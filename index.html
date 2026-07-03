@@ -63,6 +63,19 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif
 .nb-warn{background:#FF9800;color:#fff;}
 .nb-lock{background:rgba(255,255,255,.1);color:rgba(255,255,255,.4);font-size:9px;}
 .sidebar-bottom{padding:12px 18px 16px;border-top:1px solid rgba(255,255,255,.08);}
+.sidebar-calendar{margin:10px 6px 4px;padding:10px 8px 8px;background:rgba(255,255,255,.05);border-radius:10px;}
+.cal-header{display:flex;align-items:center;justify-content:space-between;padding:0 2px 6px;}
+.cal-title{font-size:11px;font-weight:700;color:rgba(255,255,255,.85);}
+.cal-nav{font-size:12px;color:rgba(255,255,255,.4);cursor:pointer;padding:0 5px;user-select:none;}
+.cal-nav:hover{color:#fff;}
+.cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:9px;color:rgba(255,255,255,.35);margin-bottom:2px;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);row-gap:2px;}
+.cal-day{text-align:center;font-size:10px;color:rgba(255,255,255,.65);padding:3px 0;border-radius:5px;cursor:default;}
+.cal-day.blank{visibility:hidden;}
+.cal-day.today{background:#4169e1;color:#fff;font-weight:700;}
+.cal-day.sun{color:#ff8a8a;}
+.cal-day.sat{color:#8ab4ff;}
+.cal-day.today.sun,.cal-day.today.sat{color:#fff;}
 .logout-btn{font-size:11px;color:rgba(255,255,255,.35);cursor:pointer;display:flex;align-items:center;gap:6px;}
 .logout-btn:hover{color:rgba(255,255,255,.7);}
 
@@ -186,6 +199,18 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif
       <div class="nav-item" style="opacity:.35;cursor:not-allowed;">
         <span class="nav-icon">🔒</span><span class="nav-label">経営情報</span>
         <span class="nav-badge nb-lock">本部のみ</span>
+      </div>
+
+      <div class="sidebar-calendar">
+        <div class="cal-header">
+          <span class="cal-nav" onclick="calShift(-1)">‹</span>
+          <span class="cal-title" id="cal-month-label"></span>
+          <span class="cal-nav" onclick="calShift(1)">›</span>
+        </div>
+        <div class="cal-dow-row">
+          <span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
       </div>
     </div>
     <div class="sidebar-bottom">
@@ -327,6 +352,7 @@ function goTop(){
   ["nt1","nt2","nt4"].forEach(function(id){var e=document.getElementById(id);e.className="ntag "+bc;});
   updateTime();
   loadHojyokin();
+  renderCalendar();
 }
 function goLogin(){
   document.getElementById("top-screen").style.display="none";
@@ -339,6 +365,37 @@ function updateTime(){
   document.getElementById("hdate").textContent=now.getFullYear()+"年"+(now.getMonth()+1)+"月"+now.getDate()+"日（"+days[now.getDay()]+"） "+pad(h)+":"+pad(m);
 }
 setInterval(updateTime,30000);
+
+var calViewDate=new Date();
+function calShift(diff){
+  calViewDate=new Date(calViewDate.getFullYear(),calViewDate.getMonth()+diff,1);
+  renderCalendar();
+}
+function renderCalendar(){
+  var today=new Date();
+  var y=calViewDate.getFullYear(),m=calViewDate.getMonth();
+  document.getElementById("cal-month-label").textContent=y+"年"+(m+1)+"月";
+  var firstDow=new Date(y,m,1).getDay();
+  var lastDate=new Date(y,m+1,0).getDate();
+  var grid=document.getElementById("cal-grid");
+  grid.innerHTML="";
+  for(var i=0;i<firstDow;i++){
+    var blank=document.createElement("span");
+    blank.className="cal-day blank";
+    grid.appendChild(blank);
+  }
+  for(var d=1;d<=lastDate;d++){
+    var cell=document.createElement("span");
+    var dow=new Date(y,m,d).getDay();
+    var cls="cal-day";
+    if(dow===0)cls+=" sun";
+    if(dow===6)cls+=" sat";
+    if(y===today.getFullYear()&&m===today.getMonth()&&d===today.getDate())cls+=" today";
+    cell.className=cls;
+    cell.textContent=d;
+    grid.appendChild(cell);
+  }
+}
 
 function loadHojyokin(){
   var area=document.getElementById("hojyokin-area");
