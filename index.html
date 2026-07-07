@@ -121,6 +121,7 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid #e0e0e0;border-top:2px solid #4169e1;border-radius:50%;animation:spin .8s linear infinite;margin-right:8px;vertical-align:middle;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .hojyokin-tag{background:#F3E5F5;color:#6A1B9A;}
+.muni-tag{background:#E3F2FD;color:#0D47A1;}
 .loading-row{padding:10px 13px;font-size:12px;color:#aaa;}
 .empty-row{padding:10px 13px;font-size:12px;color:#bbb;text-align:center;}
 .widget-header{padding:9px 13px;border-bottom:1px solid #e6e6fa;font-size:11px;font-weight:700;color:#555;display:flex;align-items:center;gap:5px;}
@@ -409,7 +410,7 @@ function loadHojyokin(){
       }
       var html="";
       items.forEach(function(item){
-        html+='<div class="ni"><div class="nd">'+item.date+'</div><div class="nt"><span class="ntag hojyokin-tag">補助金</span>'+item.title+'<span style="font-size:10px;color:#bbb;margin-left:6px;">'+item.sender+'</span></div></div>';
+        html+='<div class="ni"><div class="nd">'+item.date+'</div><div class="nt"><span class="ntag hojyokin-tag">補助金</span>'+(item.muni?'<span class="ntag muni-tag">'+item.muni+'</span>':'')+item.title+'</div></div>';
       });
       area.innerHTML=html;
     })
