@@ -131,6 +131,48 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif
 .nd{font-size:10px;color:#bbb;white-space:nowrap;flex-shrink:0;width:58px;}
 .nt{font-size:12px;color:#1a1a2e;line-height:1.4;}
 .ntag{display:inline-block;font-size:10px;padding:1px 6px;border-radius:5px;margin-right:5px;font-weight:700;vertical-align:middle;}
+
+/* ===== ナレッジボード（v7 新レイアウト） ===== */
+.kb-layout{display:flex;gap:14px;align-items:flex-start;}
+.kb-main{flex:1;min-width:0;}
+.kb-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:10px;}
+.kb-grid .span4{grid-column:span 4;}
+.kb-grid .span3{grid-column:span 3;}
+.kb-grid .span6{grid-column:span 6;}
+.kb-panel{margin-top:10px;}
+.kb-card{background:#fff;border:1px solid #dddbd4;border-radius:12px;padding:20px 10px 16px;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .1s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;text-align:center;min-height:96px;}
+.kb-card:hover{border-color:#4A7FD4;box-shadow:0 3px 10px rgba(74,127,212,.12);transform:translateY(-1px);}
+.kb-ci{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+.kb-ct{font-size:12px;font-weight:700;color:#1a1a2e;line-height:1.3;}
+.kb-cd{font-size:9px;color:#aaa;margin-top:-3px;}
+.kb-card .badge{margin-top:0;}
+.kb-locked{background:#eeeef8;opacity:.6;}
+.kb-locked .kb-ct{color:#aaa;}
+.kb-side{width:250px;flex-shrink:0;display:flex;flex-direction:column;gap:10px;}
+.kb-side-card{min-height:64px;padding:14px 10px;}
+
+/* ===== ドメボット 実物大ウィジェット ===== */
+.domebot{width:250px;height:500px;flex-shrink:0;background:#fff;border-radius:16px;border:1px solid #dddbd4;overflow:hidden;box-shadow:0 4px 16px rgba(60,60,120,.08);}
+.db-header{background:#4169e1;padding:10px 12px;display:flex;align-items:center;gap:8px;}
+.db-avatar{width:30px;height:30px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
+.db-avatar img{width:24px;height:24px;object-fit:contain;}
+.db-title{color:#fff;font-size:9px;line-height:1.3;opacity:.85;}
+.db-name{color:#fff;font-size:12px;font-weight:700;line-height:1.3;}
+.db-body{padding:9px 10px;background:#f7f7fb;flex:1;display:flex;flex-direction:column;gap:8px;}
+.db-section-label{font-size:9px;font-weight:700;color:#888;display:flex;align-items:center;justify-content:space-between;}
+.db-arrows{font-size:9px;color:#bbb;}
+.db-cats{display:grid;grid-template-columns:1fr 1fr;grid-auto-flow:column;grid-template-rows:1fr 1fr;gap:6px;overflow:hidden;}
+.db-cat{background:#fff;border:1px solid #e6e6f0;border-radius:8px;padding:7px 4px;text-align:center;font-size:9px;color:#555;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.db-cat .ic{font-size:13px;}
+.db-page{text-align:center;font-size:8px;color:#bbb;}
+.db-rules-label{font-size:9px;font-weight:700;color:#888;}
+.db-rules{display:flex;gap:6px;}
+.db-rule{flex:1;background:#fff;border:1px solid #e6e6f0;border-radius:8px;padding:6px 4px;text-align:center;font-size:9px;color:#4169e1;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.db-rule .sub{font-size:7px;color:#aaa;font-weight:500;}
+.db-greeting{background:#e8ebfa;border-radius:4px 10px 10px 10px;padding:8px 9px;font-size:10px;color:#555;line-height:1.5;display:flex;gap:6px;align-items:flex-start;}
+.db-greeting .em{flex-shrink:0;}
+.db-input{margin:0 10px 10px;background:#fff;border:1.5px solid #4169e1;border-radius:20px;padding:7px 12px;font-size:10px;color:#aaa;display:flex;align-items:center;justify-content:space-between;}
+.db-send{width:18px;height:18px;border-radius:50%;background:#4169e1;color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -169,7 +211,7 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif
       <div><div class="slt" id="sl-name">柴学園</div><div class="sls">ナレッジポータル</div></div>
     </div>
     <div class="sidebar-user">
-      <select class="garden-select" id="garden-select"></select>
+      <select class="garden-select" id="garden-select" onchange="updateDomebotFrame()"></select>
     </div>
     <div class="sidebar-nav">
       <div class="nav-section">ツール</div>
@@ -225,78 +267,80 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif
       <span class="hdate" id="hdate"></span>
     </div>
 
-    <!-- ツール -->
+    <!-- ナレッジボード -->
     <div class="layer">
-      <div class="ltitle">ツール</div>
-      <div class="grid4">
-        <div class="card">
-          <div class="ci" style="background:#EEF4FF;">🖥️</div>
-          <div class="card-right"><div class="ct">AIモニタリング</div><div class="cd">稼働状況・異常検知</div><span class="badge bo" id="b-ai">自園のみ</span></div>
-        </div>
-        <div class="card">
-          <div class="ci" style="background:#FFF3E0;">⚠️</div>
-          <div class="card-right"><div class="ct">ヒヤリハットくん</div><div class="cd">インシデント記録・管理</div><span class="badge bo">自園のみ</span></div>
-        </div>
-        <div class="card">
-          <div class="ci" style="background:#EEF4FF;">🎙️</div>
-          <div class="card-right"><div class="ct">文字起こし</div><div class="cd">音声・動画をテキスト化</div><span class="badge bc-s" id="b-mic">共通</span></div>
-        </div>
-        <div class="card">
-          <div class="ci" style="background:#EEF4FF;">📔</div>
-          <div class="card-right"><div class="ct">ホイクノキロク</div><div class="cd">保育記録・日誌</div><span class="badge bo" id="b-hoiku">自園のみ</span></div>
-        </div>
-      </div>
-    </div>
+      <div class="ltitle">ナレッジボード</div>
+      <div class="kb-layout">
+        <div class="kb-main">
+          <div class="kb-grid">
+            <div class="kb-card span4">
+              <div class="kb-ci" style="background:#EEF4FF;">🖥️</div>
+              <div class="kb-ct">AIモニタリング</div>
+              <span class="badge bo" id="b-ai">自園のみ</span>
+            </div>
+            <div class="kb-card span4">
+              <div class="kb-ci" style="background:#FFF3E0;">⚠️</div>
+              <div class="kb-ct">ヒヤリハットくん</div>
+              <span class="badge bo">自園のみ</span>
+            </div>
+            <div class="kb-card span4">
+              <div class="kb-ci" style="background:#EEF4FF;">🎙️</div>
+              <div class="kb-ct">文字起こし</div>
+              <span class="badge bc-s" id="b-mic">共通</span>
+            </div>
+            <div class="kb-card span3">
+              <div class="kb-ci" style="background:#FFF3E0;">📅</div>
+              <div class="kb-ct">UQchecker</div>
+              <div class="kb-cd">有給管理</div>
+              <span class="badge bo">自園のみ</span>
+            </div>
+            <div class="kb-card span3">
+              <div class="kb-ci" style="background:#EEF4FF;">📔</div>
+              <div class="kb-ct">ホイクノキロク</div>
+              <span class="badge bo" id="b-hoiku">自園のみ</span>
+            </div>
+            <div class="kb-card span3">
+              <div class="kb-ci" style="background:#E8F5E9;">📝</div>
+              <div class="kb-ct">申請書サポート</div>
+              <span class="badge bc-s" id="b-shinsei">共通</span>
+            </div>
+            <div class="kb-card span3">
+              <div class="kb-ci" style="background:#e6e6fa;">🔒</div>
+              <div class="kb-ct">経営情報</div>
+              <span class="lock-badge">🔒 本部のみ</span>
+            </div>
+          </div>
 
-    <!-- ナレッジ -->
-    <div class="layer">
-      <div class="ltitle">ナレッジ</div>
-      <div class="grid4">
-        <div class="card">
-          <div class="ci" style="background:#E8F5E9;">📄</div>
-          <div class="card-right"><div class="ct">法人規約・ガイドライン</div><div class="cd">就業規則・各種規定</div><span class="badge bc-s" id="b-kiyaku">共通</span></div>
-        </div>
-        <div class="card">
-          <div class="ci" style="background:#E8F5E9;">📝</div>
-          <div class="card-right"><div class="ct">申請ひな形</div><div class="cd">各種申請書のダウンロード</div><span class="badge bc-s" id="b-shinsei">共通</span></div>
-        </div>
-        <div class="card">
-          <div class="ci" style="background:#FFF3E0;">📅</div>
-          <div class="card-right"><div class="ct">有給管理</div><div class="cd">取得状況・残日数の確認</div><span class="badge bo">自園のみ</span></div>
-        </div>
-        <div class="card">
-          <div class="ci" style="background:#E8F5E9;">📘</div>
-          <div class="card-right"><div class="ct">コーポレートブック</div><div class="cd">理念・沿革・組織紹介</div><span class="badge bc-s" id="b-corp">共通</span></div>
-        </div>
-      </div>
-    </div>
+          <!-- 補助金情報（常時表示） -->
+          <div class="widget kb-panel" id="hojyokin-panel">
+            <div class="widget-header" style="justify-content:space-between;">
+              <span>💰 補助金情報 <span class="badge hojyokin-tag" id="hojyokin-card-badge">読み込み中…</span></span>
+              <button class="refresh-btn" onclick="loadHojyokin()">🔄 更新</button>
+            </div>
+            <div id="hojyokin-area"><div class="loading-row"><span class="spinner"></span>補助金メールを読み込み中…</div></div>
+          </div>
 
-    <!-- サービス -->
-    <div class="layer">
-      <div class="ltitle">サービス</div>
-      <div class="grid2">
-        <div class="card">
-          <div class="ci" style="background:#e6e6fa;">🔒</div>
-          <div class="card-right"><div class="ct">経営情報</div><div class="cd">収支・給与・出納帳・全園サマリー</div><span class="lock-badge">🔒 本部のみアクセス可</span></div>
+          <!-- 最新のお知らせ（常時表示） -->
+          <div class="widget kb-panel" id="notice-panel">
+            <div class="widget-header"><span>🔔 最新のお知らせ</span></div>
+            <div class="ni"><div class="nd">2026/06/27</div><div class="nt"><span class="ntag bc-s" id="nt1">全園共通</span>【本部より】熱中症対策ガイドラインを更新しました</div></div>
+            <div class="ni"><div class="nd">2026/06/25</div><div class="nt"><span class="ntag bc-s" id="nt2">全園共通</span>有給取得促進月間のお知らせ（7月）</div></div>
+            <div class="ni"><div class="nd">2026/06/15</div><div class="nt"><span class="ntag bc-s" id="nt4">全園共通</span>コーポレートブック2026年版を公開しました</div></div>
+          </div>
         </div>
-        <div class="chat-card">
-          <div class="chat-title">💬 チャットボット</div>
-          <div class="chat-bubble">規約・申請・保育のことなど、何でもお気軽にどうぞ。</div>
-          <div class="chat-input-row"><span>質問を入力…</span><span>➤</span></div>
-        </div>
-      </div>
-    </div>
 
-    <!-- お知らせ -->
-    <div class="widget">
-      <div class="widget-header" style="justify-content:space-between;">
-        <span>🔔 最新のお知らせ・補助金情報</span>
-        <button class="refresh-btn" onclick="loadHojyokin()">🔄 補助金を更新</button>
+        <!-- ドメボット 実物大ウィジェット（本物のdome-chatをiframeで埋め込み） + コーポレートブック -->
+        <div class="kb-side">
+        <div class="domebot">
+          <iframe id="domebot-iframe" src="" title="ドメボット" loading="lazy" style="width:100%;height:100%;border:0;display:block;"></iframe>
+        </div>
+        <div class="kb-card kb-side-card">
+          <div class="kb-ci" style="background:#E8F5E9;">📘</div>
+          <div class="kb-ct">コーポレートブック</div>
+          <span class="badge bc-s" id="b-corp">共通</span>
+        </div>
+        </div>
       </div>
-      <div class="ni"><div class="nd">2026/06/27</div><div class="nt"><span class="ntag bc-s" id="nt1">全園共通</span>【本部より】熱中症対策ガイドラインを更新しました</div></div>
-      <div class="ni"><div class="nd">2026/06/25</div><div class="nt"><span class="ntag bc-s" id="nt2">全園共通</span>有給取得促進月間のお知らせ（7月）</div></div>
-      <div class="ni"><div class="nd">2026/06/15</div><div class="nt"><span class="ntag bc-s" id="nt4">全園共通</span>コーポレートブック2026年版を公開しました</div></div>
-      <div id="hojyokin-area"><div class="loading-row"><span class="spinner"></span>補助金メールを読み込み中…</div></div>
     </div>
 
   </div>
@@ -317,6 +361,27 @@ var GARDENS_S=[
 var GARDENS_Y=[
   "Y01 八潮しおどめ保育園","Y02 守谷しおどめ保育園","Y03 しおどめなかよし保育園"
 ];
+// dome-chat（https://kimkat01.github.io/dome-chat/?en=キー）の園キー対応表
+// ※yashio_akanemachi・shokibo・edogawa_chuo・kamata・koshigaya・inagi・kuki・moriyaは
+//   過去チャットで作成が確認済み。それ以外は命名ルールからの推測のため要確認。
+var DOMECHAT_BASE="https://kimkat01.github.io/dome-chat/";
+var KEYS_S=[
+  "shiodome_no_mori","yashio_ekikita","kamata",
+  "shokibo","edogawa_chuo","kasukabe",
+  "koshigaya","yashio_akanemachi","fureai_moriya",
+  "tsukuba","inagi","kuki",
+  "misato_chuo","fureai_yashio"
+];
+var KEYS_Y=[
+  "yashio_shiodome","moriya","nakayoshi"
+];
+function updateDomebotFrame(){
+  var s=law==="s";
+  var sel=document.getElementById("garden-select");
+  var idx=sel?sel.selectedIndex:0;
+  var key=(s?KEYS_S:KEYS_Y)[idx]||"yashio_akanemachi";
+  document.getElementById("domebot-iframe").src=DOMECHAT_BASE+"?en="+key;
+}
 function populateGardens(s){
   var sel=document.getElementById("garden-select");
   var list=s?GARDENS_S:GARDENS_Y;
@@ -350,8 +415,9 @@ function goTop(){
   populateGardens(s);
   document.getElementById("nav-top").className="nav-item "+(s?"active-s":"active-y");
   var bc=s?"bc-s":"bc-y",ns=s?"#EEF4FF":"#E8F5E9",nt=s?"#185FA5":"#1B5E20";
-  ["b-mic","b-kiyaku","b-shinsei"].forEach(function(id){document.getElementById(id).className="badge "+bc;});
+  ["b-mic","b-shinsei","b-corp"].forEach(function(id){document.getElementById(id).className="badge "+bc;});
   ["nt1","nt2","nt4"].forEach(function(id){var e=document.getElementById(id);e.className="ntag "+bc;});
+  updateDomebotFrame();
   updateTime();
   loadHojyokin();
   renderCalendar();
@@ -401,14 +467,17 @@ function renderCalendar(){
 
 function loadHojyokin(){
   var area=document.getElementById("hojyokin-area");
+  var cardBadge=document.getElementById("hojyokin-card-badge");
   area.innerHTML='<div class="loading-row"><span class="spinner"></span>補助金メールを読み込み中…</div>';
   fetch(HOJYOKIN_URL+"?t="+Date.now())
     .then(function(r){return r.json();})
     .then(function(items){
       if(!items||items.length===0){
         area.innerHTML='<div class="empty-row">📭 補助金メールは現在0件です</div>';
+        if(cardBadge)cardBadge.textContent="0件";
         return;
       }
+      if(cardBadge)cardBadge.textContent=items.length+"件";
       var html="";
       items.forEach(function(item,i){
         var bodyHtml=item.body?item.body.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>"):"（本文はありません）";
@@ -418,14 +487,17 @@ function loadHojyokin(){
     })
     .catch(function(){
       area.innerHTML='<div class="empty-row">📭 補助金メールは現在0件です</div>';
+      if(cardBadge)cardBadge.textContent="0件";
     });
 }
 function deleteHojyokin(id,rowId){
   if(!confirm("このお知らせを削除しますか？（元に戻せません）"))return;
   var row=document.getElementById(rowId);
   if(row)row.style.opacity="0.4";
-  fetch(HOJYOKIN_DELETE_URL+"?id="+encodeURIComponent(id))
-    .then(function(){ if(row) row.remove(); })
+  fetch(HOJYOKIN_DELETE_URL+"?id="+encodeURIComponent(id),{mode:"no-cors"})
+    .then(function(){
+      setTimeout(function(){ if(row) row.remove(); }, 600);
+    })
     .catch(function(){
       alert("削除に失敗しました。時間をおいて再度お試しください。");
       if(row) row.style.opacity="1";
