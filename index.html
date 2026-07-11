@@ -214,34 +214,40 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif
       <select class="garden-select" id="garden-select" onchange="updateDomebotFrame()"></select>
     </div>
     <div class="sidebar-nav">
-      <div class="nav-section">ツール</div>
-      <div class="nav-item active-s" id="nav-top" onclick="selectNav(this)">
+      <div class="nav-item active-s" id="nav-ai" onclick="navTo(this,'card-ai')">
         <span class="nav-icon">🖥️</span><span class="nav-label">AIモニタリング</span>
       </div>
-      <div class="nav-item" onclick="selectNav(this)">
+      <div class="nav-item" id="nav-hiyari" onclick="navTo(this,'card-hiyari')">
         <span class="nav-icon">⚠️</span><span class="nav-label">ヒヤリハットくん</span>
         <span class="nav-badge nb-warn">3</span>
       </div>
-      <div class="nav-item" onclick="selectNav(this)">
+      <div class="nav-item" id="nav-moji" onclick="navTo(this,'card-moji')">
         <span class="nav-icon">🎙️</span><span class="nav-label">文字起こし</span>
       </div>
-      <div class="nav-section">ナレッジ</div>
-      <div class="nav-item" onclick="selectNav(this)">
-        <span class="nav-icon">📄</span><span class="nav-label">法人規約・ガイドライン</span>
+      <div class="nav-item" id="nav-uq" onclick="navTo(this,'card-uq')">
+        <span class="nav-icon">📅</span><span class="nav-label">UQchecker（有給管理）</span>
       </div>
-      <div class="nav-item" onclick="selectNav(this)">
-        <span class="nav-icon">📝</span><span class="nav-label">申請ひな形</span>
+      <div class="nav-item" id="nav-hoiku" onclick="navTo(this,'card-hoiku')">
+        <span class="nav-icon">📔</span><span class="nav-label">ホイクノキロク</span>
       </div>
-      <div class="nav-item" onclick="selectNav(this)">
-        <span class="nav-icon">📅</span><span class="nav-label">有給管理</span>
+      <div class="nav-item" id="nav-shinsei" onclick="navTo(this,'card-shinsei')">
+        <span class="nav-icon">📝</span><span class="nav-label">申請書サポート</span>
       </div>
-      <div class="nav-section">サービス</div>
-      <div class="nav-item" onclick="selectNav(this)">
-        <span class="nav-icon">💬</span><span class="nav-label">チャットボット</span>
-      </div>
-      <div class="nav-item" style="opacity:.35;cursor:not-allowed;">
+      <div class="nav-item" id="nav-keiei" onclick="navTo(this,'card-keiei')">
         <span class="nav-icon">🔒</span><span class="nav-label">経営情報</span>
         <span class="nav-badge nb-lock">本部のみ</span>
+      </div>
+      <div class="nav-item" id="nav-hojyokin" onclick="navTo(this,'hojyokin-panel')">
+        <span class="nav-icon">💰</span><span class="nav-label">補助金情報</span>
+      </div>
+      <div class="nav-item" id="nav-notice" onclick="navTo(this,'notice-panel')">
+        <span class="nav-icon">🔔</span><span class="nav-label">最新のお知らせ</span>
+      </div>
+      <div class="nav-item" id="nav-domebot" onclick="navTo(this,'domebot-widget')">
+        <span class="nav-icon">💬</span><span class="nav-label">ドメボット</span>
+      </div>
+      <div class="nav-item" id="nav-corp" onclick="navTo(this,'card-corp')">
+        <span class="nav-icon">📘</span><span class="nav-label">コーポレートブック</span>
       </div>
 
       <div class="sidebar-calendar">
@@ -263,48 +269,47 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif
 
   <div class="main">
     <div class="top-bar">
-      <div class="page-title">ダッシュボード</div>
+      <div class="page-title">ナレッジボード</div>
       <span class="hdate" id="hdate"></span>
     </div>
 
     <!-- ナレッジボード -->
     <div class="layer">
-      <div class="ltitle">ナレッジボード</div>
       <div class="kb-layout">
         <div class="kb-main">
           <div class="kb-grid">
-            <div class="kb-card span4">
+            <div class="kb-card span4" id="card-ai" onclick="highlightNav('nav-ai')">
               <div class="kb-ci" style="background:#EEF4FF;">🖥️</div>
               <div class="kb-ct">AIモニタリング</div>
               <span class="badge bo" id="b-ai">自園のみ</span>
             </div>
-            <div class="kb-card span4">
+            <div class="kb-card span4" id="card-hiyari" onclick="highlightNav('nav-hiyari')">
               <div class="kb-ci" style="background:#FFF3E0;">⚠️</div>
               <div class="kb-ct">ヒヤリハットくん</div>
               <span class="badge bo">自園のみ</span>
             </div>
-            <div class="kb-card span4">
+            <div class="kb-card span4" id="card-moji" onclick="highlightNav('nav-moji')">
               <div class="kb-ci" style="background:#EEF4FF;">🎙️</div>
               <div class="kb-ct">文字起こし</div>
               <span class="badge bc-s" id="b-mic">共通</span>
             </div>
-            <div class="kb-card span3">
+            <div class="kb-card span3" id="card-uq" onclick="highlightNav('nav-uq')">
               <div class="kb-ci" style="background:#FFF3E0;">📅</div>
               <div class="kb-ct">UQchecker</div>
               <div class="kb-cd">有給管理</div>
               <span class="badge bo">自園のみ</span>
             </div>
-            <div class="kb-card span3">
+            <div class="kb-card span3" id="card-hoiku" onclick="highlightNav('nav-hoiku')">
               <div class="kb-ci" style="background:#EEF4FF;">📔</div>
               <div class="kb-ct">ホイクノキロク</div>
               <span class="badge bo" id="b-hoiku">自園のみ</span>
             </div>
-            <div class="kb-card span3">
+            <div class="kb-card span3" id="card-shinsei" onclick="highlightNav('nav-shinsei')">
               <div class="kb-ci" style="background:#E8F5E9;">📝</div>
               <div class="kb-ct">申請書サポート</div>
               <span class="badge bc-s" id="b-shinsei">共通</span>
             </div>
-            <div class="kb-card span3">
+            <div class="kb-card span3" id="card-keiei" onclick="highlightNav('nav-keiei')">
               <div class="kb-ci" style="background:#e6e6fa;">🔒</div>
               <div class="kb-ct">経営情報</div>
               <span class="lock-badge">🔒 本部のみ</span>
@@ -313,7 +318,7 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif
 
           <!-- 補助金情報（常時表示） -->
           <div class="widget kb-panel" id="hojyokin-panel">
-            <div class="widget-header" style="justify-content:space-between;">
+            <div class="widget-header" style="justify-content:space-between;cursor:pointer;" onclick="highlightNav('nav-hojyokin')">
               <span>💰 補助金情報 <span class="badge hojyokin-tag" id="hojyokin-card-badge">読み込み中…</span></span>
               <button class="refresh-btn" onclick="loadHojyokin()">🔄 更新</button>
             </div>
@@ -322,7 +327,7 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif
 
           <!-- 最新のお知らせ（常時表示） -->
           <div class="widget kb-panel" id="notice-panel">
-            <div class="widget-header"><span>🔔 最新のお知らせ</span></div>
+            <div class="widget-header" style="cursor:pointer;" onclick="highlightNav('nav-notice')"><span>🔔 最新のお知らせ</span></div>
             <div class="ni"><div class="nd">2026/06/27</div><div class="nt"><span class="ntag bc-s" id="nt1">全園共通</span>【本部より】熱中症対策ガイドラインを更新しました</div></div>
             <div class="ni"><div class="nd">2026/06/25</div><div class="nt"><span class="ntag bc-s" id="nt2">全園共通</span>有給取得促進月間のお知らせ（7月）</div></div>
             <div class="ni"><div class="nd">2026/06/15</div><div class="nt"><span class="ntag bc-s" id="nt4">全園共通</span>コーポレートブック2026年版を公開しました</div></div>
@@ -331,10 +336,10 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif
 
         <!-- ドメボット 実物大ウィジェット（本物のdome-chatをiframeで埋め込み） + コーポレートブック -->
         <div class="kb-side">
-        <div class="domebot">
+        <div class="domebot" id="domebot-widget">
           <iframe id="domebot-iframe" src="" title="ドメボット" loading="lazy" style="width:100%;height:100%;border:0;display:block;"></iframe>
         </div>
-        <div class="kb-card kb-side-card">
+        <div class="kb-card kb-side-card" id="card-corp" onclick="highlightNav('nav-corp')">
           <div class="kb-ci" style="background:#E8F5E9;">📘</div>
           <div class="kb-ct">コーポレートブック</div>
           <span class="badge bc-s" id="b-corp">共通</span>
@@ -398,6 +403,18 @@ function selectNav(el){
   });
   el.classList.add(law==="s"?"active-s":"active-y");
 }
+function navTo(el,targetId){
+  selectNav(el);
+  var target=document.getElementById(targetId);
+  if(target)target.scrollIntoView({behavior:"smooth",block:"center"});
+}
+function highlightNav(navId){
+  document.querySelectorAll(".sidebar-nav .nav-item").forEach(function(item){
+    item.classList.remove("active-s","active-y");
+  });
+  var navEl=document.getElementById(navId);
+  if(navEl)navEl.classList.add(law==="s"?"active-s":"active-y");
+}
 function sel(l){
   law=l;
   document.getElementById("tab-s").className="law-tab"+(l==="s"?" active-s":"");
@@ -413,7 +430,7 @@ function goTop(){
   document.getElementById("sl-img").src=c;
   document.getElementById("sl-name").textContent=s?"柴学園":"雄雅会";
   populateGardens(s);
-  document.getElementById("nav-top").className="nav-item "+(s?"active-s":"active-y");
+  document.getElementById("nav-ai").className="nav-item "+(s?"active-s":"active-y");
   var bc=s?"bc-s":"bc-y",ns=s?"#EEF4FF":"#E8F5E9",nt=s?"#185FA5":"#1B5E20";
   ["b-mic","b-shinsei","b-corp"].forEach(function(id){document.getElementById(id).className="badge "+bc;});
   ["nt1","nt2","nt4"].forEach(function(id){var e=document.getElementById(id);e.className="ntag "+bc;});
