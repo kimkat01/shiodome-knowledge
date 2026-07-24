@@ -1,0 +1,493 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CORPORATE BOOK｜学校法人柴学園 / 社会福祉法人雄雅会</title>
+<style>
+:root{
+  --paper:#F7F2EA;
+  --paper2:#FFFCF6;
+  --ink:#171412;
+  --ink-soft:#5B534B;
+  --orange:#EF7F2E;
+  --pink:#EE6BA3;
+  --yellow:#F6C43A;
+  --blue:#2B4A9B;
+  --rule:#DCD2C2;
+  --jp:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  --en:"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:#2A2622;color:var(--ink);
+  font-family:var(--jp);
+  display:flex;flex-direction:column;
+  background-image:radial-gradient(120% 90% at 50% 0%,#3B352E 0%,#221F1B 70%);
+  overflow:hidden;
+}
+
+/* ---------- stage ---------- */
+#stage{flex:1;display:flex;align-items:center;justify-content:center;perspective:2600px;overflow:hidden;padding:18px}
+#book{position:relative;width:960px;height:640px;transform-style:preserve-3d;flex:none}
+#book::after{ /* 綴じ目の落ち影 */
+  content:"";position:absolute;left:50%;top:2%;height:96%;width:70px;transform:translateX(-50%);
+  background:radial-gradient(closest-side,rgba(0,0,0,.30),rgba(0,0,0,0));pointer-events:none;z-index:0;
+}
+.leaf{
+  position:absolute;top:0;left:50%;width:480px;height:640px;
+  transform-origin:left center;transform-style:preserve-3d;
+  transition:transform .85s cubic-bezier(.36,.02,.16,1);
+}
+.leaf.flipped{transform:rotateY(-180deg)}
+.face{
+  position:absolute;inset:0;backface-visibility:hidden;overflow:hidden;
+  background:var(--paper);box-shadow:0 18px 50px rgba(0,0,0,.35);
+}
+.face.b{transform:rotateY(180deg)}
+/* 綴じ目側のグラデ（右ページは左端、左ページは右端が綴じ目） */
+.face.f::before,.face.b::before{
+  content:"";position:absolute;top:0;bottom:0;width:38px;pointer-events:none;z-index:6;
+}
+.face.f::before{left:0;background:linear-gradient(90deg,rgba(90,70,45,.20),rgba(90,70,45,0))}
+.face.b::before{right:0;background:linear-gradient(270deg,rgba(90,70,45,.20),rgba(90,70,45,0))}
+
+/* 単ページ（スマホ）モード */
+#book.single{width:480px}
+#book.single::after{display:none}
+.card{
+  position:absolute;top:0;left:0;width:480px;height:640px;background:var(--paper);
+  transform-origin:left center;backface-visibility:hidden;overflow:hidden;
+  box-shadow:0 18px 50px rgba(0,0,0,.35);
+  transition:transform .6s cubic-bezier(.36,.02,.16,1),opacity .6s ease;
+}
+.card.away{transform:rotateY(-115deg);opacity:0}
+
+/* ---------- ページ共通 ---------- */
+.pg{position:absolute;inset:0;padding:46px 44px 40px;display:flex;flex-direction:column}
+.pg.tight{padding:38px 40px 34px}
+.pg p{margin:0 0 .85em;font-size:11.5px;line-height:2.0;color:var(--ink);letter-spacing:.02em;text-align:justify}
+.pg h2{margin:0 0 14px;font-size:16.5px;line-height:1.6;letter-spacing:.04em;font-weight:700}
+.pg h3{margin:20px 0 8px;font-size:12.5px;letter-spacing:.06em;font-weight:700;padding-left:11px;position:relative}
+.pg h3::before{content:"";position:absolute;left:0;top:.35em;width:4px;height:.9em;background:var(--orange);border-radius:2px}
+.folio{position:absolute;bottom:16px;font-size:10px;letter-spacing:.14em;color:#9A9086;font-family:var(--en)}
+.pg.left .folio{left:26px}
+.pg.right .folio{right:26px}
+.tab{position:absolute;top:0;bottom:0;width:26px;background:var(--orange);color:#fff;
+  writing-mode:vertical-rl;font-family:var(--en);font-size:9.5px;letter-spacing:.32em;
+  display:flex;align-items:flex-end;justify-content:center;padding-bottom:26px;font-weight:700}
+.pg.right .tab{right:0}
+.pg.left .tab{left:0}
+.eyebrow{font-family:var(--en);font-size:9.5px;letter-spacing:.3em;color:var(--ink-soft);margin-bottom:6px}
+.chapno{font-family:var(--en);font-size:56px;line-height:1;font-weight:200;letter-spacing:-.02em;color:var(--orange)}
+.chaphead{display:flex;align-items:flex-end;gap:14px;border-bottom:1.5px solid var(--ink);padding-bottom:12px;margin-bottom:18px}
+.chapen{font-family:var(--en);font-size:19px;letter-spacing:.16em;font-weight:700}
+.pull{font-size:13px;line-height:1.95;font-weight:700;letter-spacing:.03em;
+  border-left:3px solid var(--yellow);padding:2px 0 2px 13px;margin:4px 0 16px}
+.box{background:#EFE7D8;border-radius:10px;padding:14px 16px;margin-top:auto}
+.box .bt{font-size:11px;font-weight:700;letter-spacing:.04em;margin-bottom:6px}
+.box p{font-size:10.5px;line-height:1.85;margin:0;color:var(--ink-soft)}
+
+/* ---------- 表紙 ---------- */
+.cover{position:absolute;inset:0;background:#F4EFE6;overflow:hidden}
+.cover .blob{position:absolute;border-radius:50%}
+.cv-y{width:520px;height:200px;background:var(--yellow);right:-140px;top:-70px;border-radius:0 0 0 300px}
+.cv-o{width:560px;height:330px;background:var(--orange);left:-90px;bottom:-40px;border-radius:60% 40% 0 0/70% 60% 0 0}
+.cv-p{width:330px;height:300px;background:var(--pink);right:-70px;bottom:-30px;border-radius:55% 45% 0 0/60% 70% 0 0}
+.cv-b{position:absolute;left:56px;top:38px;width:120px;height:16px;background:var(--blue);border-radius:9px;transform:rotate(-18deg)}
+.cv-b2{position:absolute;left:96px;top:66px;width:88px;height:14px;background:var(--blue);border-radius:8px;transform:rotate(-8deg)}
+.cover .txt{position:absolute;left:44px;right:44px;top:132px;z-index:3}
+.cover .org{font-size:12px;font-weight:700;letter-spacing:.16em;margin-bottom:22px}
+.cover h1{font-family:var(--en);font-size:42px;letter-spacing:-.01em;font-weight:400;margin:0;line-height:1.1}
+.cover .sub{font-family:var(--en);font-size:13.5px;font-weight:700;letter-spacing:.05em;margin-top:10px}
+.cover .spark{position:absolute;z-index:3;color:var(--yellow);font-size:22px}
+
+/* ---------- 序文 ---------- */
+.fore .big{font-size:22px;font-weight:700;letter-spacing:.06em;line-height:1.7;margin:0 0 6px}
+.fore .en{font-family:var(--en);font-size:10px;letter-spacing:.22em;color:var(--ink-soft);margin-bottom:22px}
+.sign{margin-top:auto;text-align:right;font-size:11px;line-height:1.9}
+.sign b{font-size:14px;letter-spacing:.1em}
+
+/* ---------- 法人概要 ---------- */
+.profile h2{text-align:center;font-size:15px;letter-spacing:.2em;border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:22px}
+.profile .name{font-size:16px;font-weight:700;letter-spacing:.06em;margin-bottom:14px}
+.dl{display:grid;grid-template-columns:64px 1fr;row-gap:5px;font-size:10.5px;line-height:1.75}
+.dl dt{color:var(--ink-soft)}
+.dl dd{margin:0}
+.flist{margin:16px 0 0;padding:0;list-style:none;columns:1;font-size:10px;line-height:1.85;color:var(--ink)}
+.flist li{padding-left:11px;position:relative}
+.flist li::before{content:"";position:absolute;left:2px;top:.72em;width:3px;height:3px;border-radius:50%;background:var(--pink)}
+.flabel{font-size:10.5px;font-weight:700;margin-top:16px;letter-spacing:.05em}
+
+/* ---------- 裏表紙 ---------- */
+.backcover{position:absolute;inset:0;background:#F4EFE6;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:16px;text-align:center;overflow:hidden}
+.backcover .bo{position:absolute;width:420px;height:230px;background:var(--orange);left:-120px;bottom:-90px;border-radius:50%}
+.backcover .bp{position:absolute;width:260px;height:200px;background:var(--pink);right:-90px;top:-70px;border-radius:50%}
+.backcover .in{position:relative;z-index:2}
+.backcover .q{font-size:15px;font-weight:700;letter-spacing:.08em;line-height:2}
+.backcover .u{font-family:var(--en);font-size:10px;letter-spacing:.2em;color:var(--ink-soft);margin-top:18px;line-height:2}
+
+/* ---------- コントロール ---------- */
+#bar{flex:none;display:flex;align-items:center;justify-content:center;gap:18px;padding:12px 16px 18px;color:#EDE4D6}
+#bar button{
+  width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.28);
+  background:rgba(255,255,255,.06);color:#EDE4D6;font-size:18px;cursor:pointer;
+  display:grid;place-items:center;transition:background .2s,transform .2s;font-family:var(--en)
+}
+#bar button:hover:not(:disabled){background:rgba(255,255,255,.16)}
+#bar button:active:not(:disabled){transform:scale(.94)}
+#bar button:disabled{opacity:.28;cursor:default}
+#bar button:focus-visible{outline:2px solid var(--yellow);outline-offset:3px}
+#meter{width:min(340px,42vw);height:3px;background:rgba(255,255,255,.16);border-radius:2px;overflow:hidden}
+#meter i{display:block;height:100%;width:0;background:var(--yellow);transition:width .5s ease}
+#count{font-family:var(--en);font-size:11px;letter-spacing:.16em;min-width:74px;text-align:center;color:#C9BEAE}
+#hint{position:fixed;left:50%;bottom:78px;transform:translateX(-50%);color:#B9AE9E;font-size:11px;letter-spacing:.08em;pointer-events:none;transition:opacity .6s;z-index:50}
+@media (prefers-reduced-motion:reduce){.leaf,.card{transition-duration:.01ms}}
+</style>
+
+<div id="stage"><div id="book"></div></div>
+<div id="hint">ページをクリック、または ← → キーでめくれます</div>
+<nav id="bar">
+  <button id="prev" aria-label="前のページ">‹</button>
+  <div id="meter"><i></i></div>
+  <span id="count"></span>
+  <button id="next" aria-label="次のページ">›</button>
+  <button id="fs" aria-label="全画面表示" title="全画面表示" style="font-size:14px">⤢</button>
+</nav>
+
+<script>
+const P = [];
+
+/* 1 表紙 */
+P.push(`<div class="cover">
+  <div class="blob cv-y"></div><div class="blob cv-o"></div><div class="blob cv-p"></div>
+  <div class="cv-b"></div><div class="cv-b2"></div>
+  <div class="spark" style="left:60px;top:120px">✦</div>
+  <div class="spark" style="right:64px;top:214px;font-size:15px">✦</div>
+  <div class="txt">
+    <div class="org">学校法人柴学園 ／ 社会福祉法人雄雅会</div>
+    <h1>CORPORATE<br>BOOK</h1>
+    <div class="sub">SHIBA GAKUEN &amp; YUGAKAI</div>
+  </div>
+</div>`);
+
+/* 2 序文 */
+P.push(`<div class="pg left fore">
+  <div class="eyebrow">FOREWORD ／ 序文</div>
+  <div class="big">子どもの力を信じて、待つ。</div>
+  <div class="en">The practice of believing in children.</div>
+  <p>法人の理事長に就任してから、14年が経ちます。この冊子を手に取っているあなたが職員であれば、私はこう問いかけます。「私たちは、なんのためにここにいるのか」──その答えを、このコーポレートブックで共有したいと思います。</p>
+  <p>法人継承の経緯も、保育への確信も、長らく語ってきませんでした。継承時は準備も引き継ぎもなく、突然の就任でした。「実績を見せた時に、自分の本当の姿を語る」──そう決め、走り続けた14年でした。今、自信が確信に変わりました。だからこそ、今、語ります。</p>
+  <p>このコーポレートブックは、きれいごとを並べた広報誌ではありません。13年間の試行錯誤、失敗、確信の変遷を正直に記した、法人の思想の設計図です。読み終えたとき、「自分がここで働く意味」が少しでも鮮明になれば、この冊子はその役割を果たしたことになります。</p>
+  <div class="pull">道しるべは、いつも真実でなければならない。</div>
+  <div class="sign">学校法人柴学園 ／ 社会福祉法人雄雅会<br>理事長　<b>柴 明彦</b></div>
+  <div class="folio">02</div>
+</div>`);
+
+/* 3 Ch01 */
+P.push(`<div class="pg right">
+  <div class="tab">ORIGIN</div>
+  <div class="chaphead"><div class="chapno">01</div><div><div class="eyebrow" style="margin:0">CHAPTER</div><div class="chapen">ORIGIN</div></div></div>
+  <h2>志を継ぐ、という決断</h2>
+  <p>柴学園の前身、潮止幼稚園は昭和46年（1971年）に設立されました。創設者は柴理事長の父です。学校法人として地域の乳幼児教育を担い続け、40年以上にわたってその役割を果たしてきました。</p>
+  <p>しかし理事長自身は、若いころから家業継承の圧力に抗い、自らの意志で経済学部を選び、大学在学中に起業を決意した人物です。貿易ビジネスで頭角を現し、20代半ばに自社を設立して欧州との直接取引を開始。さらに金融・不動産へと事業領域を広げ、株式上場申請の準備段階にまで到達していました。起業から27年目のことでした。</p>
+  <p>そこに、父からの一言が来た。2012年2月。末期がんで余命1か月、病院のベッドに伏す父から、「幼稚園をどうする？」と唐突に問われた。</p>
+  <div class="box"><div class="bt">「継がなかったらどうなる？」</div><p>「残念だが、私の建学の志しは途絶えることになる」──父はそう答えました。</p></div>
+  <div class="folio">03</div>
+</div>`);
+
+/* 4 Ch01 続き */
+P.push(`<div class="pg left">
+  <div class="tab">ORIGIN</div>
+  <h2>説明なき就任から、14年</h2>
+  <p>ここまで築き上げたものをすべて脇に置いてでも幼稚園を継承するという、一世一代の決断がここから始まります。「俺が継ぐから、志しは閉ざさない」──その言葉が、柴明彦の第二の人生を動かしました。</p>
+  <p>当時、職員は誰も後継者の存在を知りませんでした。父は長男の存在を園長にも職員にも伝えておらず、突然現れた理事長に「この人は誰？」という空気があったのは事実です。</p>
+  <p>理事長はあえて説明しませんでした。「言いたいことはたくさんあったが、実績を示した時にこそ、自分の本当の姿を語る」──そう腹を括った。その姿勢を貫いたまま、気づけば14年が経ちました。</p>
+  <p>今このコーポレートブックが存在するのは、14年をかけて積み上げた実績と確信があるからです。「自信が確信に変わった今、あらためて理念を語る時」──理事長の言葉は、そこから始まっています。</p>
+  <div class="folio">04</div>
+</div>`);
+
+/* 5 Ch02 */
+P.push(`<div class="pg right">
+  <div class="tab" style="background:var(--pink)">WHY NOW</div>
+  <div class="chaphead"><div class="chapno" style="color:var(--pink)">02</div><div><div class="eyebrow" style="margin:0">CHAPTER</div><div class="chapen">WHY NOW</div></div></div>
+  <h2>なぜ、今この保育なのか</h2>
+  <h3>世界で目撃した、教育の原点</h3>
+  <p>保育の世界に入る前、20代後半のヨーロッパでの体験が、その後の保育観の核心をつくりました。貿易ビジネスで訪れたドイツ・ハンブルクで出会った若者たちは、流暢な英語で思想や倫理観を語り、異文化に旺盛な好奇心を持ち、主張は明確で、人の意見にも真剣に耳を傾ける存在でした。</p>
+  <p>のちに判明したのは、彼らがスイスの国際バカロレア（IB）認定校の学生だったという事実です。3歳からのキンダーガーデンを起点に、探究型学習と主体性を核とした教育を受けて育った若者たちでした。</p>
+  <div class="folio">05</div>
+</div>`);
+
+/* 6 Ch02 続き */
+P.push(`<div class="pg left">
+  <div class="tab" style="background:var(--pink)">WHY NOW</div>
+  <h3>「主体性」ブームへの、静かな警戒</h3>
+  <p>子ども家庭庁が「子どもがまん中」を掲げた時代、日本の保育業界では一斉保育から主体性保育への転換が急速に進みました。しかし理事長は、そのブームに一線を引いています。保育観の転換を短期間で無理に行えばヒヤリハットが連続し、子どものインシデントリスクが高まる。見守りを担う人材育成が追いつかないまま看板だけを変えても、子どもには何も届かない、という診断です。</p>
+  <div class="pull">「主体性・見守る・子ども中心・自由」を研修を数十回受けたくらいで実践できると思っているなら、それは危険だ。</div>
+  <h3>就学後に現れる、乳幼児期の影響</h3>
+  <p>保育の結果は数値化されません。しかしその影響が顕在化するのは、就学後3〜4年、小学校4年生頃だという研究知見があります。この時期に思考・行動の差として現れるのが「認知スキル」の差です。</p>
+  <div class="box"><div class="bt">ハックマン教授の知見（シカゴ大学／ノーベル経済学賞）</div><p>教育への投資は早ければ早いほど効果が大きい。乳幼児期への人的・環境的投資のリターンは、就学以降のどの時期への投資よりも高い──今日の教育経済学の共通認識です。</p></div>
+  <div class="folio">06</div>
+</div>`);
+
+/* 7 Ch03 */
+P.push(`<div class="pg right">
+  <div class="tab" style="background:var(--blue)">PHILOSOPHY</div>
+  <div class="chaphead"><div class="chapno" style="color:var(--blue)">03</div><div><div class="eyebrow" style="margin:0">CHAPTER</div><div class="chapen">PHILOSOPHY</div></div></div>
+  <h2>保育の核心：思想と価値観</h2>
+  <h3>10年間の失敗から導いた、確信</h3>
+  <p>理事長は就任直後、自身のグローバルビジネス経験をそのまま保育に持ち込もうとしました。英語教育、世界地理のカリキュラム、早期学習プログラム──やってみると、子どもたちは無関心でした。「子どもたちはその様なことに興味も関心もなく、遊ぶことに夢中でした」。その観察が出発点になりました。</p>
+  <div class="pull">基本に立ち返ると、幼児教育での実践も結果もないまま邁進しても、理解されるはずがない。</div>
+  <h3>「好き」を見つける環境設計</h3>
+  <p>乳幼児期に必要なのは、詰め込まれることでも管理されることでもなく、自分の「好き」を見つけること。だから法人が設計するのは「カリキュラム」ではなく「環境」です。</p>
+  <div class="folio">07</div>
+</div>`);
+
+/* 8 Ch03 続き */
+P.push(`<div class="pg left">
+  <div class="tab" style="background:var(--blue)">PHILOSOPHY</div>
+  <h3>主体性と認知スキル、その両立</h3>
+  <p>「遊びだけでいい」とは言いません。自由・主体性だけでは学習への拒絶が最大のリスクになる。法人の答えは「環境設定によって、子ども自身が選び取るように仕向ける」こと。押しつけない。しかし何もしない訳でもない。子どもが“興味・関心を持って動き出す”場所をつくることが、大人の仕事です。</p>
+  <h3>幼児期の英語教育について</h3>
+  <p>英語力は人生を豊かにする可能性があります。しかし乳幼児期に英語教育を受けたからといって就学に優位に立つとは言いきれません。重要なのは興味関心です。法人は「英語教育」を実施するのではなく、英語が「好きになれる環境」を設計する立場を取っています。</p>
+  <h3>「良い園」の定義を問い直す</h3>
+  <p>年間計画が学習的であれば教育的施設である──そう思い込んでいる運営者は、本来の乳幼児教育の根幹からずれているのではないか。法人・施設・親の三者が形成する「教育的協力の三角形」があって初めて、教育的投資は機能します。</p>
+  <div class="folio">08</div>
+</div>`);
+
+/* 9 Ch04 */
+P.push(`<div class="pg right">
+  <div class="tab" style="background:var(--yellow);color:#171412">PRACTICE</div>
+  <div class="chaphead"><div class="chapno" style="color:#D9A800">04</div><div><div class="eyebrow" style="margin:0">CHAPTER</div><div class="chapen">PRACTICE</div></div></div>
+  <h2>現場で実践していること</h2>
+  <h3>環境投資を、経営判断として行う</h3>
+  <p>「法人・施設は、教育投資された資財を有効に活用し、子どもが無理なく学習活動に取り組めるための環境設定が必要だ」。絵本・積木・パズル等の知育的備品の充実は、コスト削減ではなく教育投資として位置付けています。現場で「予算がない」と言い訳をする前に、何に投資するかの優先順位を理事長自身が決断し続けています。</p>
+  <h3>人材育成を、最重要インフラと位置付ける</h3>
+  <p>保育の質は、最終的に人が決めます。「主体性保育」への移行を急ぐあまり人材育成を後回しにした施設が、ヒヤリハットを繰り返し、やがて一斉保育に戻らざるを得なくなる──この失敗パターンを法人は明確に認識し、回避しています。</p>
+  <div class="pull">教育とは、子どもの力を信じて待つこと。</div>
+  <div class="folio">09</div>
+</div>`);
+
+/* 10 Ch05 */
+P.push(`<div class="pg left">
+  <div class="tab" style="background:var(--orange)">GOVERNANCE</div>
+  <div class="chaphead"><div class="chapno">05</div><div><div class="eyebrow" style="margin:0">CHAPTER</div><div class="chapen">GOVERNANCE</div></div></div>
+  <h2>組織としての意思決定</h2>
+  <h3>2法人体制の意味</h3>
+  <p>学校法人柴学園と社会福祉法人雄雅会の二法人体制は、偶然ではなく戦略的な設計です。幼保連携型認定こども園、認可保育所、小規模保育、そして将来の児童発達支援センターまで含め、乳幼児期のさまざまなニーズに面的に応答できる体制を構築しています。両法人の事務局を東京・銀座に一本化しているのも、情報の集約と意思決定の一元化のためです。</p>
+  <h3>17園という規模が意味すること</h3>
+  <p>2026年4月時点で、両法人合計の施設数は17園。ただし規模は目的ではありません。「地域の子どもに対して、可能な限り教育的投資を行うことが法人の役務」であり、施設数はその実現手段です。</p>
+  <div class="folio">10</div>
+</div>`);
+
+/* 11 Ch05 続き */
+P.push(`<div class="pg right">
+  <div class="tab" style="background:var(--orange)">GOVERNANCE</div>
+  <h3>「理念」を旗印にする意味</h3>
+  <p>理念共有は「美しい言葉を額に飾る」ことではありません。現場の判断に一貫性を持たせるための、組織的インフラです。理事長が13年かけて語らなかった理念を今語ることには明確な意図があります。それは、組織が次のステージに進む準備が整ったという宣言です。</p>
+  <h3>ガバナンスと現場の接続</h3>
+  <p>理事長は、保育現場を外側から眺めているわけではありません。幼稚園・認定こども園・認可保育所それぞれの施設類型を経験し、認定・認可の行政対応、研修や協会での役職、学術的知見の調査を通じて「現場の真実」と向き合ってきた経営者です。</p>
+  <h3>事業継承から経営革新へ</h3>
+  <p>2015年の認定こども園移行、2014年以降の保育所展開、2018年の雄雅会設立。2019年から2022年の4年間だけで10園以上が開園しました。補助金頼みではなく、将来の社会課題に先手を打つ経営です。</p>
+  <div class="folio">11</div>
+</div>`);
+
+/* 12 Ch06 */
+P.push(`<div class="pg left">
+  <div class="tab" style="background:var(--pink)">VISION</div>
+  <div class="chaphead"><div class="chapno" style="color:var(--pink)">06</div><div><div class="eyebrow" style="margin:0">CHAPTER</div><div class="chapen">VISION</div></div></div>
+  <h2>2030年以降へ向けた視点</h2>
+  <h3>少子化時代に保育を続ける、という選択</h3>
+  <p>子どもの数が減れば定員充足率は下がり、経営を圧迫します。それでも拡充を続ける答えは、「残る施設になる」という戦略です。少子化が進むほど、「質」で選ばれる施設と閉園を迫られる施設に二極化する。だから今、理念と実践の質を上げることに投資します。</p>
+  <h3>乳幼児施設と大人との関係性の再設計</h3>
+  <p>2030年以降、乳幼児施設には「親への支援」「地域との連携」「障害児支援との連続性」まで含めた社会インフラとしての役割が強まります。雄雅会が計画する児童発達支援センター（仮称「しおどめ学園」）は、その最初の一歩です。</p>
+  <div class="folio">12</div>
+</div>`);
+
+/* 13 Ch06 続き＋宣誓 */
+P.push(`<div class="pg right">
+  <div class="tab" style="background:var(--pink)">VISION</div>
+  <h3>世界標準から、日本の保育を問い直す</h3>
+  <p>国際バカロレア（IB）の視点からは、日本の保育は「教育後進国」になりつつあると理事長は警鐘を鳴らしています。世界の子どもたちが探究型学習によって自主性と批判的思考力を身につけているのに対し、日本の幼児教育は依然として一斉管理型の慣性を引きずっています。</p>
+  <p>法人が目指すのは、IBやモンテッソーリの理念を直接輸入することではなく、「日本の乳幼児施設という条件の中で、子どもの主体性と認知スキル形成を両立させる実践モデル」を構築することです。</p>
+  <div class="pull" style="border-color:var(--pink)">目的を定めたねらいに忠実に向かい、子どもの発達と成長に則し、そこにガバナンスを発揮できる組織づくりを行うことを、ここに宣誓いたします。</div>
+  <p style="text-align:right;font-size:10.5px;color:var(--ink-soft)">これは対外的なアピールではなく、全職員に向けた理事長としての約束です。</p>
+  <div class="folio">13</div>
+</div>`);
+
+/* 14 メッセージ */
+P.push(`<div class="pg left tight">
+  <div class="eyebrow">MESSAGE</div>
+  <h2>ステークホルダーへのメッセージ</h2>
+  <h3>職員の皆さんへ</h3>
+  <p>この冊子は、あなたに「何かをさせる」ための指示書ではありません。私たちが何のためにここにいるかを、共に確認するための媒体です。方向が定まれば、現場の判断も一貫します。ただ一つ問い続けてください。「この子の力を、今日私は信じられたか」と。</p>
+  <h3>保護者・地域の皆さまへ</h3>
+  <p>私たちが何を考え、何を判断し、何に投資してきたかを、誠実に伝えるために作りました。もう一つだけ確認していただきたいのは「この施設は、子どもの10年後を考えているか」という問いです。今日の「遊び」が、将来の「学ぶ力」になる。その連鎖を意識した環境を、毎日更新し続けています。</p>
+  <h3>行政・関係機関の皆さまへ</h3>
+  <p>施設の量的整備から質的向上への転換が求められる時代です。関東一円17施設のネットワークは、地域の子育て支援インフラとして機能し続けます。行政との連携においては、透明性と誠実性を最優先します。</p>
+  <div class="folio">14</div>
+</div>`);
+
+/* 15 法人概要（柴学園） */
+P.push(`<div class="pg right profile tight">
+  <h2>法人概要</h2>
+  <div class="name">学校法人 柴学園</div>
+  <dl class="dl">
+    <dt>法人名</dt><dd>学校法人 柴学園</dd>
+    <dt>設立</dt><dd>昭和46年（1971年）12月</dd>
+    <dt>理事長</dt><dd>柴 明彦</dd>
+    <dt>職員数</dt><dd>298名（令和6年4月現在）</dd>
+    <dt>法人本部</dt><dd>〒340-0813 埼玉県八潮市木曽根1097-2</dd>
+    <dt>事務局</dt><dd>〒104-0061 東京都中央区銀座8-15-6 2F</dd>
+  </dl>
+  <div class="flabel">運営施設一覧</div>
+  <ul class="flist">
+    <li>認定こども園 しおどめの森（幼保連携認定こども園）</li>
+    <li>しおどめ保育園 八潮駅北（認可保育所）</li>
+    <li>しおどめ保育園 京急蒲田駅前（小規模保育事業A型）</li>
+    <li>しおどめ保育園 小規模認可（小規模保育事業A型）</li>
+    <li>しおどめ保育園 江戸川中央（小規模保育事業A型）</li>
+    <li>しおどめ保育園 春日部（小規模保育事業A型）</li>
+    <li>しおどめ保育園 越谷（小規模保育事業A型）</li>
+    <li>しおどめ保育園 八潮茜町（小規模保育事業A型）</li>
+    <li>ふれあいしおどめ保育園（認可保育所）</li>
+    <li>しおどめ保育園 つくば（認可保育所）</li>
+    <li>しおどめ保育園 稲城（認可保育所）</li>
+    <li>しおどめ保育園 久喜（小規模保育事業A型）</li>
+    <li>しおどめ保育園 三郷中央（小規模保育事業A型）</li>
+    <li>ふれあいしおどめ保育園 八潮（認可保育所）</li>
+  </ul>
+  <div class="folio">18</div>
+</div>`);
+
+/* 16 法人概要（雄雅会） */
+P.push(`<div class="pg left profile tight">
+  <h2>法人概要</h2>
+  <div class="name">社会福祉法人 雄雅会</div>
+  <dl class="dl">
+    <dt>法人名</dt><dd>社会福祉法人 雄雅会</dd>
+    <dt>設立</dt><dd>平成30年（2018年）12月</dd>
+    <dt>理事長</dt><dd>柴 明彦</dd>
+    <dt>職員数</dt><dd>47名（令和6年4月現在）</dd>
+    <dt>法人本部</dt><dd>〒340-0814 埼玉県八潮市南川崎713番地3</dd>
+    <dt>事務局</dt><dd>〒104-0061 東京都中央区銀座8-15-6 2F</dd>
+  </dl>
+  <div class="flabel">運営施設一覧</div>
+  <ul class="flist">
+    <li>八潮しおどめ保育園（認可保育所・定員75名）</li>
+    <li>守谷しおどめ保育園（認可保育所・定員90名）</li>
+    <li>しおどめなかよし保育園（認可保育所・2026年4月開園）</li>
+  </ul>
+  <div class="flabel" style="margin-top:26px">WEB</div>
+  <div style="font-size:10px;line-height:2;color:var(--ink-soft)">
+    学校法人柴学園　https://www.gakuhou-shibagakuen.com<br>
+    社会福祉法人雄雅会　https://www.yugakai.org
+  </div>
+  <div class="folio">19</div>
+</div>`);
+
+/* 17 裏表紙 */
+P.push(`<div class="backcover">
+  <div class="bo"></div><div class="bp"></div>
+  <div class="in">
+    <div class="q">子どもの力を信じて、待つ。</div>
+    <div class="u">CORPORATE BOOK<br>SHIBA GAKUEN &amp; YUGAKAI</div>
+  </div>
+</div>`);
+
+/* ---------- 描画 ---------- */
+const book=document.getElementById('book'), stage=document.getElementById('stage');
+const prevBtn=document.getElementById('prev'), nextBtn=document.getElementById('next');
+const count=document.getElementById('count'), meter=document.querySelector('#meter i');
+const hint=document.getElementById('hint');
+let single = window.innerWidth < 860;
+let leafIdx = 0;        // spread: めくり終えた枚数
+let pageIdx = 0;        // single: 表示中のページ
+const nLeaves = Math.ceil(P.length/2);
+
+function buildSpread(){
+  book.classList.remove('single'); book.innerHTML='';
+  for(let i=0;i<nLeaves;i++){
+    const leaf=document.createElement('div'); leaf.className='leaf';
+    const f=document.createElement('div'); f.className='face f'; f.innerHTML=P[i*2]||'';
+    const b=document.createElement('div'); b.className='face b'; b.innerHTML=P[i*2+1]||'';
+    leaf.append(f,b); book.appendChild(leaf);
+  }
+  syncSpread();
+}
+function syncSpread(){
+  [...book.children].forEach((leaf,i)=>{
+    const flipped = i < leafIdx;
+    leaf.classList.toggle('flipped',flipped);
+    leaf.style.zIndex = flipped ? i+1 : nLeaves-i;
+  });
+}
+function buildSingle(){
+  book.classList.add('single'); book.innerHTML='';
+  P.forEach((html,i)=>{
+    const c=document.createElement('div'); c.className='card'; c.innerHTML=html;
+    c.style.zIndex = P.length-i; book.appendChild(c);
+  });
+  syncSingle();
+}
+function syncSingle(){
+  [...book.children].forEach((c,i)=>{
+    c.classList.toggle('away', i<pageIdx);
+    c.style.visibility = i<pageIdx-1 ? 'hidden' : 'visible';
+  });
+}
+function go(d){
+  if(single){
+    const n=Math.min(Math.max(pageIdx+d,0),P.length-1);
+    if(n===pageIdx) return; pageIdx=n; syncSingle();
+  }else{
+    const n=Math.min(Math.max(leafIdx+d,0),nLeaves);
+    if(n===leafIdx) return; leafIdx=n; syncSpread();
+  }
+  update(); hint.style.opacity=0;
+}
+function update(){
+  const cur = single ? pageIdx+1 : Math.min(leafIdx*2+1,P.length);
+  count.textContent = `${String(cur).padStart(2,'0')} / ${P.length}`;
+  meter.style.width = ((cur-1)/(P.length-1)*100)+'%';
+  prevBtn.disabled = single ? pageIdx===0 : leafIdx===0;
+  nextBtn.disabled = single ? pageIdx===P.length-1 : leafIdx===nLeaves;
+}
+function fit(){
+  const bw = single?480:960, bh=640;
+  const s = Math.min((stage.clientWidth-24)/bw,(stage.clientHeight-24)/bh,1.2);
+  book.style.transform=`scale(${s})`;
+}
+function render(){ single ? buildSingle() : buildSpread(); update(); fit(); }
+
+nextBtn.onclick=()=>go(1); prevBtn.onclick=()=>go(-1);
+const fsBtn=document.getElementById('fs');
+fsBtn.onclick=e=>{
+  e.stopPropagation();
+  if(document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen?.();
+};
+document.addEventListener('fullscreenchange',()=>{
+  fsBtn.textContent = document.fullscreenElement ? '⤡' : '⤢';
+  setTimeout(fit,120);
+});
+addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' ') {e.preventDefault();go(1);}
+  if(e.key==='ArrowLeft') go(-1);
+});
+stage.addEventListener('click',e=>{
+  if(e.target.closest('a')) return;
+  go(e.clientX > stage.getBoundingClientRect().width/2 ? 1 : -1);
+});
+let sx=null;
+stage.addEventListener('touchstart',e=>sx=e.touches[0].clientX,{passive:true});
+stage.addEventListener('touchend',e=>{
+  if(sx===null) return; const dx=e.changedTouches[0].clientX-sx;
+  if(Math.abs(dx)>45) go(dx<0?1:-1); sx=null;
+},{passive:true});
+addEventListener('resize',()=>{
+  const s = window.innerWidth<860;
+  if(s!==single){ single=s; if(single) pageIdx=Math.min(leafIdx*2,P.length-1); else leafIdx=Math.floor(pageIdx/2); render(); }
+  else fit();
+});
+render();
+setTimeout(()=>hint.style.opacity=0,6000);
+</script>

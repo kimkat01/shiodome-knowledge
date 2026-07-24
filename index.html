@@ -133,13 +133,14 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif
 .ntag{display:inline-block;font-size:10px;padding:1px 6px;border-radius:5px;margin-right:5px;font-weight:700;vertical-align:middle;}
 
 /* ===== ナレッジボード（v7 新レイアウト） ===== */
-.kb-layout{display:flex;gap:14px;align-items:flex-start;}
+.kb-layout{display:flex;gap:14px;align-items:stretch;}
 .kb-main{flex:1;min-width:0;}
 .kb-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:10px;}
 .kb-grid .span4{grid-column:span 4;}
 .kb-grid .span3{grid-column:span 3;}
 .kb-grid .span6{grid-column:span 6;}
 .kb-panel{margin-top:10px;}
+#hojyokin-area{max-height:258px;overflow-y:auto;}
 .kb-card{background:#fff;border:1px solid #dddbd4;border-radius:12px;padding:20px 10px 16px;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .1s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;text-align:center;min-height:96px;}
 .kb-card:hover{border-color:#4A7FD4;box-shadow:0 3px 10px rgba(74,127,212,.12);transform:translateY(-1px);}
 .kb-ci{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
@@ -152,7 +153,7 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif
 .kb-side-card{min-height:64px;padding:14px 10px;}
 
 /* ===== ドメボット 実物大ウィジェット ===== */
-.domebot{width:250px;height:500px;flex-shrink:0;background:#fff;border-radius:16px;border:1px solid #dddbd4;overflow:hidden;box-shadow:0 4px 16px rgba(60,60,120,.08);}
+.domebot{width:250px;flex:1;min-height:400px;flex-shrink:0;background:#fff;border-radius:16px;border:1px solid #dddbd4;overflow:hidden;box-shadow:0 4px 16px rgba(60,60,120,.08);}
 .db-header{background:#4169e1;padding:10px 12px;display:flex;align-items:center;gap:8px;}
 .db-avatar{width:30px;height:30px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
 .db-avatar img{width:24px;height:24px;object-fit:contain;}
@@ -246,7 +247,7 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif
       <div class="nav-item" id="nav-domebot" onclick="navTo(this,'domebot-widget')">
         <span class="nav-icon">💬</span><span class="nav-label">ドメボット</span>
       </div>
-      <div class="nav-item" id="nav-corp" onclick="navTo(this,'card-corp')">
+      <div class="nav-item" id="nav-corp" onclick="selectNav(this);window.open('corporate-book-flipbook.html','_blank');">
         <span class="nav-icon">📘</span><span class="nav-label">コーポレートブック</span>
       </div>
 
@@ -328,7 +329,7 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif
           <!-- 最新のお知らせ（常時表示） -->
           <div class="widget kb-panel" id="notice-panel">
             <div class="widget-header" style="cursor:pointer;" onclick="highlightNav('nav-notice')"><span>🔔 最新のお知らせ</span></div>
-            <div class="ni"><div class="nd">2026/06/27</div><div class="nt"><span class="ntag bc-s" id="nt1">全園共通</span>【本部より】熱中症対策ガイドラインを更新しました</div></div>
+            <div class="ni"><div class="nd">2026/07/24</div><div class="nt"><span class="ntag bc-s" id="nt1">全園共通</span>通報案件</div></div>
             <div class="ni"><div class="nd">2026/06/25</div><div class="nt"><span class="ntag bc-s" id="nt2">全園共通</span>有給取得促進月間のお知らせ（7月）</div></div>
             <div class="ni"><div class="nd">2026/06/15</div><div class="nt"><span class="ntag bc-s" id="nt4">全園共通</span>コーポレートブック2026年版を公開しました</div></div>
           </div>
@@ -339,7 +340,7 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif
         <div class="domebot" id="domebot-widget">
           <iframe id="domebot-iframe" src="" title="ドメボット" loading="lazy" style="width:100%;height:100%;border:0;display:block;"></iframe>
         </div>
-        <div class="kb-card kb-side-card" id="card-corp" onclick="highlightNav('nav-corp')">
+        <div class="kb-card kb-side-card" id="card-corp" onclick="highlightNav('nav-corp');window.open('corporate-book-flipbook.html','_blank');">
           <div class="kb-ci" style="background:#E8F5E9;">📘</div>
           <div class="kb-ct">コーポレートブック</div>
           <span class="badge bc-s" id="b-corp">共通</span>
