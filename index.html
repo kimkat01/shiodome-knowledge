@@ -62,7 +62,7 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif
 .logout-btn:hover{color:#fff;}
 
 /* ===== 中央 + 右（案C ポータル） ===== */
-.portal{flex:1;min-width:0;display:flex;gap:16px;padding:18px 20px;align-items:stretch;}
+.portal{flex:1;min-width:0;display:flex;gap:16px;padding:18px 20px;align-items:stretch;position:relative;}
 .center{flex:1;min-width:0;display:flex;flex-direction:column;gap:14px;}
 .rightcol{width:320px;flex-shrink:0;display:flex;flex-direction:column;gap:12px;}
 
@@ -162,11 +162,14 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif
 .dbc-sub{font-size:11px;color:#c9cdf3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;}
 .dbc-name{font-size:20px;font-weight:800;color:#fff;line-height:1.05;}
 .dbc-dot{position:absolute;right:0;top:50%;transform:translateY(-50%);width:11px;height:11px;border-radius:50%;background:#37d67a;box-shadow:0 0 0 3px rgba(55,214,122,.25);}
-/* ==== 画面下のラインを揃える（中央=補助金 / 右=ドメボットが余白を充填） ==== */
-#hojyokin-panel{flex:1;display:flex;flex-direction:column;min-height:0;}
-#hojyokin-area{flex:1;max-height:none;min-height:0;overflow-y:auto;}
-.domebot-card{flex:1;display:flex;flex-direction:column;}
-.domebot-card .dbc-body{flex:1;}
+/* 補助金=4行固定 / ドメボットカードは自然な高さ（v14方式で底を合わせる） */
+#hojyokin-area{max-height:172px;overflow-y:auto;}
+/* ドメボット 全面チャットパネル：右カラムに重ねて全面表示。ヘッダーは付けず、チャット自身の見出しのみ（2重回避） */
+#domebot-panel{position:absolute;top:18px;right:20px;bottom:18px;width:320px;max-width:calc(100% - 40px);display:none;background:#fff;border:1px solid #d7d8e2;border-radius:16px;overflow:hidden;z-index:50;box-shadow:0 12px 44px rgba(20,20,50,.20);}
+#domebot-panel.open{display:block;}
+#domebot-frame{width:100%;height:100%;border:0;background:#fff;display:block;}
+.dbp-close{position:absolute;top:8px;right:8px;z-index:2;background:rgba(30,30,60,.55);border:none;color:#fff;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:background .15s;}
+.dbp-close:hover{background:rgba(30,30,60,.82);}
 </style>
 </head>
 <body>
@@ -330,6 +333,12 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif
       </div>
     </div>
 
+    <!-- ドメボット 全面チャットパネル（右カラムに重ねて表示・見出しはチャット側のみ） -->
+    <div id="domebot-panel">
+      <button class="dbp-close" onclick="closeDomebot()" title="閉じる"><i class="ti ti-x"></i></button>
+      <iframe id="domebot-frame" src="" title="ドメボット" allow="clipboard-write; microphone"></iframe>
+    </div>
+
   </div>
  </div>
 </div>
@@ -362,7 +371,17 @@ var KEYS_Y=[
   "yashio_shiodome","moriya","nakayoshi"
 ];
 var domebotUrl="";
-function openDomebot(){ if(domebotUrl){ window.open(domebotUrl,"_blank"); } }
+function openDomebot(){
+  if(!domebotUrl)updateDomebotFrame();
+  var f=document.getElementById("domebot-frame");
+  if(f&&f.src!==domebotUrl)f.src=domebotUrl;
+  var p=document.getElementById("domebot-panel");
+  if(p)p.classList.add("open");
+}
+function closeDomebot(){
+  var p=document.getElementById("domebot-panel");
+  if(p)p.classList.remove("open");
+}
 function updateDomebotFrame(){
   var s=law==="s";
   var sel=document.getElementById("garden-select");
@@ -372,6 +391,12 @@ function updateDomebotFrame(){
   var av=document.getElementById("db-avatar"); if(av)av.src=(s?DOME:YUGA);
   var sub=document.getElementById("db-sub");
   if(sub&&sel&&sel.selectedIndex>=0){sub.textContent=sel.options[sel.selectedIndex].text.replace(/^[SY]\d+\s*/,"")+"専用チャット";}
+  // パネルが開いていれば iframe も園切替に連動
+  var panel=document.getElementById("domebot-panel");
+  if(panel&&panel.classList.contains("open")){
+    var f=document.getElementById("domebot-frame");
+    if(f)f.src=domebotUrl;
+  }
 }
 function populateGardens(s){
   var sel=document.getElementById("garden-select");
