@@ -153,6 +153,9 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif
 .bcimg .tlock{position:absolute;top:1px;right:3px;font-size:12px;color:#5a6b78;background:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.22);}
 .domebot-card{background:#4b57d1;border-radius:16px;padding:15px 17px;cursor:pointer;position:relative;transition:background .15s;}
 .domebot-card:hover{background:#4250c2;}
+.domebot-card.dbc-yuga{background:#43a047;}
+.domebot-card.dbc-yuga:hover{background:#3c8f40;}
+.domebot-card.dbc-yuga .dbc-sub{color:#cfe9d4;}
 .dbc-head{color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;margin-bottom:14px;}
 .dbc-head i{font-size:15px;}
 .dbc-body{display:flex;align-items:center;gap:13px;position:relative;padding-right:18px;}
@@ -166,7 +169,24 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif
 #hojyokin-area{max-height:172px;overflow-y:auto;}
 /* ドメボット 全面チャットパネル：右カラムに重ねて全面表示。ヘッダーは付けず、チャット自身の見出しのみ（2重回避） */
 #domebot-panel{position:absolute;top:18px;right:20px;bottom:18px;width:320px;max-width:calc(100% - 40px);display:none;background:#fff;border:1px solid #d7d8e2;border-radius:16px;overflow:hidden;z-index:50;box-shadow:0 12px 44px rgba(20,20,50,.20);}
-#domebot-panel.open{display:block;}
+#domebot-panel.open{display:block;transform-origin:50% 100%;animation:genieOpen .5s cubic-bezier(.2,.85,.25,1) both;}
+#domebot-panel.closing{display:block;transform-origin:50% 100%;animation:genieClose .34s cubic-bezier(.55,0,.9,.35) both;}
+@keyframes genieOpen{
+  0%{transform:translateY(150px) scaleX(.10) scaleY(.02);opacity:0;}
+  35%{transform:translateY(70px) scaleX(.45) scaleY(.30);opacity:1;}
+  70%{transform:translateY(12px) scaleX(1) scaleY(.82);}
+  100%{transform:translateY(0) scale(1);opacity:1;}
+}
+@keyframes genieClose{
+  0%{transform:translateY(0) scale(1);opacity:1;}
+  100%{transform:translateY(150px) scaleX(.10) scaleY(.02);opacity:0;}
+}
+/* 全ボタン共通：ジニー風のタップ演出 */
+@keyframes geniePress{0%{transform:scale(1);}30%{transform:scaleX(1.06) scaleY(.86);}60%{transform:scaleX(.98) scaleY(1.03);}100%{transform:scale(1);}}
+.genie-press{animation:geniePress .30s ease;}
+@media (prefers-reduced-motion:reduce){
+  #domebot-panel.open,#domebot-panel.closing,.genie-press{animation:none;}
+}
 #domebot-frame{width:100%;height:100%;border:0;background:#fff;display:block;}
 .dbp-close{position:absolute;top:8px;right:8px;z-index:2;background:rgba(30,30,60,.55);border:none;color:#fff;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:background .15s;}
 .dbp-close:hover{background:rgba(30,30,60,.82);}
@@ -237,7 +257,7 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif
         <span class="nav-icon"><i class="ti ti-bell"></i></span><span class="nav-label">最新のお知らせ</span>
       </div>
       <div class="nav-item" id="nav-domebot" onclick="navTo(this,'domebot-widget')">
-        <span class="nav-icon"><i class="ti ti-message-chatbot"></i></span><span class="nav-label">ドメボット</span>
+        <span class="nav-icon"><i class="ti ti-message-chatbot"></i></span><span class="nav-label" id="db-navlabel">ドメボット</span>
       </div>
     </div>
     <div class="rail-bottom">
@@ -321,12 +341,12 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif
       </div>
 
       <div class="domebot-card" id="domebot-widget" onclick="openDomebot()" title="ドメボットを開く">
-        <div class="dbc-head"><i class="ti ti-message-2"></i> ドメボット</div>
+        <div class="dbc-head"><i class="ti ti-message-2"></i> <span id="db-headname">ドメボット</span></div>
         <div class="dbc-body">
           <div class="dbc-av"><img id="db-avatar" src="" alt="ドメくん"></div>
           <div class="dbc-txt">
             <div class="dbc-sub" id="db-sub">専用チャット</div>
-            <div class="dbc-name">ドメボット</div>
+            <div class="dbc-name" id="db-cardname">ドメボット</div>
           </div>
           <span class="dbc-dot"></span>
         </div>
@@ -376,12 +396,25 @@ function openDomebot(){
   var f=document.getElementById("domebot-frame");
   if(f&&f.src!==domebotUrl)f.src=domebotUrl;
   var p=document.getElementById("domebot-panel");
-  if(p)p.classList.add("open");
+  if(p){p.classList.remove("closing");p.classList.add("open");}
 }
 function closeDomebot(){
   var p=document.getElementById("domebot-panel");
-  if(p)p.classList.remove("open");
+  if(!p||!p.classList.contains("open"))return;
+  p.classList.add("closing");
+  setTimeout(function(){p.classList.remove("open");p.classList.remove("closing");},330);
 }
+// 全ボタン共通：クリック時にジニー風のタップ演出
+document.addEventListener("click",function(e){
+  var el=e.target.closest&&e.target.closest(".tile,.nav-item,.domebot-card,.dbp-close,.kb-card,.law-tab,.logout-btn");
+  if(!el)return;
+  el.classList.remove("genie-press");
+  void el.offsetWidth;
+  el.classList.add("genie-press");
+},true);
+document.addEventListener("animationend",function(e){
+  if(e.animationName==="geniePress")e.target.classList.remove("genie-press");
+});
 function updateDomebotFrame(){
   var s=law==="s";
   var sel=document.getElementById("garden-select");
@@ -434,6 +467,16 @@ function sel(l){
   document.getElementById("lsub").textContent=l==="s"?"学校法人 柴学園":"社会福祉法人 雄雅会";
   document.getElementById("lbtn").className="btn-login btn-"+l;
 }
+function applyBotName(){
+  var name=law==="s"?"ドメボット":"ユウガボット";
+  var mascot=law==="s"?"ドメくん":"ゆうがくん";
+  ["db-headname","db-cardname","db-navlabel"].forEach(function(id){
+    var e=document.getElementById(id); if(e)e.textContent=name;
+  });
+  var av=document.getElementById("db-avatar"); if(av)av.alt=mascot;
+  var card=document.getElementById("domebot-widget"); if(card){card.title=name+"を開く";card.classList.toggle("dbc-yuga",law==="y");}
+  var f=document.getElementById("domebot-frame"); if(f)f.title=name;
+}
 function goTop(){
   document.getElementById("login-screen").style.display="none";
   document.getElementById("top-screen").style.display="block";
@@ -446,6 +489,7 @@ function goTop(){
   ["b-mic","b-shinsei","b-corp"].forEach(function(id){var e=document.getElementById(id);if(e)e.className="badge "+bc;});
   ["nt1","nt2","nt4"].forEach(function(id){var e=document.getElementById(id);e.className="ntag "+bc;});
   updateDomebotFrame();
+  applyBotName();
   updateTime();
   loadHojyokin();
   renderCalendar();
