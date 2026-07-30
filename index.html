@@ -257,7 +257,7 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif
       <div class="kb-header">
         <div class="kb-title">ナレッジボード</div>
         <div class="law-pill"><i class="ti ti-building"></i><span id="sl-name">柴学園</span></div>
-        <div class="gsel-wrap"><i class="ti ti-map-pin"></i><select class="garden-select" id="garden-select" onchange="updateDomebotFrame()"></select></div>
+        <div class="gsel-wrap"><i class="ti ti-map-pin"></i><select class="garden-select" id="garden-select" onchange="updateDomebotFrame();updateUqLink()"></select></div>
         <div class="search-pill"><i class="ti ti-search"></i><span>キーワードで探す…</span></div>
       </div>
 
@@ -373,6 +373,10 @@ var KEYS_S=[
 var KEYS_Y=[
   "yashio_shiodome","moriya","nakayoshi"
 ];
+// 有給チェッカー(UQ)は「施設名（正式名称）」を ?garden= に渡す。
+// 例: garden-select「S11 しおどめ保育園稲城」→ garden=しおどめ保育園稲城
+// スプレッドシート「職員マスタ」のgarden列も施設名（正式名称）に統一しておくこと。
+var UQ_ENCHO_BASE="https://hojyokinsenyo-cell.github.io/uqcheck/encho.html";
 var domebotUrl="";
 function openDomebot(){
   if(!domebotUrl)updateDomebotFrame();
@@ -437,6 +441,16 @@ function sel(l){
   document.getElementById("lsub").textContent=l==="s"?"学校法人 柴学園":"社会福祉法人 雄雅会";
   document.getElementById("lbtn").className="btn-login btn-"+l;
 }
+function updateUqLink(){
+  var sel=document.getElementById("garden-select");
+  var idx=sel?sel.selectedIndex:0; if(idx<0)idx=0;
+  var raw=(sel&&sel.options[idx])?sel.options[idx].text:"";
+  var name=raw.replace(/^[SY]\d+\s*/,""); // 施設名（正式名称）に整形：「S11 しおどめ保育園稲城」→「しおどめ保育園稲城」
+  var url=UQ_ENCHO_BASE+"?garden="+encodeURIComponent(name);
+  ["nav-uq","card-uq"].forEach(function(id){
+    var e=document.getElementById(id); if(e)e.href=url;
+  });
+}
 function applyBotName(){
   var name=law==="s"?"ドメボット":"ユウガボット";
   var mascot=law==="s"?"ドメくん":"ゆうがくん";
@@ -460,6 +474,7 @@ function goTop(){
   ["nt1","nt2","nt4"].forEach(function(id){var e=document.getElementById(id);e.className="ntag "+bc;});
   updateDomebotFrame();
   applyBotName();
+  updateUqLink();
   updateTime();
   loadHojyokin();
   renderCalendar();
