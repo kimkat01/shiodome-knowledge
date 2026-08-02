@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>規約・マニュアル｜しおどめグループ</title>
+<style>
+  :root{
+    --navy:#1a1a2e;
+    --blue:#2563eb;
+    --blue-soft:#e8efff;
+    --line:#e3e6ee;
+    --text:#1f2430;
+    --muted:#6b7280;
+    --bg:#f5f6fa;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;}
+  body{
+    font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;
+    color:var(--text);background:var(--bg);
+    display:flex;flex-direction:column;height:100vh;
+  }
+
+  /* ヘッダー */
+  header{
+    background:var(--navy);color:#fff;
+    padding:14px 20px;display:flex;align-items:center;gap:12px;flex:none;
+  }
+  header .title{font-size:18px;font-weight:700;letter-spacing:.02em;}
+  header .sub{font-size:12px;color:#b9bfd6;}
+  header a.back{
+    margin-left:auto;color:#cdd3ea;text-decoration:none;font-size:13px;
+    border:1px solid #3a3f5c;padding:6px 12px;border-radius:8px;
+  }
+  header a.back:hover{background:#2a2f4a;color:#fff;}
+
+  /* 本体レイアウト */
+  .wrap{flex:1;display:flex;min-height:0;}
+
+  /* 左：文書一覧 */
+  nav.list{
+    width:260px;flex:none;background:#fff;border-right:1px solid var(--line);
+    overflow-y:auto;padding:14px 12px;
+  }
+  nav.list h2{
+    font-size:12px;color:var(--muted);font-weight:700;
+    margin:6px 6px 10px;letter-spacing:.08em;
+  }
+  .doc-btn{
+    display:block;width:100%;text-align:left;cursor:pointer;
+    border:1px solid transparent;border-radius:10px;
+    padding:11px 12px;margin-bottom:6px;font-size:14px;line-height:1.35;
+    background:transparent;color:var(--text);
+  }
+  .doc-btn:hover{background:#f2f5ff;}
+  .doc-btn.active{
+    background:var(--blue-soft);border-color:#c3d4ff;
+    color:var(--blue);font-weight:700;
+  }
+  .doc-btn .grp{display:block;font-size:11px;color:var(--muted);font-weight:400;margin-top:2px;}
+  .doc-btn.active .grp{color:#5b7fd6;}
+
+  /* 右：ビューア */
+  main.viewer{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--bg);}
+  .viewer-bar{
+    display:flex;align-items:center;gap:10px;
+    padding:10px 16px;border-bottom:1px solid var(--line);background:#fff;flex:none;
+  }
+  .viewer-bar .name{font-weight:700;font-size:15px;}
+  .viewer-bar .open{
+    margin-left:auto;font-size:13px;color:var(--blue);text-decoration:none;
+    border:1px solid #c3d4ff;padding:6px 12px;border-radius:8px;
+  }
+  .viewer-bar .open:hover{background:var(--blue-soft);}
+  .frame-holder{flex:1;min-height:0;padding:12px 16px;}
+  iframe#pdf{width:100%;height:100%;border:1px solid var(--line);border-radius:10px;background:#fff;}
+
+  /* スマホ：一覧を上部に横並び */
+  @media (max-width:760px){
+    .wrap{flex-direction:column;}
+    nav.list{
+      width:100%;border-right:none;border-bottom:1px solid var(--line);
+      display:flex;gap:8px;overflow-x:auto;padding:10px 12px;
+    }
+    nav.list h2{display:none;}
+    .doc-btn{width:auto;white-space:nowrap;margin-bottom:0;flex:none;}
+    .doc-btn .grp{display:none;}
+    .frame-holder{padding:8px;}
+  }
+</style>
+</head>
+<body>
+  <header>
+    <div>
+      <div class="title">規約・マニュアル</div>
+      <div class="sub">しおどめグループ ナレッジポータル</div>
+    </div>
+    <a class="back" href="index.html">← ポータルへ戻る</a>
+  </header>
+
+  <div class="wrap">
+    <nav class="list" id="list">
+      <h2>文書一覧</h2>
+      <!-- ボタンはJSで生成 -->
+    </nav>
+
+    <main class="viewer">
+      <div class="viewer-bar">
+        <span class="name" id="currentName">読み込み中…</span>
+        <a class="open" id="openTab" href="#" target="_blank" rel="noopener">別タブで開く</a>
+      </div>
+      <div class="frame-holder">
+        <iframe id="pdf" title="PDFビューア"></iframe>
+      </div>
+    </main>
+  </div>
+
+<script>
+  /* ===== ここに文書を追加・編集します =====
+     title : 一覧に表示する名前
+     file  : 同じフォルダに置いたPDFのファイル名
+     group : （任意）分類ラベル。空欄でもOK              */
+  var DOCS = [
+    { title:"正規職員 就業規則",   file:"seiki-shugyo-kisoku.pdf", group:"しおどめ保育園 三郷中央" },
+    { title:"パート職員 就業規則", file:"part-shugyo-kisoku.pdf",  group:"しおどめ保育園 三郷中央" },
+    { title:"正規職員 給与規定",   file:"seiki-kyuyo-kitei.pdf",   group:"しおどめ保育園 三郷中央" },
+    { title:"管理規程",            file:"kanri-kitei.pdf",         group:"法人共通" },
+    { title:"経理規程",            file:"keiri-kitei.pdf",         group:"法人共通" }
+  ];
+  /* ======================================= */
+
+  var listEl = document.getElementById('list');
+  var frame  = document.getElementById('pdf');
+  var nameEl = document.getElementById('currentName');
+  var openTab= document.getElementById('openTab');
+  var buttons = [];
+
+  function show(i){
+    var d = DOCS[i];
+    // ツールバー無しで埋め込み（ダウンロード導線を出さない）
+    frame.src = d.file + "#toolbar=0&navpanes=0";
+    nameEl.textContent = d.title;
+    openTab.href = d.file;
+    buttons.forEach(function(b,j){ b.classList.toggle('active', j===i); });
+  }
+
+  DOCS.forEach(function(d,i){
+    var b = document.createElement('button');
+    b.className = 'doc-btn';
+    b.innerHTML = d.title + (d.group ? '<span class="grp">'+d.group+'</span>' : '');
+    b.addEventListener('click', function(){ show(i); });
+    listEl.appendChild(b);
+    buttons.push(b);
+  });
+
+  // 開いた瞬間に先頭の文書を表示
+  if (DOCS.length) show(0);
+</script>
+</body>
+</html>
