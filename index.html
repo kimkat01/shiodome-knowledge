@@ -566,5 +566,20 @@ function toggleHojyokin(i){
   el.style.display=(el.style.display==="none")?"block":"none";
 }
 </script>
+
+<!-- feedから戻ったとき等、#main付きURLならログインを飛ばしてメイン画面を表示 -->
+<script>
+(function(){
+  try{
+    var h=(location.hash||"").toLowerCase();
+    if(h.indexOf("main")>-1){
+      if(h.indexOf("-y")>-1){ try{ law="y"; }catch(e){} }
+      else { try{ law="s"; }catch(e){} }
+      if(typeof goTop==="function"){ goTop(); }
+    }
+  }catch(e){}
+})();
+</script>
+
 </body>
 </html>
