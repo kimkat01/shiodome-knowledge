@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ヒヤリハットくん ── 事務所モニター（操作プロトタイプ）</title>
+<style>
+  :root{
+    --teal:#4169e1; --teal2:#2F8073; --teal-bg:#E9F3F0;
+    --alert:#C6483C; --alert-bg:#FBEDEB;
+    --amber:#B4801E; --amber-bg:#F7EFDC;
+    --ink:#26251F; --ink2:#5F5D57; --ink3:#918F88;
+    --line:#E6E5E0; --line2:#F0EFEB; --bg:#F3F3F0; --surface:#FFFFFF;
+    --jp:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",YuGothic,"Noto Sans JP","Meiryo",sans-serif;
+    --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+    --shadow:0 1px 2px rgba(30,30,25,.04),0 4px 14px rgba(30,30,25,.05);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:var(--jp);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;overflow:hidden}
+  button{font-family:inherit;cursor:pointer}
+
+  /* ===== top bar ===== */
+  .topbar{height:58px;background:var(--teal);display:flex;align-items:center;padding:0 20px;gap:16px;color:#fff;position:relative;z-index:30}
+  .brand{display:flex;align-items:baseline;gap:9px}
+  .brand b{font-size:17px;font-weight:800;letter-spacing:.02em}
+  .brand span{font-size:12px;color:#C7D6F5}
+  .garden{font-size:12.5px;color:#D6E1F8;border:1px solid rgba(255,255,255,.28);border-radius:100px;padding:3px 12px}
+  .grow{flex:1}
+  .live{display:flex;align-items:center;gap:7px;font-size:12px;color:#E4EBFA;font-family:var(--mono)}
+  .live .dot{width:8px;height:8px;border-radius:50%;background:#7DE0B0;box-shadow:0 0 0 0 rgba(125,224,176,.7);animation:pulse 2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(125,224,176,.6)}70%{box-shadow:0 0 0 7px rgba(125,224,176,0)}100%{box-shadow:0 0 0 0 rgba(125,224,176,0)}}
+  .clock{font-family:var(--mono);font-size:13px;color:#EAF3F1;min-width:74px;text-align:right}
+  .listen-btn{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);color:#fff;
+    border-radius:100px;padding:6px 13px;font-size:12.5px;transition:.15s}
+  .listen-btn:hover{background:rgba(255,255,255,.2)}
+  .listen-btn.on{background:#fff;color:var(--teal);border-color:#fff;font-weight:700}
+  .listen-btn .mic{width:9px;height:9px;border-radius:50%;background:currentColor;opacity:.85}
+  .listen-btn.on .mic{background:var(--alert);animation:pulse2 1.2s infinite}
+  @keyframes pulse2{0%,100%{opacity:1}50%{opacity:.3}}
+
+  /* ===== layout ===== */
+  .body{display:flex;height:calc(100% - 58px)}
+  .side{width:212px;background:var(--surface);border-right:1px solid var(--line);padding:14px 12px;display:flex;flex-direction:column;gap:3px;flex:0 0 auto}
+  .nav{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:var(--ink2);font-size:14px;font-weight:600;
+    border:none;background:none;text-align:left;width:100%;transition:.13s}
+  .nav:hover{background:var(--line2)}
+  .nav.active{background:#E8EDFB;color:var(--teal)}
+  .nav svg{width:18px;height:18px;flex:0 0 auto;stroke:currentColor;fill:none;stroke-width:1.7}
+  .nav .badge{margin-left:auto;background:var(--alert);color:#fff;font-size:10.5px;font-weight:800;border-radius:100px;padding:1px 7px;min-width:18px;text-align:center}
+  .side-sep{height:1px;background:var(--line);margin:10px 6px}
+  .side-foot{margin-top:auto;font-size:10.5px;color:var(--ink3);padding:10px 12px;line-height:1.6}
+
+  .main{flex:1;overflow-y:auto;padding:24px 28px 60px}
+  .page-h{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
+  .page-h h1{font-size:22px;font-weight:800}
+  .page-h .sub{font-size:12.5px;color:var(--ink3)}
+  .updated{font-size:11.5px;color:var(--ink3);font-family:var(--mono);margin-bottom:18px}
+
+  /* stat cards */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:15px 16px;box-shadow:var(--shadow)}
+  .stat .k{font-size:12px;color:var(--ink2);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+  .stat .v{font-size:30px;font-weight:800;line-height:1;letter-spacing:-.01em}
+  .stat .v small{font-size:14px;color:var(--ink3);font-weight:600;margin-left:2px}
+  .stat.warn .v{color:var(--alert)}
+  .stat .k .ic{width:15px;height:15px;stroke-width:1.8;fill:none}
+  /* donut stat cards */
+  .stat-c{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:16px 12px 14px;
+    box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;gap:8px}
+  .donut{width:108px;height:108px;display:block}
+  .donut-big{font-family:var(--jp);font-size:26px;font-weight:800;fill:var(--ink);text-anchor:middle}
+  .donut-big small{font-size:13px;fill:var(--ink3)}
+  .donut-small{font-family:var(--jp);font-size:11px;font-weight:600;fill:var(--ink3);text-anchor:middle}
+  .donut-fg{animation:donutGrow .9s cubic-bezier(.4,0,.2,1) both}
+  @keyframes donutGrow{from{stroke-dashoffset:var(--c)}}
+  .stat-c .cap{font-size:13px;font-weight:700;color:var(--ink);text-align:center;line-height:1.3}
+  .stat-c .sub{font-size:10.5px;color:var(--ink3);margin-top:-3px}
+  .legend2{display:flex;gap:12px;font-size:10.5px;color:var(--ink2);margin-top:-2px}
+  .legend2 i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;vertical-align:0}
+
+  .cols{display:grid;grid-template-columns:1.35fr 1fr;gap:20px;align-items:start}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+  .panel-h{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line2)}
+  .panel-h h2{font-size:14.5px;font-weight:800}
+  .panel-h .cnt{font-size:11.5px;color:var(--ink3);font-family:var(--mono)}
+  .panel-h .spacer{flex:1}
+  .mini-live{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--teal2);font-family:var(--mono)}
+  .mini-live .d{width:7px;height:7px;border-radius:50%;background:var(--teal2);animation:pulse3 2s infinite}
+  @keyframes pulse3{0%,100%{opacity:1}50%{opacity:.35}}
+
+  /* handoff card */
+  .feed{padding:8px 8px 10px}
+  .ho{display:flex;gap:12px;align-items:flex-start;padding:12px 12px;border-radius:11px;cursor:pointer;transition:.13s;border:1px solid transparent}
+  .ho:hover{background:var(--line2);border-color:var(--line)}
+  .ho .bl{width:4px;border-radius:3px;flex:0 0 auto;background:var(--ink3)}
+  .ho .bl.alert{background:var(--alert)} .ho .bl.amber{background:var(--amber)} .ho .bl.info{background:var(--teal2)}
+  .avatar{border-radius:50%;flex:0 0 auto;display:grid;place-items:center;border:3px solid var(--teal2);background:#fff}
+  .face{border-radius:50%;overflow:hidden;display:grid;place-items:center;background:#EEF1F4}
+  .face.boy{background:#E6EEF5} .face.girl{background:#F7E9EE}
+  .face svg{width:100%;height:100%;display:block}
+  /* inline audio waveform player (柴学園カラー) */
+  .wplayer{display:flex;align-items:center;gap:11px;margin:8px 0 2px;padding:8px 12px;background:#F5F4F0;border:1px solid var(--line);border-radius:12px}
+  .wp-btn{width:34px;height:34px;border-radius:50%;background:#0000ff;border:none;display:grid;place-items:center;flex:0 0 auto;transition:filter .12s}
+  .wp-btn:hover{filter:brightness(1.12)}
+  .wp-btn svg{width:13px;height:13px;fill:#fff}
+  .wp-wave{flex:1;display:flex;align-items:center;gap:2px;height:30px;min-width:0}
+  .wp-wave i{flex:1;min-width:2px;background:#0000ff;border-radius:2px;opacity:.3;transition:opacity .12s}
+  .wp-wave i.on{opacity:1}
+  .wp-time{font-family:var(--mono);font-size:11px;color:var(--ink3);flex:0 0 auto;min-width:74px;text-align:right}
+  .ho .mid{flex:1;min-width:0}
+  .ho .row1{display:flex;align-items:center;gap:8px;margin-bottom:3px}
+  .ho .nm{font-size:13.5px;font-weight:800}
+  .ho .cls{font-size:11px;color:var(--ink3)}
+  .ho .txt{font-size:12.5px;color:#000000;line-height:1.55;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .ho .row3{display:flex;align-items:center;gap:10px;margin-top:6px}
+  .ho .time{font-size:10.5px;color:var(--ink3);font-family:var(--mono)}
+  .ho .staff{font-size:10.5px;color:var(--ink3)}
+  .ho .play{margin-left:auto;display:flex;align-items:center;gap:5px;font-size:11px;color:var(--teal2);font-weight:700}
+  .ho .play svg{width:13px;height:13px;fill:var(--teal2)}
+  .tag{font-size:10px;font-weight:800;padding:2px 8px;border-radius:6px;white-space:nowrap}
+  .tag.体調,.tag.alert{background:var(--alert-bg);color:var(--alert)}
+  .tag.怪我{background:var(--amber-bg);color:var(--amber)}
+  .tag.睡眠,.tag.食事{background:var(--teal-bg);color:var(--teal2)}
+  .tag.その他{background:#EFEEEA;color:var(--ink2)}
+  .tag.ok{background:var(--teal-bg);color:var(--teal2)}
+  .badge-new{font-size:9.5px;font-weight:800;color:#fff;background:var(--alert);border-radius:5px;padding:1px 6px;letter-spacing:.03em}
+  .unconf{font-size:9.5px;font-weight:800;color:var(--amber);border:1px solid var(--amber);border-radius:5px;padding:1px 6px}
+  .conf{font-size:9.5px;font-weight:800;color:var(--teal2);display:inline-flex;align-items:center;gap:3px}
+  .hl{color:var(--alert);font-weight:800}
+  .hl.a{color:var(--amber)}
+  @keyframes flashIn{0%{background:var(--amber-bg);transform:translateY(-4px);opacity:0}100%{background:transparent;transform:none;opacity:1}}
+  .ho.new-anim{animation:flashIn 1.1s ease}
+
+  /* right-side lists */
+  .list{padding:6px 8px 10px}
+  .li{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:10px}
+  .li:hover{background:var(--line2)}
+  .li .av{width:30px;height:30px;border-radius:50%;background:var(--line);flex:0 0 auto;display:grid;place-items:center;font-size:12px;font-weight:800;color:var(--ink2)}
+  .li .nm{font-size:13px;font-weight:700}
+  .li .meta{font-size:11px;color:var(--ink3)}
+  .li .r{margin-left:auto;display:flex;gap:6px;align-items:center}
+
+  .alert-line{margin:0 8px 8px;background:var(--alert-bg);border:1px solid var(--alert);border-radius:10px;padding:11px 13px}
+  .alert-line .t{font-size:12.5px;font-weight:800;color:var(--alert);margin-bottom:2px}
+  .alert-line .d{font-size:12px;color:var(--ink)}
+  .prog{display:flex;align-items:center;gap:8px;padding:10px 14px;border-top:1px solid var(--line2);font-size:12px;color:var(--ink2)}
+  .prog .bar{flex:1;height:7px;background:var(--line);border-radius:4px;overflow:hidden}
+  .prog .bar i{display:block;height:100%;background:var(--teal2);border-radius:4px}
+
+  /* toolbar (board page) */
+  .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+  .chips{display:flex;gap:7px}
+  .chip{font-size:12px;font-weight:700;color:var(--ink2);background:var(--surface);border:1px solid var(--line);border-radius:100px;padding:6px 14px;transition:.12s}
+  .chip:hover{border-color:var(--ink3)}
+  .chip.active{background:var(--teal);color:#fff;border-color:var(--teal)}
+  .sel{font-size:12.5px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:7px 12px}
+  .sim-btn{margin-left:auto;display:flex;align-items:center;gap:7px;background:var(--teal2);color:#fff;border:none;border-radius:9px;padding:8px 15px;font-size:12.5px;font-weight:700;box-shadow:var(--shadow)}
+  .sim-btn:hover{filter:brightness(1.05)}
+  .sim-btn svg{width:13px;height:13px;fill:#fff}
+
+  /* menu / allergy page */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+  .menu-item{display:flex;align-items:center;justify-content:space-between;padding:12px 15px;border-bottom:1px solid var(--line2)}
+  .menu-item:last-child{border-bottom:none}
+  .menu-item .mn{font-size:13.5px;font-weight:700}
+  .menu-item .al{display:flex;gap:6px}
+  .chk-row{display:flex;align-items:center;gap:12px;padding:13px 15px;border-bottom:1px solid var(--line2)}
+  .chk-row:last-child{border-bottom:none}
+  .chk-row .info{flex:1}
+  .chk-row .nm{font-size:13.5px;font-weight:800}
+  .chk-row .de{font-size:11.5px;color:var(--ink2);margin-top:2px}
+  .cbx{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink2);font-weight:700}
+  .box{width:20px;height:20px;border-radius:6px;border:2px solid var(--ink3);display:grid;place-items:center;transition:.12s;background:var(--surface)}
+  .box.on{background:var(--teal2);border-color:var(--teal2)}
+  .box svg{width:12px;height:12px;stroke:#fff;stroke-width:3;fill:none;opacity:0}
+  .box.on svg{opacity:1}
+  .box:hover{border-color:var(--teal2)}
+
+  /* archive */
+  .arch-row{display:flex;align-items:center;gap:14px;padding:13px 8px;border-bottom:1px solid var(--line2)}
+  .arch-row:hover{background:var(--line2);border-radius:8px}
+  .arch-row .dt{font-family:var(--mono);font-size:11.5px;color:var(--ink3);width:96px;flex:0 0 auto}
+  .arch-row .who{width:150px;flex:0 0 auto}
+  .arch-row .who .nm{font-size:13px;font-weight:700}
+  .arch-row .who .cl{font-size:11px;color:var(--ink3)}
+  .arch-row .pv{flex:1;font-size:12px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .arch-row .dur{font-family:var(--mono);font-size:11px;color:var(--ink3)}
+  .playbtn{width:32px;height:32px;border-radius:50%;background:var(--teal-bg);border:none;display:grid;place-items:center;flex:0 0 auto}
+  .playbtn svg{width:13px;height:13px;fill:var(--teal);margin-left:1px}
+  .playbtn:hover{background:var(--teal2)}
+  .playbtn:hover svg{fill:#fff}
+
+  /* drawer */
+  .scrim{position:fixed;inset:0;background:rgba(30,30,25,.28);opacity:0;pointer-events:none;transition:.2s;z-index:40}
+  .scrim.open{opacity:1;pointer-events:auto}
+  .drawer{position:fixed;top:0;right:0;height:100%;width:440px;max-width:92vw;background:var(--surface);box-shadow:-8px 0 30px rgba(0,0,0,.12);
+    transform:translateX(100%);transition:transform .24s cubic-bezier(.4,0,.2,1);z-index:50;display:flex;flex-direction:column}
+  .drawer.open{transform:none}
+  .dr-h{display:flex;align-items:flex-start;gap:12px;padding:20px 22px 16px;border-bottom:1px solid var(--line)}
+  .dr-h .nm{font-size:19px;font-weight:800}
+  .dr-h .meta{font-size:12px;color:var(--ink3);margin-top:3px}
+  .dr-close{margin-left:auto;background:none;border:none;font-size:22px;color:var(--ink3);line-height:1;padding:2px 6px}
+  .dr-close:hover{color:var(--ink)}
+  .dr-body{padding:20px 22px;overflow-y:auto;flex:1}
+  .dr-label{font-size:11px;font-family:var(--mono);color:var(--ink3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:9px}
+  .transcript{background:var(--line2);border-radius:12px;padding:15px 16px;font-size:14px;line-height:1.85;color:#000000;margin-bottom:22px}
+  /* audio player */
+  .player{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:22px}
+  .pl-top{display:flex;align-items:center;gap:13px}
+  .pl-play{width:44px;height:44px;border-radius:50%;background:#0000ff;border:none;display:grid;place-items:center;flex:0 0 auto}
+  .pl-play svg{width:16px;height:16px;fill:#fff}
+  .wave{flex:1;display:flex;align-items:center;gap:2px;height:34px}
+  .wave i{flex:1;background:var(--line);border-radius:2px;height:30%;transition:height .1s,background .1s}
+  .player.playing .wave i{background:#0000ff}
+  .pl-time{font-family:var(--mono);font-size:12px;color:var(--ink3);min-width:82px;text-align:right}
+  .dr-info{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+  .info-pill{font-size:11.5px;color:var(--ink2);background:var(--line2);border-radius:8px;padding:6px 11px}
+  .info-pill b{color:var(--ink)}
+  .dr-foot{padding:16px 22px;border-top:1px solid var(--line);display:flex;gap:10px}
+  .btn{flex:1;padding:11px;border-radius:10px;font-size:13.5px;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--ink2)}
+  .btn:hover{background:var(--line2)}
+  .btn.primary{background:var(--teal);color:#fff;border-color:var(--teal)}
+  .btn.primary:hover{filter:brightness(1.08);background:var(--teal)}
+  .btn.done{background:var(--teal-bg);color:var(--teal2);border-color:var(--teal-bg)}
+
+  /* toast */
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;
+    padding:12px 20px;border-radius:100px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.2);opacity:0;pointer-events:none;transition:.25s;z-index:60;display:flex;align-items:center;gap:9px}
+  .toast.show{opacity:1;transform:translateX(-50%)}
+  .toast .d{width:8px;height:8px;border-radius:50%;background:#7DE0B0}
+
+  .demo-note{position:fixed;bottom:14px;right:16px;font-size:10.5px;color:var(--ink3);background:var(--surface);border:1px solid var(--line);
+    border-radius:8px;padding:6px 11px;z-index:20}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><b>ヒヤリハットくん</b><span>事務所モニター</span></div>
+  <div class="garden">しおどめ保育園三郷中央</div>
+  <div class="grow"></div>
+  <button class="listen-btn" id="listenBtn"><span class="mic"></span>受付マイクを試聴</button>
+  <div class="live"><span class="dot"></span>LIVE</div>
+  <div class="clock" id="clock">--:--</div>
+</div>
+
+<div class="body">
+  <nav class="side" id="side">
+    <button class="nav active" data-view="dashboard">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+      ダッシュボード</button>
+    <button class="nav" data-view="board">
+      <svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h10"/></svg>
+      保護者メッセージボード<span class="badge" id="navBadge">0</span></button>
+    <button class="nav" data-view="allergy">
+      <svg viewBox="0 0 24 24"><path d="M12 3v18M8 3v6a2 2 0 004 0M16 3c-1.5 0-2 2-2 4s.5 4 2 4v10"/></svg>
+      アレルギー・給食</button>
+    <button class="nav" data-view="attention">
+      <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M4 20c0-3 2.5-5 5-5s5 2 5 5"/><circle cx="17" cy="9" r="2.3"/><path d="M15 20c0-2 1-3.5 2.5-4"/></svg>
+      要注意児</button>
+    <div class="side-sep"></div>
+    <button class="nav" data-view="archive">
+      <svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0012 0M12 17v4"/></svg>
+      録音アーカイブ</button>
+    <div class="side-foot">操作プロトタイプ<br>園児名は名簿／体調・アレルギー・メッセージ内容はサンプルです</div>
+  </nav>
+
+  <main class="main" id="view"></main>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer"></aside>
+<div class="toast" id="toast"><span class="d"></span><span id="toastMsg"></span></div>
+<div class="demo-note">これは操作イメージの試作です</div>
+
+<script>
+// ============ データ ============
+const KW = { // キーワード → 危険度
+  "熱":"a2","発熱":"a2","打った":"a2","頭を打った":"a2","吐い":"a2","嘔吐":"a2","けいれん":"a2","呼吸":"a2",
+  "咳":"a1","鼻水":"a1","すり傷":"a1","切り傷":"a1","たんこぶ":"a1","寝不足":"a1","ぐずる":"a1","食欲":"a1","下痢":"a1","様子を見て":"a1","少なめ":"a1"
+};
+let ID = 100;
+const state = {
+  view:"dashboard",
+  filter:"all",
+  cls:"all",
+  listening:false,
+  handoffs:[
+    {id:1, name:"百木田夏凪", sex:"girl", cls:"うさぎ組", cat:"体調", level:"alert",
+     text:"昨夜、寝る前に37.8度の熱が出て、朝は下がったけれど日中も様子を見てほしいとのこと。朝食は少なめでした。",
+     time:"8:12", staff:"田中", conf:false},
+    {id:2, name:"田中俊来", sex:"boy", cls:"うさぎ組", cat:"怪我", level:"amber",
+     text:"昨日、家で転んで右ひざにすり傷。絆創膏を貼っている。痛がってはいない。",
+     time:"8:20", staff:"佐藤", conf:false},
+    {id:3, name:"本郷日菜", sex:"girl", cls:"ひよこ組", cat:"睡眠", level:"info",
+     text:"寝不足ぎみで、午前中ぐずるかもしれないとのこと。",
+     time:"8:31", staff:"田中", conf:true},
+    {id:4, name:"小沼紗來", sex:"girl", cls:"うさぎ組", cat:"食事", level:"info",
+     text:"昨夜あまり食べられず、今朝も食欲がない様子。無理せず見てほしい。",
+     time:"8:35", staff:"鈴木", conf:false},
+    {id:5, name:"神谷陸", sex:"boy", cls:"ひよこ組", cat:"その他", level:"info", audio:true,
+     text:"水筒を忘れたので、お茶の提供をお願いしたいとのこと。",
+     time:"8:40", staff:"佐藤", conf:true},
+  ],
+};
+const SIM = [
+  {name:"笹本実柊", sex:"boy", cls:"ひよこ組", cat:"怪我", level:"alert",
+   text:"登園の途中で転んで頭を打ったとのこと。今は元気だが、日中も様子を見てほしい。", staff:"田中"},
+  {name:"山口心暖", sex:"girl", cls:"うさぎ組", cat:"体調", level:"amber",
+   text:"咳が出ていて、鼻水も少し。悪化したら連絡してほしいとのこと。", staff:"鈴木"},
+  {name:"中野茉玲", sex:"girl", cls:"ひよこ組", cat:"体調", level:"alert",
+   text:"朝、一度吐いてしまった。熱はないが、水分をこまめにとらせてほしい。", staff:"佐藤"},
+];
+const attentionChildren = [
+  {ini:"小", name:"小沼紗來", sex:"girl", cls:"うさぎ組", tag:"卵アレルギー", lv:"alert"},
+  {ini:"神", name:"神谷陸", sex:"boy", cls:"ひよこ組", tag:"感覚過敏", lv:"info"},
+  {ini:"百", name:"百木田夏凪", sex:"girl", cls:"うさぎ組", tag:"乳・小麦", lv:"alert"},
+  {ini:"田", name:"田中俊来", sex:"boy", cls:"うさぎ組", tag:"多動傾向", lv:"info"},
+  {ini:"山", name:"山本瑶生", sex:"boy", cls:"ひよこ組", tag:"そばアレルギー", lv:"alert"},
+  {ini:"本", name:"本郷日菜", sex:"girl", cls:"ひよこ組", tag:"熱性けいれん既往", lv:"amber"},
+];
+const menu = [
+  {mn:"主菜：オムレツ", al:[["卵","al"]]},
+  {mn:"副菜：ほうれん草のソテー", al:[["該当なし","ok"]]},
+  {mn:"汁物：みそ汁", al:[["該当なし","ok"]]},
+  {mn:"おやつ：ビスケット", al:[["小麦","al"],["乳","al"]]},
+];
+const allergyChecks = [
+  {name:"小沼紗來", de:"卵除去 → オムレツを代替メニューに", need:true, cook:true, care:true},
+  {name:"百木田夏凪", de:"乳・小麦除去 → ビスケットを代替に", need:true, cook:true, care:false},
+  {name:"山本瑶生", de:"そば除去 → 本日の献立に該当なし", need:false, cook:true, care:true},
+];
+const archive = [
+  {dt:"6/10 8:12", name:"百木田夏凪", cls:"うさぎ組", pv:"昨夜37.8度の熱が出て、日中も様子を…", dur:"0:24"},
+  {dt:"6/10 8:20", name:"田中俊来", cls:"うさぎ組", pv:"転んで右ひざにすり傷、絆創膏を…", dur:"0:16"},
+  {dt:"6/9 8:05", name:"小沼紗來", cls:"うさぎ組", pv:"食欲がなく、朝ごはんをあまり…", dur:"0:19"},
+  {dt:"6/9 8:33", name:"田中俊来", cls:"うさぎ組", pv:"昨日は落ち着かず、今日も声かけを…", dur:"0:31"},
+  {dt:"6/6 8:18", name:"本郷日菜", cls:"ひよこ組", pv:"以前の熱性けいれんのため、発熱時は…", dur:"0:42"},
+];
+
+// ============ ユーティリティ ============
+const $ = s => document.querySelector(s);
+function highlight(text){
+  let out = text;
+  Object.keys(KW).sort((a,b)=>b.length-a.length).forEach(k=>{
+    const cls = KW[k]==="a2" ? "hl" : "hl a";
+    out = out.replaceAll(k, `<span class="${cls}">${k}</span>`);
+  });
+  return out;
+}
+function unconfCount(){ return state.handoffs.filter(h=>!h.conf).length; }
+function donut(frac, color, big, small, opt={}){
+  frac=Math.max(0,Math.min(1,frac));
+  const r=40, C=2*Math.PI*r, off=C*(1-frac), track=opt.track||"var(--line)";
+  const bc=opt.bigColor?` style="fill:${opt.bigColor}"`:"";
+  return `<svg class="donut" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="${r}" fill="none" stroke="${track}" stroke-width="10"/>
+    <circle cx="50" cy="50" r="${r}" fill="none" stroke="${color}" stroke-width="10" stroke-linecap="round"
+      transform="rotate(-90 50 50)" stroke-dasharray="${C.toFixed(1)}"
+      style="--c:${C.toFixed(1)}px;stroke-dashoffset:${off.toFixed(1)}px" class="donut-fg"/>
+    <text x="50" y="49" class="donut-big"${bc}>${big}</text>
+    ${small?`<text x="50" y="65" class="donut-small">${small}</text>`:""}
+  </svg>`;
+}
+function statDonut(frac,color,big,small,cap,extra,opt){
+  return `<div class="stat-c">${donut(frac,color,big,small,opt||{})}
+    <div class="cap">${cap}</div>${extra||""}</div>`;
+}
+function ringColor(level){ return level==="alert"?"var(--alert)":level==="amber"?"var(--amber)":"var(--teal2)"; }
+function faceSVG(sex){
+  if(sex==="boy"){
+    return `<svg viewBox="0 0 40 40">
+      <circle cx="20" cy="22" r="11" fill="#F1D2B8"/>
+      <path d="M9 21c0-7 5-11 11-11s11 4 11 11c-2.5-3-5-4.5-11-4.5S11.5 18 9 21z" fill="#6E5849"/>
+      <circle cx="16.4" cy="22.5" r="1.4" fill="#5B4A3F"/><circle cx="23.6" cy="22.5" r="1.4" fill="#5B4A3F"/>
+      <path d="M17.2 26.6c1.1 1 4.5 1 5.6 0" stroke="#B07A63" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+    </svg>`;
+  }
+  return `<svg viewBox="0 0 40 40">
+    <ellipse cx="9.6" cy="24" rx="4.3" ry="8" fill="#6E5849"/><ellipse cx="30.4" cy="24" rx="4.3" ry="8" fill="#6E5849"/>
+    <circle cx="20" cy="22" r="10.6" fill="#F1D2B8"/>
+    <path d="M10 20c0-7 4.5-11 10-11s10 4 10 11c-2.5-3-4.5-4.5-10-4.5S12.5 17 10 20z" fill="#6E5849"/>
+    <circle cx="16.6" cy="22.5" r="1.4" fill="#5B4A3F"/><circle cx="23.4" cy="22.5" r="1.4" fill="#5B4A3F"/>
+    <path d="M17.2 26.6c1.1 1 4.5 1 5.6 0" stroke="#B07A63" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+    <path d="M6.5 12.5l3.6-1.4-.4 4z" fill="#D98BA0"/><path d="M12.7 12.5l-3.6-1.4.4 4z" fill="#D98BA0"/><circle cx="9.5" cy="12.4" r="1.2" fill="#C56F88"/>
+  </svg>`;
+}
+function avatar(sex, level, size){
+  size=size||46; const inner=size-8;
+  return `<div class="avatar" style="width:${size}px;height:${size}px;border-color:${ringColor(level)}">
+    <div class="face ${sex}" style="width:${inner}px;height:${inner}px">${faceSVG(sex)}</div></div>`;
+}
+// ---- 音声波形プレーヤー ----
+const PLAY_SVG='<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+const PAUSE_SVG='<svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+function fmt(s){ return Math.floor(s/60)+":"+String(Math.floor(s%60)).padStart(2,"0"); }
+function clipDur(h){ return Math.max(12, Math.min(40, Math.round((h.text||"").length/2.4))); }
+function wavePlayer(dur){
+  let bars=""; const N=34;
+  for(let i=0;i<N;i++){ const hgt=Math.min(94, 26+Math.round(40*Math.abs(Math.sin(i*1.7))) + (i%3)*7); bars+=`<i style="height:${hgt}%"></i>`; }
+  return `<div class="wplayer" data-dur="${dur}">
+    <button class="wp-btn" type="button" aria-label="再生">${PLAY_SVG}</button>
+    <div class="wp-wave">${bars}</div>
+    <div class="wp-time">0:00 / ${fmt(dur)}</div>
+  </div>`;
+}
+let inlineTimer=null, inlineEl=null;
+function stopInline(){
+  if(inlineTimer){ clearInterval(inlineTimer); inlineTimer=null; }
+  if("speechSynthesis" in window) window.speechSynthesis.cancel();
+  if(inlineEl){ inlineEl.classList.remove("playing");
+    const b=inlineEl.querySelector(".wp-btn"); if(b) b.innerHTML=PLAY_SVG;
+    inlineEl.querySelectorAll(".wp-wave i").forEach(x=>x.classList.remove("on"));
+    const t=inlineEl.querySelector(".wp-time"); if(t) t.textContent="0:00 / "+t.textContent.split("/")[1].trim();
+    inlineEl=null; }
+}
+function speakInline(wp, bars, timeEl, text){
+  const synth=window.speechSynthesis;
+  const u=new SpeechSynthesisUtterance(text.replace(/[「」]/g,""));
+  u.lang="ja-JP"; u.rate=1.0; u.pitch=1.05;
+  const pick=()=>{ const jv=synth.getVoices().find(v=>/ja|japan|日本/i.test(v.lang+" "+v.name)); if(jv) u.voice=jv; };
+  pick(); if(!synth.getVoices().length){ synth.onvoiceschanged=pick; }
+  let t=0; const guess=Math.max(4, Math.round(text.length/5.5));
+  inlineTimer=setInterval(()=>{ t++; if(!document.contains(wp)){ stopInline(); return; }
+    const n=Math.min(bars.length, Math.round((t/guess)*bars.length));
+    bars.forEach((b,i)=>b.classList.toggle("on", i<n));
+    timeEl.textContent=fmt(t)+" / "+fmt(Math.max(t,guess)); }, 300);
+  u.onend=()=>{ bars.forEach(b=>b.classList.add("on")); timeEl.textContent=fmt(guess)+" / "+fmt(guess); setTimeout(stopInline, 500); };
+  u.onerror=()=>stopInline();
+  synth.cancel(); synth.speak(u);
+}
+function toggleInline(btn){
+  const wp=btn.closest(".wplayer"); if(!wp) return;
+  if(inlineEl===wp){ stopInline(); return; }
+  stopInline();
+  inlineEl=wp; wp.classList.add("playing"); btn.innerHTML=PAUSE_SVG;
+  const bars=[...wp.querySelectorAll(".wp-wave i")], timeEl=wp.querySelector(".wp-time");
+  // 音声指定のカード（神谷くん）は実際に読み上げる
+  const card=btn.closest(".ho"); const h=card ? state.handoffs.find(x=>x.id===+card.dataset.id) : null;
+  if(h && h.audio && ("speechSynthesis" in window)){ speakInline(wp, bars, timeEl, h.text); return; }
+  const dur=parseInt(wp.dataset.dur)||24; let t=0;
+  const upd=()=>{ const n=Math.round((t/dur)*bars.length);
+    bars.forEach((b,i)=>b.classList.toggle("on", i<n));
+    timeEl.textContent=fmt(t)+" / "+fmt(dur); };
+  upd();
+  inlineTimer=setInterval(()=>{ t++; if(t>dur){ stopInline(); return; } if(!document.contains(wp)){ stopInline(); return; } upd(); }, 220);
+}
+function toast(msg){
+  $("#toastMsg").textContent = msg;
+  const t = $("#toast"); t.classList.add("show");
+  clearTimeout(t._t); t._t = setTimeout(()=>t.classList.remove("show"), 2600);
+}
+
+// ============ 描画 ============
+function render(){
+  stopInline();
+  document.querySelectorAll(".nav").forEach(n=>n.classList.toggle("active", n.dataset.view===state.view));
+  $("#navBadge").textContent = unconfCount();
+  $("#navBadge").style.display = unconfCount()? "" : "none";
+  const v = $("#view");
+  if(state.view==="dashboard") v.innerHTML = viewDashboard();
+  else if(state.view==="board") v.innerHTML = viewBoard();
+  else if(state.view==="allergy") v.innerHTML = viewAllergy();
+  else if(state.view==="attention") v.innerHTML = viewAttention();
+  else if(state.view==="archive") v.innerHTML = viewArchive();
+  bindView();
+}
+
+function hoCard(h, isNew){
+  return `<div class="ho ${isNew?'new-anim':''}" data-id="${h.id}">
+    ${avatar(h.sex, h.level, 46)}
+    <div class="mid">
+      <div class="row1">
+        <span class="nm">${h.name}</span><span class="cls">${h.cls}</span>
+        <span class="tag ${h.cat}">${h.cat}</span>
+        ${h.conf? '<span class="conf">✓ 確認済み</span>' : '<span class="unconf">未確認</span>'}
+      </div>
+      ${wavePlayer(clipDur(h))}
+      <div class="txt">${highlight(h.text)}</div>
+      <div class="row3">
+        <span class="time">${h.time}</span><span class="staff">受付：${h.staff}</span>
+      </div>
+    </div></div>`;
+}
+
+function viewDashboard(){
+  const present=15, absent=2, att=6, allergy=3;
+  const recent = state.handoffs.slice().reverse();
+  return `
+  <div class="page-h"><h1>ダッシュボード</h1><span class="sub">6月10日（火）朝の受け入れ</span></div>
+  <div class="updated">最終更新 8:41 ・ コドモン連携 済</div>
+  <div class="stats">
+    ${statDonut(present/17, "#2F9FD6", present, "/ 17名", "本日の出席",
+      `<div class="legend2"><span><i style="background:#2F9FD6"></i>出席 ${present}</span><span><i style="background:var(--line)"></i>欠席 ${absent}</span></div>`,
+      {bigColor:"var(--ink)"})}
+    ${statDonut(att/present, "#F2B01E", att, "名", "要注意児",
+      `<div class="sub">${present}名中</div>`, {bigColor:"var(--ink)"})}
+    ${statDonut(allergy/present, "#EC2A8E", allergy, "件", "アレルギー対応",
+      `<div class="sub">${present}名中</div>`, {bigColor:"var(--ink)"})}
+    ${statDonut(unconfCount()/state.handoffs.length, "#26B0A0", unconfCount(), "件", "未確認の保護者メッセージ",
+      `<div class="sub">全${state.handoffs.length}件中</div>`, {bigColor:"var(--ink)"})}
+  </div>
+  <div class="cols">
+    <div class="panel">
+      <div class="panel-h"><h2>ライブ保護者メッセージ</h2><span class="spacer"></span>
+        <span class="mini-live"><span class="d"></span>受付から自動で反映</span></div>
+      <div class="feed" id="dashFeed">${recent.map(h=>hoCard(h)).join("")}</div>
+    </div>
+    <div>
+      <div class="panel" style="margin-bottom:20px">
+        <div class="panel-h"><h2>今朝の要対応</h2></div>
+        <div class="alert-line"><div class="t">小沼紗來 ── アレルギー要対応</div>
+          <div class="d">本日の「オムレツ」に卵。除去食の準備を確認。</div></div>
+        <div class="alert-line"><div class="t">百木田夏凪 ── アレルギー要対応</div>
+          <div class="d">「ビスケット」に小麦・乳。代替を確認。</div></div>
+        <div class="prog"><span>ダブルチェック</span><div class="bar"><i style="width:66%"></i></div><span style="font-family:var(--mono)">2/3</span></div>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><h2>要注意児（本日の出席）</h2><span class="cnt">6名</span></div>
+        <div class="list">
+          ${attentionChildren.slice(0,4).map(c=>`<div class="li">${avatar(c.sex, c.lv, 38)}
+            <div><div class="nm">${c.name}</div><div class="meta">${c.cls}</div></div>
+            <div class="r"><span class="tag ${c.lv==='alert'?'alert':(c.lv==='amber'?'怪我':'睡眠')}">${c.tag}</span></div></div>`).join("")}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function viewBoard(){
+  const cats=["all","体調","怪我","睡眠","食事","その他"];
+  const classes=["all","うさぎ組","ひよこ組"];
+  let items = state.handoffs.slice().reverse();
+  if(state.filter!=="all") items=items.filter(h=>h.cat===state.filter);
+  if(state.cls!=="all") items=items.filter(h=>h.cls.startsWith(state.cls));
+  return `
+  <div class="page-h"><h1>保護者メッセージボード</h1><span class="sub">全職員・事務所で共有</span></div>
+  <div class="updated">未確認 ${unconfCount()}件 ・ 本日 ${state.handoffs.length}件</div>
+  <div class="toolbar">
+    <div class="chips">${cats.map(c=>`<button class="chip ${state.filter===c?'active':''}" data-filter="${c}">${c==='all'?'すべて':c}</button>`).join("")}</div>
+    <select class="sel" id="clsSel">${classes.map(c=>`<option value="${c}" ${state.cls===c?'selected':''}>${c==='all'?'すべてのクラス':c}</option>`).join("")}</select>
+    <button class="sim-btn" id="simBtn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>新しい保護者メッセージをシミュレート</button>
+  </div>
+  <div class="panel"><div class="feed" id="boardFeed">${items.length? items.map(h=>hoCard(h)).join("") : '<div style="padding:40px;text-align:center;color:var(--ink3);font-size:13px">該当する保護者メッセージはありません</div>'}</div></div>`;
+}
+
+function viewAllergy(){
+  return `
+  <div class="page-h"><h1>アレルギー・給食</h1><span class="sub">6月10日の献立との自動照合</span></div>
+  <div class="updated">要対応 2件 ・ ダブルチェック 2/3</div>
+  <div class="grid2">
+    <div class="panel">
+      <div class="panel-h"><h2>本日の献立</h2><span class="cnt">自動チェック</span></div>
+      <div>${menu.map(m=>`<div class="menu-item"><span class="mn">${m.mn}</span>
+        <span class="al">${m.al.map(a=>`<span class="tag ${a[1]==='ok'?'ok':'alert'}">${a[0]}</span>`).join("")}</span></div>`).join("")}</div>
+    </div>
+    <div class="panel">
+      <div class="panel-h"><h2>アレルギー児 × 献立</h2><span class="cnt">調理室 ⇄ 保育室</span></div>
+      <div>${allergyChecks.map((c,i)=>`<div class="chk-row">
+        <div class="info"><div class="nm">${c.name} ${c.need?'<span class="tag alert" style="margin-left:6px">要対応</span>':'<span class="tag ok" style="margin-left:6px">対応不要</span>'}</div>
+          <div class="de">${c.de}</div></div>
+        <div class="cbx"><span>調理</span><div class="box ${c.cook?'on':''}" data-chk="${i}-cook"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></div></div>
+        <div class="cbx"><span>保育</span><div class="box ${c.care?'on':''}" data-chk="${i}-care"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></div></div>
+      </div>`).join("")}</div>
+    </div>
+  </div>`;
+}
+
+function viewAttention(){
+  return `
+  <div class="page-h"><h1>要注意児</h1><span class="sub">本日の出席者から自動抽出</span></div>
+  <div class="updated">6名 ・ アレルギー児 3名 / 特性のある子 2名 / 既往あり 1名</div>
+  <div class="stats" style="grid-template-columns:repeat(3,1fr)">
+    ${attentionChildren.map(c=>`<div class="stat" style="display:flex;gap:14px;align-items:center">
+      ${avatar(c.sex, c.lv, 48)}
+      <div><div style="font-size:15px;font-weight:800">${c.name}</div>
+      <div style="font-size:11.5px;color:var(--ink3);margin:3px 0 6px">${c.cls}</div>
+      <span class="tag ${c.lv==='alert'?'alert':(c.lv==='amber'?'怪我':'睡眠')}">${c.tag}</span></div></div>`).join("")}
+  </div>`;
+}
+
+function viewArchive(){
+  return `
+  <div class="page-h"><h1>録音アーカイブ</h1><span class="sub">日付・園児で検索</span></div>
+  <div class="updated">保管期間：30日（設定で変更可）</div>
+  <div class="toolbar">
+    <select class="sel"><option>すべての日付</option><option>今日（6/10）</option><option>今週</option></select>
+    <input class="sel" placeholder="園児名で検索…" style="min-width:200px">
+  </div>
+  <div class="panel"><div style="padding:6px 14px">
+    ${archive.map(a=>`<div class="arch-row">
+      <span class="dt">${a.dt}</span>
+      <div class="who"><div class="nm">${a.name}</div><div class="cl">${a.cls}</div></div>
+      <span class="pv">${highlight(a.pv)}</span>
+      <span class="dur">${a.dur}</span>
+      <button class="playbtn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+    </div>`).join("")}
+  </div></div>`;
+}
+
+// ============ ドロワー（保護者メッセージ詳細） ============
+let player=null;
+function openDrawer(id){
+  const h = state.handoffs.find(x=>x.id===id); if(!h) return;
+  const d = $("#drawer");
+  d.innerHTML = `
+    <div class="dr-h">
+      ${avatar(h.sex, h.level, 52)}
+      <div><div class="nm">${h.name}</div><div class="meta">${h.cls} ・ ${h.time} ・ 受付：${h.staff}</div></div>
+      <button class="dr-close" id="drClose">×</button>
+    </div>
+    <div class="dr-body">
+      <div style="margin-bottom:18px"><span class="tag ${h.cat}">${h.cat}</span></div>
+      <div class="dr-label">録音</div>
+      <div class="player" id="player">
+        <div class="pl-top">
+          <button class="pl-play" id="plPlay"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+          <div class="wave" id="wave">${Array.from({length:34}).map(()=>`<i></i>`).join("")}</div>
+          <div class="pl-time" id="plTime">0:00 / 0:24</div>
+        </div>
+      </div>
+      <div class="dr-label">文字起こし（危険な語は自動で強調）</div>
+      <div class="transcript">「${highlight(h.text)}」</div>
+      <div class="dr-info">
+        <span class="info-pill">受付担当：<b>${h.staff}</b></span>
+        <span class="info-pill">時刻：<b>${h.time}</b></span>
+        <span class="info-pill">クラス：<b>${h.cls}</b></span>
+      </div>
+    </div>
+    <div class="dr-foot">
+      <button class="btn" id="drShare">担任に共有</button>
+      <button class="btn primary ${h.conf?'done':''}" id="drConf">${h.conf?'✓ 確認済み':'確認済みにする'}</button>
+    </div>`;
+  $("#scrim").classList.add("open"); d.classList.add("open");
+  // wavebars random heights
+  d.querySelectorAll("#wave i").forEach(b=>b.style.height=(20+Math.random()*70)+"%");
+  $("#drClose").onclick = closeDrawer;
+  $("#drShare").onclick = ()=>toast(h.name+" の保護者メッセージを担任に共有しました");
+  $("#drConf").onclick = ()=>{ h.conf=true; toast(h.name+" を確認済みにしました"); render(); closeDrawer(); };
+  $("#plPlay").onclick = togglePlay;
+}
+function togglePlay(){
+  const pl=$("#player"), btn=$("#plPlay"), timeEl=$("#plTime");
+  if(player){ clearInterval(player); player=null; pl.classList.remove("playing");
+    btn.innerHTML='<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>'; return; }
+  pl.classList.add("playing");
+  btn.innerHTML='<svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+  const bars=[...pl.querySelectorAll("#wave i")]; let t=0; const total=24;
+  player=setInterval(()=>{
+    t+=1; bars.forEach(b=>b.style.height=(20+Math.random()*70)+"%");
+    timeEl.textContent=`0:${String(t).padStart(2,'0')} / 0:24`;
+    if(t>=total){ clearInterval(player); player=null; pl.classList.remove("playing");
+      btn.innerHTML='<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>'; timeEl.textContent="0:00 / 0:24"; }
+  },140);
+}
+function closeDrawer(){ $("#scrim").classList.remove("open"); $("#drawer").classList.remove("open");
+  if(player){clearInterval(player);player=null;} }
+
+// ============ イベント束ね ============
+function bindView(){
+  // handoff cards → drawer
+  document.querySelectorAll(".ho").forEach(c=>c.onclick=()=>openDrawer(+c.dataset.id));
+  // inline waveform player (カードを開かずに再生)
+  document.querySelectorAll(".wp-btn").forEach(b=>b.onclick=(e)=>{ e.stopPropagation(); toggleInline(b); });
+  // board filters
+  document.querySelectorAll("[data-filter]").forEach(b=>b.onclick=()=>{state.filter=b.dataset.filter;render();});
+  const cs=$("#clsSel"); if(cs) cs.onchange=()=>{state.cls=cs.value;render();};
+  const sb=$("#simBtn"); if(sb) sb.onclick=simulate;
+  // allergy checkboxes
+  document.querySelectorAll("[data-chk]").forEach(box=>box.onclick=()=>{
+    const [i,which]=box.dataset.chk.split("-"); allergyChecks[i][which]=!allergyChecks[i][which];
+    box.classList.toggle("on"); toast("チェックを更新しました");
+  });
+}
+
+function simulate(){
+  const s = SIM[ID % SIM.length]; ID++;
+  const now = new Date();
+  const h = {id:ID, name:s.name, cls:s.cls, cat:s.cat, level:s.level, text:s.text, staff:s.staff,
+    time:`${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`, conf:false};
+  state.handoffs.push(h);
+  render();
+  // 先頭カードに登場アニメ
+  const feed = $("#boardFeed")||$("#dashFeed");
+  if(feed && feed.firstElementChild){ feed.firstElementChild.classList.add("new-anim");
+    feed.firstElementChild.onclick=()=>openDrawer(h.id); }
+  toast(`新しい保護者メッセージ：${s.name}（${s.cat}）が届きました`);
+}
+
+// ============ 起動 ============
+$("#side").onclick = e=>{ const n=e.target.closest(".nav"); if(!n)return; state.view=n.dataset.view; render(); };
+$("#scrim").onclick = closeDrawer;
+$("#listenBtn").onclick = ()=>{ state.listening=!state.listening;
+  const b=$("#listenBtn"); b.classList.toggle("on",state.listening);
+  b.innerHTML = state.listening? '<span class="mic"></span>試聴中 ── 受付マイク' : '<span class="mic"></span>受付マイクを試聴';
+  toast(state.listening? "受付マイクの試聴を開始しました":"試聴を停止しました");
+};
+function tick(){ const n=new Date(); $("#clock").textContent=`${n.getHours()}:${String(n.getMinutes()).padStart(2,'0')}`; }
+tick(); setInterval(tick,10000);
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeDrawer(); });
+render();
+</script>
+</body>
+</html>
