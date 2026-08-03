@@ -93,7 +93,7 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif
 
 /* パネル（補助金・お知らせ） */
 .widget{background:#fff;border:1px solid #e7e8f0;border-radius:16px;box-shadow:0 2px 10px rgba(30,32,60,.06);overflow:hidden;}
-.widget-header{padding:10px 14px;border-bottom:1px solid #dfe0ea;font-size:11px;font-weight:700;color:#555;display:flex;align-items:center;gap:5px;}
+.widget-header{padding:10px 14px;border-bottom:1px solid #dfe0ea;font-size:12px;font-weight:700;color:#555;display:flex;align-items:center;gap:5px;}
 .refresh-btn{font-size:10px;color:#4169e1;cursor:pointer;padding:3px 9px;border-radius:6px;border:1px solid #4169e1;background:#EEF4FF;font-weight:600;}
 .refresh-btn:hover{background:#4169e1;color:#fff;}
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid #e0e0e0;border-top:2px solid #4169e1;border-radius:50%;animation:spin .8s linear infinite;margin-right:8px;vertical-align:middle;}
@@ -106,21 +106,22 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif
 .ni{padding:9px 14px;border-bottom:1px solid #e2e3ec;display:flex;align-items:center;gap:10px;cursor:pointer;}
 .ni:last-child{border-bottom:none;}
 .ni:hover{background:#e6e7f0;}
-.nd{font-size:10px;color:#4d5560;font-weight:600;white-space:nowrap;flex-shrink:0;width:64px;}
-.nt{font-size:12px;color:#1a1a2e;line-height:1.4;}
-.ntag{display:inline-block;font-size:10px;padding:1px 6px;border-radius:5px;margin-right:5px;font-weight:700;vertical-align:middle;}
+.nd{font-size:11px;color:#4d5560;font-weight:600;white-space:nowrap;flex-shrink:0;width:64px;}
+.nt{font-size:13px;color:#1a1a2e;line-height:1.4;}
+.ntag{display:inline-block;font-size:11px;padding:1px 6px;border-radius:5px;margin-right:5px;font-weight:700;vertical-align:middle;}
 
 /* 右カラム：今日 + カレンダー */
 .rc{background:#fff;border:1px solid #e7e8f0;border-radius:16px;box-shadow:0 2px 10px rgba(30,32,60,.06);padding:14px;}
 .rc-title{font-size:12px;font-weight:700;color:#555;display:flex;align-items:center;gap:6px;margin-bottom:8px;}
-.today-date{font-size:12px;color:#777;font-weight:600;}
+.today-date{font-size:13px;color:#555;font-weight:700;display:flex;justify-content:space-between;align-items:baseline;gap:8px;}
+.today-date #hd-time{color:#4169e1;}
 .cal-header{display:flex;align-items:center;justify-content:space-between;padding:0 2px 8px;}
-.cal-title{font-size:12px;font-weight:700;color:#555;}
-.cal-nav{font-size:15px;color:#bbb;cursor:pointer;padding:0 6px;user-select:none;}
+.cal-title{font-size:13px;font-weight:700;color:#555;}
+.cal-nav{font-size:16px;color:#bbb;cursor:pointer;padding:0 6px;user-select:none;}
 .cal-nav:hover{color:#4169e1;}
-.cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:9px;color:#aaa;margin-bottom:3px;}
+.cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:10px;color:#aaa;margin-bottom:3px;}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);row-gap:3px;}
-.cal-day{text-align:center;font-size:10px;color:#666;padding:4px 0;border-radius:6px;}
+.cal-day{text-align:center;font-size:11px;color:#666;padding:4px 0;border-radius:6px;}
 .cal-day.blank{visibility:hidden;}
 .cal-day.today{background:#4169e1;color:#fff;font-weight:700;}
 .cal-day.sun{color:#e57373;}
@@ -155,7 +156,7 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif
 .tile .lbl{font-size:14px;font-weight:700;color:#1a1a2e;text-align:center;line-height:1.3;}
 .cards2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .bcimg{position:relative;width:104px;height:104px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.igrid-row.row2 .bcimg{width:94px;height:94px;}
+.igrid-row.row2 .bcimg{width:85px;height:85px;}
 .bcimg img{width:100%;height:100%;object-fit:contain;display:block;}
 .bcimg .tlock{position:absolute;top:1px;right:3px;font-size:12px;color:#5a6b78;background:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.22);}
 .domebot-card{background:#4b57d1;border-radius:16px;padding:15px 17px;cursor:pointer;position:relative;transition:background .15s;flex:1;display:flex;flex-direction:column;justify-content:center;}
@@ -277,8 +278,7 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif
     <!-- 右カラム（今日＋カレンダー・お知らせ・ドメボット） -->
     <div class="rightcol">
       <div class="rc">
-        <div class="rc-title"><i class="ti ti-calendar"></i> 今日</div>
-        <div class="today-date" id="hdate"></div>
+        <div class="today-date" id="hdate"><span id="hd-date"></span><span id="hd-time"></span></div>
         <div class="cal-header" style="margin-top:12px;">
           <span class="cal-nav" onclick="calShift(-1)">‹</span>
           <span class="cal-title" id="cal-month-label"></span>
@@ -465,7 +465,9 @@ function updateTime(){
   var now=new Date(),h=now.getHours(),m=now.getMinutes();
   var pad=function(n){return n<10?"0"+n:n;};
   var days=["日","月","火","水","木","金","土"];
-  document.getElementById("hdate").textContent=now.getFullYear()+"年"+(now.getMonth()+1)+"月"+now.getDate()+"日（"+days[now.getDay()]+"） "+pad(h)+":"+pad(m);
+  var dEl=document.getElementById("hd-date"), tEl=document.getElementById("hd-time");
+  if(dEl)dEl.textContent=now.getFullYear()+"年"+(now.getMonth()+1)+"月"+now.getDate()+"日（"+days[now.getDay()]+"）";
+  if(tEl)tEl.textContent=pad(h)+":"+pad(m);
 }
 setInterval(updateTime,30000);
 
@@ -516,7 +518,7 @@ function loadHojyokin(){
       var html="";
       items.forEach(function(item,i){
         var bodyHtml=item.body?item.body.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>"):"（本文はありません）";
-        html+='<div class="ni" id="hj-row-'+i+'" onclick="toggleHojyokin('+i+')" style="cursor:pointer;display:block;"><div style="display:flex;align-items:center;gap:10px;"><div class="nd">'+item.date+'</div><div class="nt" style="flex:1;"><span class="ntag hojyokin-tag">補助金</span>'+(item.muni?'<span class="ntag muni-tag">'+item.muni+'</span>':'')+item.title+'</div><span onclick="event.stopPropagation();deleteHojyokin(\''+item.id+'\',\'hj-row-'+i+'\')" title="削除" style="font-size:12px;color:#ccc;padding:2px 6px;flex-shrink:0;">🗑</span></div><div class="hj-detail" id="hj-detail-'+i+'" style="display:none;margin:8px 0 0 68px;padding:10px 12px;background:#f7f6fb;border-radius:8px;font-size:11px;color:#555;line-height:1.7;white-space:normal;">'+bodyHtml+'</div></div>';
+        html+='<div class="ni" id="hj-row-'+i+'" onclick="toggleHojyokin('+i+')" style="cursor:pointer;display:block;"><div style="display:flex;align-items:center;gap:10px;"><div class="nd">'+item.date+'</div><div class="nt" style="flex:1;"><span class="ntag hojyokin-tag">補助金</span>'+(item.muni?'<span class="ntag muni-tag">'+item.muni+'</span>':'')+item.title+'</div><span onclick="event.stopPropagation();deleteHojyokin(\''+item.id+'\',\'hj-row-'+i+'\')" title="削除" style="font-size:12px;color:#ccc;padding:2px 6px;flex-shrink:0;">🗑</span></div><div class="hj-detail" id="hj-detail-'+i+'" style="display:none;margin:8px 0 0 68px;padding:10px 12px;background:#f7f6fb;border-radius:8px;font-size:12px;color:#555;line-height:1.7;white-space:normal;">'+bodyHtml+'</div></div>';
       });
       area.innerHTML=html;
     })
