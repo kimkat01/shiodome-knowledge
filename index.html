@@ -126,12 +126,18 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif
 .cal-nav:hover{color:#4169e1;}
 .cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:9px;color:#aaa;margin-bottom:3px;}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);row-gap:3px;}
-.cal-day{text-align:center;font-size:10px;color:#666;padding:4px 0;border-radius:6px;}
+.cal-day{text-align:center;font-size:10px;color:#666;padding:4px 0;border-radius:6px;position:relative;}
 .cal-day.blank{visibility:hidden;}
 .cal-day.today{background:#4169e1;color:#fff;font-weight:700;}
 .cal-day.sun{color:#e57373;}
 .cal-day.sat{color:#64b5f6;}
 .cal-day.today.sun,.cal-day.today.sat{color:#fff;}
+.cal-day.has-dl{cursor:default;}
+.cal-dot{position:absolute;left:50%;bottom:1px;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:#e53935;}
+.cal-dot.past{background:#c0c4cc;}
+.cal-day.today .cal-dot{background:#fff;}
+.cal-legend{font-size:9px;color:#999;margin-top:7px;display:flex;align-items:center;gap:4px;}
+.cal-legend .dot{width:6px;height:6px;border-radius:50%;background:#e53935;display:inline-block;}
 
 /* 右カラム：ドメボット */
 .domebot{flex:1;min-height:380px;background:#edeef2;border:1px solid #d7d8e2;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;}
@@ -294,6 +300,7 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif
           <span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span>
         </div>
         <div class="cal-grid" id="cal-grid"></div>
+        <div class="cal-legend"><span class="dot"></span> 補助金の締切（マウスを乗せると内容を表示）</div>
       </div>
 
       <!-- 最新のお知らせ（右側に復帰・カード型/網がけ） -->
@@ -476,6 +483,7 @@ function updateTime(){
 setInterval(updateTime,30000);
 
 var calViewDate=new Date();
+var deadlineMap={};  // "y-m-d" => [{muni,title,past}]（カレンダー用の締切データ）
 function calShift(diff){
   calViewDate=new Date(calViewDate.getFullYear(),calViewDate.getMonth()+diff,1);
   renderCalendar();
@@ -500,8 +508,17 @@ function renderCalendar(){
     if(dow===0)cls+=" sun";
     if(dow===6)cls+=" sat";
     if(y===today.getFullYear()&&m===today.getMonth()&&d===today.getDate())cls+=" today";
+    var dls=deadlineMap[y+"-"+m+"-"+d];
+    if(dls&&dls.length)cls+=" has-dl";
     cell.className=cls;
     cell.textContent=d;
+    if(dls&&dls.length){
+      var allPast=dls.every(function(x){return x.past;});
+      var dot=document.createElement("span");
+      dot.className="cal-dot"+(allPast?" past":"");
+      cell.appendChild(dot);
+      cell.title=dls.map(function(x){return "〆"+(m+1)+"/"+d+"  "+(x.muni?"["+x.muni+"] ":"")+x.title;}).join("\n");
+    }
     grid.appendChild(cell);
   }
 }
@@ -519,6 +536,7 @@ function loadHojyokin(){
         return;
       }
       if(cardBadge)cardBadge.textContent=items.length+"件";
+      deadlineMap={};  // カレンダー用に締切を集め直す
       var html="";
       items.forEach(function(item,i){
         var bodyHtml=item.body?item.body.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>"):"（本文はありません）";
@@ -550,11 +568,15 @@ function loadHojyokin(){
             else if(diff<=3){cls="deadline-urgent";label="〆"+mo+"/"+da+" あと"+diff+"日";}
             else{cls="deadline-soon";}
             deadlineHtml='<span class="ntag '+cls+'">'+label+'</span>';
+            // カレンダー用に締切を登録
+            var key=yr+"-"+(mo-1)+"-"+da;
+            (deadlineMap[key]=deadlineMap[key]||[]).push({muni:item.muni||"",title:item.title||"",past:diff<0});
           }
         }
         html+='<div class="ni" id="hj-row-'+i+'" onclick="toggleHojyokin('+i+')" style="cursor:pointer;display:block;"><div style="display:flex;align-items:center;gap:10px;"><div class="nd">'+item.date+'</div><div class="nt" style="flex:1;"><span class="ntag '+kind.cls+'">'+kind.label+'</span>'+deadlineHtml+(item.muni?'<span class="ntag muni-tag">'+item.muni+'</span>':'')+item.title+'</div><span onclick="event.stopPropagation();deleteHojyokin(\''+item.id+'\',\'hj-row-'+i+'\')" title="削除" style="font-size:12px;color:#ccc;padding:2px 6px;flex-shrink:0;">🗑</span></div><div class="hj-detail" id="hj-detail-'+i+'" style="display:none;margin:8px 0 0 68px;padding:10px 12px;background:#f7f6fb;border-radius:8px;font-size:11px;color:#555;line-height:1.7;white-space:normal;">'+bodyHtml+'</div></div>';
       });
       area.innerHTML=html;
+      renderCalendar();  // 締切データが揃ったのでカレンダーを描き直す
     })
     .catch(function(){
       area.innerHTML='<div class="empty-row">📭 補助金メールは現在0件です</div>';
