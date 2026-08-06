@@ -102,6 +102,10 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif
 .koteikakaku-tag{background:#E8F5E9;color:#2E7D32;}
 .kasan-tag{background:#FFF3E0;color:#E65100;}
 .muni-tag{background:#E3F2FD;color:#0D47A1;}
+.deadline-soon{background:#FDECEA;color:#C62828;}
+.deadline-past{background:#ECEFF1;color:#90A4AE;}
+.deadline-urgent{background:#FFEBEE;color:#C62828;border:1px solid #E53935;animation:deadlineBlink 0.9s infinite;}
+@keyframes deadlineBlink{0%,100%{opacity:1;}50%{opacity:0.25;}}
 .loading-row{padding:11px 14px;font-size:12px;color:#aaa;}
 .empty-row{padding:11px 14px;font-size:12px;color:#bbb;text-align:center;}
 #hojyokin-area{max-height:172px;overflow-y:auto;}
@@ -526,7 +530,29 @@ function loadHojyokin(){
         }else if(t.indexOf("加算")!==-1||t.indexOf("処遇改善")!==-1||t.indexOf("キャリアアップ")!==-1){
           kind={label:"加算",cls:"kasan-tag"};
         }
-        html+='<div class="ni" id="hj-row-'+i+'" onclick="toggleHojyokin('+i+')" style="cursor:pointer;display:block;"><div style="display:flex;align-items:center;gap:10px;"><div class="nd">'+item.date+'</div><div class="nt" style="flex:1;"><span class="ntag '+kind.cls+'">'+kind.label+'</span>'+(item.muni?'<span class="ntag muni-tag">'+item.muni+'</span>':'')+item.title+'</div><span onclick="event.stopPropagation();deleteHojyokin(\''+item.id+'\',\'hj-row-'+i+'\')" title="削除" style="font-size:12px;color:#ccc;padding:2px 6px;flex-shrink:0;">🗑</span></div><div class="hj-detail" id="hj-detail-'+i+'" style="display:none;margin:8px 0 0 68px;padding:10px 12px;background:#f7f6fb;border-radius:8px;font-size:11px;color:#555;line-height:1.7;white-space:normal;">'+bodyHtml+'</div></div>';
+        // ▼ 締切の自動判定（件名から「◯/◯〆」「◯/◯期限」等を抽出）
+        var deadlineHtml="";
+        var z=t.normalize?t.normalize("NFKC"):t;  // 全角数字→半角
+        var dm=z.match(/(\d{1,2})\s*[\/／]\s*(\d{1,2})\s*(?:〆|締切|締め切り|期限|まで)/);
+        if(dm){
+          var mo=parseInt(dm[1],10),da=parseInt(dm[2],10);
+          if(mo>=1&&mo<=12&&da>=1&&da<=31){
+            var yr=new Date().getFullYear(),em=null;
+            var im=(item.date||"").match(/(\d{4})[\/\-](\d{1,2})/);
+            if(im){yr=parseInt(im[1],10);em=parseInt(im[2],10);}
+            if(em!==null&&em>=10&&mo<=3)yr+=1; // 年またぎ推定
+            var dl=new Date(yr,mo-1,da);
+            var td=new Date();td.setHours(0,0,0,0);
+            var diff=Math.round((dl-td)/86400000);
+            var label="〆"+mo+"/"+da,cls;
+            if(diff<0){cls="deadline-past";label="〆"+mo+"/"+da+"（終了）";}
+            else if(diff===0){cls="deadline-urgent";label="〆"+mo+"/"+da+" 本日";}
+            else if(diff<=3){cls="deadline-urgent";label="〆"+mo+"/"+da+" あと"+diff+"日";}
+            else{cls="deadline-soon";}
+            deadlineHtml='<span class="ntag '+cls+'">'+label+'</span>';
+          }
+        }
+        html+='<div class="ni" id="hj-row-'+i+'" onclick="toggleHojyokin('+i+')" style="cursor:pointer;display:block;"><div style="display:flex;align-items:center;gap:10px;"><div class="nd">'+item.date+'</div><div class="nt" style="flex:1;"><span class="ntag '+kind.cls+'">'+kind.label+'</span>'+deadlineHtml+(item.muni?'<span class="ntag muni-tag">'+item.muni+'</span>':'')+item.title+'</div><span onclick="event.stopPropagation();deleteHojyokin(\''+item.id+'\',\'hj-row-'+i+'\')" title="削除" style="font-size:12px;color:#ccc;padding:2px 6px;flex-shrink:0;">🗑</span></div><div class="hj-detail" id="hj-detail-'+i+'" style="display:none;margin:8px 0 0 68px;padding:10px 12px;background:#f7f6fb;border-radius:8px;font-size:11px;color:#555;line-height:1.7;white-space:normal;">'+bodyHtml+'</div></div>';
       });
       area.innerHTML=html;
     })
