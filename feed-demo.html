@@ -15,6 +15,8 @@
     --hq:#4a4a7a;    --hq-bg:#eeecfa;
     --like:#e0517a;
     --hojyokin:#6A1B9A; --hojyokin-bg:#F3E5F5;
+    --koteikakaku:#2E7D32; --koteikakaku-bg:#E8F5E9;
+    --kasan:#E65100; --kasan-bg:#FFF3E0;
     --muni:#0D47A1;    --muni-bg:#E3F2FD;
   }
   *{box-sizing:border-box}
@@ -126,12 +128,19 @@
   .w-all{font-size:11px; color:#6a5cd0; text-decoration:none;}
 
   /* 予定・締め切り（補助金） */
+  #deadline-list{max-height:288px; overflow-y:auto;}
   .dl-row{display:flex; gap:9px; padding:9px 0; border-top:1px dashed rgba(120,110,180,.18);}
   .dl-row:first-child{border-top:none;}
   .dl-date{font-size:10px; color:#000; white-space:nowrap; padding-top:2px; width:56px; flex:none;}
   .dl-body{flex:1; min-width:0;}
   .tag{font-size:10px; padding:1px 7px; border-radius:6px; font-weight:700; margin-right:4px; display:inline-block; vertical-align:1px;}
   .t-hojyokin{color:var(--hojyokin); background:var(--hojyokin-bg);}
+  .t-koteikakaku{color:var(--koteikakaku); background:var(--koteikakaku-bg);}
+  .t-kasan{color:var(--kasan); background:var(--kasan-bg);}
+  .t-deadline-soon{color:#C62828; background:#FDECEA;}
+  .t-deadline-past{color:#90A4AE; background:#ECEFF1;}
+  .t-deadline-urgent{color:#C62828; background:#FFEBEE; border:1px solid #E53935; animation:deadlineBlink .9s infinite;}
+  @keyframes deadlineBlink{0%,100%{opacity:1;}50%{opacity:.25;}}
   .t-muni{color:var(--muni); background:var(--muni-bg);}
   .dl-title{font-size:12px; line-height:1.45; color:var(--ink);
     display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;}
@@ -416,14 +425,42 @@ function loadHojyokin(){
     .then(r=>r.json())
     .then(list=>{
       if(!Array.isArray(list)||!list.length){ box.innerHTML='<div class="empty-s">📭 現在お知らせはありません</div>'; return; }
-      box.innerHTML = list.slice(0,4).map(it=>`
+      box.innerHTML = list.map(it=>{
+        const t=it.title||"";
+        // 種類判定（優先順：公定価格 ＞ 加算 ＞ 補助金）
+        let kLabel="補助金", kCls="t-hojyokin";
+        if(t.indexOf("公定価格")!==-1){ kLabel="公定価格"; kCls="t-koteikakaku"; }
+        else if(t.indexOf("加算")!==-1||t.indexOf("処遇改善")!==-1||t.indexOf("キャリアアップ")!==-1){ kLabel="加算"; kCls="t-kasan"; }
+        // 締切判定（件名から「◯/◯〆」「◯/◯期限」等を抽出）
+        let dTag="";
+        const z=t.normalize?t.normalize("NFKC"):t;
+        const dm=z.match(/(\d{1,2})\s*[\/／]\s*(\d{1,2})\s*(?:〆|締切|締め切り|期限|まで)/);
+        if(dm){
+          const mo=parseInt(dm[1],10),da=parseInt(dm[2],10);
+          if(mo>=1&&mo<=12&&da>=1&&da<=31){
+            let yr=new Date().getFullYear(),em=null;
+            const im=(it.date||"").match(/(\d{4})[\/\-](\d{1,2})/);
+            if(im){ yr=parseInt(im[1],10); em=parseInt(im[2],10); }
+            if(em!==null&&em>=10&&mo<=3)yr+=1;
+            const dl=new Date(yr,mo-1,da), td=new Date(); td.setHours(0,0,0,0);
+            const diff=Math.round((dl-td)/86400000);
+            let label="〆"+mo+"/"+da, cls;
+            if(diff<0){ cls="t-deadline-past"; label="〆"+mo+"/"+da+"（終了）"; }
+            else if(diff===0){ cls="t-deadline-urgent"; label="〆"+mo+"/"+da+" 本日"; }
+            else if(diff<=3){ cls="t-deadline-urgent"; label="〆"+mo+"/"+da+" あと"+diff+"日"; }
+            else{ cls="t-deadline-soon"; }
+            dTag=`<span class="tag ${cls}">${label}</span>`;
+          }
+        }
+        return `
         <div class="dl-row">
           <div class="dl-date">${esc(it.date||"")}</div>
           <div class="dl-body">
-            <span class="tag t-hojyokin">補助金</span>${it.muni?`<span class="tag t-muni">${esc(it.muni)}</span>`:""}
+            <span class="tag ${kCls}">${kLabel}</span>${dTag}${it.muni?`<span class="tag t-muni">${esc(it.muni)}</span>`:""}
             <div class="dl-title">${esc(it.title||"")}</div>
           </div>
-        </div>`).join("");
+        </div>`;
+      }).join("");
     })
     .catch(()=>{ box.innerHTML='<div class="empty-s">読み込みに失敗しました（ボードで確認してください）</div>'; });
 }
