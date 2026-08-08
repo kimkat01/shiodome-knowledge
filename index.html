@@ -30,7 +30,7 @@
   .app{max-width:1520px; margin:0 auto; display:flex; gap:36px; padding:12px 32px 72px; align-items:flex-start;}
 
   /* ===== 左カラム ===== */
-  .col-left{width:240px; flex:none; position:sticky; top:24px;}
+  .col-left{width:240px; flex:none; position:sticky; top:12px;}
   @media (max-width:820px){ .col-left{display:none} }
   .brand{display:flex; align-items:center; gap:10px; padding:0 10px 16px; text-decoration:none; color:inherit;}
   .brand .logo{width:34px; height:34px; border-radius:10px; background:var(--grad); display:grid; place-items:center; color:#fff; font-weight:800; font-size:15px;}
@@ -54,7 +54,7 @@
   .col-center{flex:1; min-width:0; max-width:920px;}
   .c-head{
     position:sticky; top:0; z-index:5; background:rgba(243,240,252,.86); backdrop-filter:blur(6px);
-    padding:0 6px 12px; margin:0 0 12px; border-radius:0 0 14px 14px;
+    padding:0 6px 8px; margin:0 0 0; border-radius:0 0 14px 14px;
   }
   .c-head h1{margin:0; font-size:18px; background:var(--grad); -webkit-background-clip:text; background-clip:text; color:transparent;}
   .c-head span{font-size:12px; color:var(--sub);}
@@ -119,7 +119,7 @@
   .empty-feed{text-align:center; color:var(--sub); font-size:13px; padding:30px;}
 
   /* ===== 右カラム ===== */
-  .col-right{width:360px; flex:none; position:sticky; top:24px; display:flex; flex-direction:column; gap:18px;}
+  .col-right{width:360px; flex:none; position:sticky; top:12px; display:flex; flex-direction:column; gap:18px;}
   @media (max-width:1100px){ .col-right{display:none} }
   .widget{background:var(--card); border:1px solid var(--line); border-radius:18px; padding:14px 15px; box-shadow:0 6px 20px rgba(90,70,190,.05);}
   .w-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:11px;}
@@ -169,30 +169,31 @@
 .tool-item.active{background:#fff;box-shadow:0 4px 14px rgba(90,70,190,.06);}
 .tool-item.locked{color:#9aa;cursor:default;}
 .tool-item.locked:hover{background:transparent;}
-/* === カレンダー（添付デザイン版） === */
-.rc{background:#fff;border:1px solid #e7e8f0;border-radius:22px;box-shadow:0 2px 10px rgba(30,32,60,.06);padding:16px 16px 18px;}
-.rc-datetime{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:#6b7280;font-weight:700;margin:0 4px 12px;}
-.rc-datetime span:last-child{color:#9aa0aa;font-weight:600;}
-.cal-header{display:flex;align-items:center;justify-content:center;gap:8px;padding:2px 0 14px;}
-.cal-nav{width:38px;height:38px;border-radius:50%;background:#eef0f4;color:#1f2a44;display:flex;align-items:center;justify-content:center;font-size:19px;cursor:pointer;user-select:none;flex:none;transition:background .12s,color .12s;}
-.cal-nav:hover{background:#e3e6ee;color:#2540ff;}
-.cal-title-wrap{display:flex;align-items:center;gap:8px;flex:1;justify-content:center;}
-.cal-pill{background:#eef0f4;border:1px solid #d5d9e2;border-radius:13px;padding:8px 15px;font-size:15px;font-weight:800;color:#1f2a44;display:inline-flex;align-items:center;gap:6px;}
-.cal-pill .car{color:#2540ff;font-size:8px;line-height:1;}
-.cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:12px;color:#6b7280;font-weight:700;margin-bottom:8px;}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
-.cal-day{position:relative;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;background:#eef0f4;border-radius:8px;font-size:13px;font-weight:600;color:#1f2a44;}
-.cal-day.oth{color:#c4c8d0;background:transparent;}
-.cal-day.today{background:#2540ff;color:#fff;font-weight:800;box-shadow:0 3px 9px rgba(37,64,255,.32);}
-.cal-day.sun{color:#e05656;}
-.cal-day.sat{color:#3f74e0;}
-.cal-day.today.sun,.cal-day.today.sat{color:#fff;}
+/* === カレンダー（添付デザイン：日付ブロック左＋グリッド右） === */
+.rc{background:#fff;border:1px solid #e7e8f0;border-radius:22px;box-shadow:0 2px 10px rgba(30,32,60,.06);padding:14px;display:flex;gap:12px;align-items:flex-start;margin-top:52px;}
+.cal-left{width:104px;flex:none;padding-top:2px;}
+.cal-year{font-size:13px;font-weight:800;color:#232323;letter-spacing:.04em;line-height:1;}
+.cal-bigdate{display:flex;align-items:center;gap:6px;margin-top:4px;}
+.cal-bigdate .md{font-size:23px;font-weight:800;color:#1a1a1a;line-height:1.02;font-variant-numeric:tabular-nums;letter-spacing:.01em;}
+.cal-bigdate .md .sl{color:#9aa0aa;margin:0 1px;font-weight:700;}
+.cal-dow-badge{width:22px;height:22px;border-radius:50%;background:#c7cad1;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex:none;}
+.cal-legend{font-size:12px;color:#333;font-weight:700;display:flex;align-items:center;gap:6px;margin-top:14px;}
+.cal-legend .dot{width:9px;height:9px;border-radius:50%;background:#e0322c;display:inline-block;}
+.cal-right{flex:1;min-width:0;}
+.cal-header{display:flex;align-items:center;justify-content:space-between;gap:4px;padding:0 0 7px;}
+.cal-navbtn{background:#fff;border:1px solid #cfd2da;border-radius:7px;padding:3px 7px;font-size:10px;font-weight:700;color:#333;cursor:pointer;white-space:nowrap;user-select:none;transition:background .12s;}
+.cal-navbtn:hover{background:#f4f5f8;}
+.cal-title{font-size:12px;font-weight:800;color:#232323;}
+.cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:11px;color:#555;font-weight:700;margin-bottom:4px;}
+.cal-dow-row .s-sun{color:#e0322c;}
+.cal-dow-row .s-sat{color:#3f74e0;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-day{position:relative;aspect-ratio:1/0.86;display:flex;align-items:center;justify-content:center;background:#e9e9ec;border-radius:2px;font-size:12px;font-weight:800;color:#242424;}
+.cal-day.oth{background:#f1f2f4;color:transparent;}
+.cal-day.today{background:#fff;box-shadow:inset 0 0 0 2px #1a1a1a;color:#111;}
 .cal-day.has-dl{cursor:pointer;}
-.cal-dot{position:absolute;left:50%;bottom:5px;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:#e53935;pointer-events:none;}
+.cal-dot{position:absolute;left:50%;bottom:3px;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:#e0322c;pointer-events:none;}
 .cal-dot.past{background:#c0c4cc;}
-.cal-day.today .cal-dot{background:#fff;}
-.cal-legend{font-size:10px;color:#9aa0aa;margin:12px 4px 0;display:flex;align-items:center;gap:5px;}
-.cal-legend .dot{width:6px;height:6px;border-radius:50%;background:#e53935;display:inline-block;}
 .cal-tip{position:fixed;z-index:9999;background:#2b2f3a;color:#fff;font-size:11px;line-height:1.5;padding:7px 10px;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.25);max-width:230px;pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .12s ease,transform .12s ease;white-space:normal;}
 .cal-tip.show{opacity:1;transform:translateY(0);}
 .cal-tip .tip-line{display:block;}
@@ -262,18 +263,20 @@
   <!-- ===== 右：予定・締め切り／注目／トピック ===== -->
   <aside class="col-right">
     <div class="rc">
-      <div class="rc-datetime"><span id="hdate-date"></span><span id="hdate-time"></span></div>
-      <div class="cal-header">
-        <span class="cal-nav" onclick="calShift(-1)">‹</span>
-        <div class="cal-title-wrap">
-          <span class="cal-pill" id="cal-year-pill"></span>
-          <span class="cal-pill" id="cal-month-pill"></span>
-        </div>
-        <span class="cal-nav" onclick="calShift(1)">›</span>
+      <div class="cal-left">
+        <div class="cal-year" id="cb-year"></div>
+        <div class="cal-bigdate"><span class="md" id="cb-md"></span><span class="cal-dow-badge" id="cb-dow"></span></div>
+        <div class="cal-legend"><span class="dot"></span> 補助金締切</div>
       </div>
-      <div class="cal-dow-row"><span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span></div>
-      <div class="cal-grid" id="cal-grid"></div>
-      <div class="cal-legend"><span class="dot"></span> 補助金の締切（マウスを乗せると内容を表示）</div>
+      <div class="cal-right">
+        <div class="cal-header">
+          <span class="cal-navbtn" onclick="calShift(-1)">◀前月</span>
+          <span class="cal-title" id="cal-month-label"></span>
+          <span class="cal-navbtn" onclick="calShift(1)">次月▶</span>
+        </div>
+        <div class="cal-dow-row"><span class="s-sun">日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span class="s-sat">土</span></div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
     </div>
 
     <div class="widget">
@@ -513,12 +516,13 @@ loadHojyokin();
 
 /* ===== カレンダー（掲示板メイン版で追加：ポータルから移設・自己完結） ===== */
 function updateTime(){
-  var now=new Date(),h=now.getHours(),m=now.getMinutes();
+  var now=new Date();
   var pad=function(n){return n<10?"0"+n:n;};
   var days=["日","月","火","水","木","金","土"];
-  var d=document.getElementById("hdate-date"),t=document.getElementById("hdate-time");
-  if(d)d.textContent=now.getFullYear()+"年"+(now.getMonth()+1)+"月"+now.getDate()+"日（"+days[now.getDay()]+"）";
-  if(t)t.textContent=pad(h)+":"+pad(m);
+  var y=document.getElementById("cb-year"),md=document.getElementById("cb-md"),dw=document.getElementById("cb-dow");
+  if(y)y.textContent=now.getFullYear();
+  if(md)md.innerHTML=pad(now.getMonth()+1)+'<span class="sl">/</span>'+pad(now.getDate());
+  if(dw)dw.textContent=days[now.getDay()];
 }
 var calViewDate=new Date();
 var deadlineMap={};
@@ -546,23 +550,19 @@ window.addEventListener("scroll",hideCalTip,true);
 window.addEventListener("resize",hideCalTip);
 function renderCalendar(){
   var today=new Date(),y=calViewDate.getFullYear(),m=calViewDate.getMonth();
-  var mp=document.getElementById("cal-month-pill"),yp=document.getElementById("cal-year-pill");
-  if(mp)mp.innerHTML=(m+1)+'月<span class="car">\u25bc</span>';
-  if(yp)yp.innerHTML=y+'年<span class="car">\u25bc</span>';
+  var pad2=function(n){return n<10?"0"+n:n;};
+  var lbl=document.getElementById("cal-month-label");if(lbl)lbl.textContent=y+"年"+pad2(m+1)+"月";
   var grid=document.getElementById("cal-grid");if(!grid)return;grid.innerHTML="";
   var firstDow=new Date(y,m,1).getDay();            // 日曜=0
   var lastDate=new Date(y,m+1,0).getDate();
   var prevLast=new Date(y,m,0).getDate();
   function mk(dd,dow,cls){
     var cell=document.createElement("span");
-    if(dow===0)cls+=" sun";        // 日曜
-    if(dow===6)cls+=" sat";        // 土曜
     cell.className=cls;cell.textContent=dd;return cell;
   }
-  // 前月の余り（グレー）
+  // 前月の余り（数字なしの空セル）
   for(var i=0;i<firstDow;i++){
-    var d=prevLast-firstDow+1+i, dow=new Date(y,m-1,d).getDay();
-    grid.appendChild(mk(d,dow,"cal-day oth"));
+    var e=document.createElement("span");e.className="cal-day oth";grid.appendChild(e);
   }
   // 当月
   for(var dd=1;dd<=lastDate;dd++){
@@ -578,11 +578,10 @@ function renderCalendar(){
     }
     grid.appendChild(cell);
   }
-  // 翌月の頭（グレー）で最終週を埋める
+  // 翌月の頭（数字なしの空セル）で最終週を埋める
   var used=firstDow+lastDate, rem=(7-(used%7))%7;
   for(var j=1;j<=rem;j++){
-    var dow=new Date(y,m+1,j).getDay();
-    grid.appendChild(mk(j,dow,"cal-day oth"));
+    var e2=document.createElement("span");e2.className="cal-day oth";grid.appendChild(e2);
   }
 }
 function loadCalendarDeadlines(){
