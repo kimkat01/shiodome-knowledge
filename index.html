@@ -177,8 +177,9 @@
 .cal-bigdate .md{font-size:23px;font-weight:800;color:#1a1a1a;line-height:1.02;font-variant-numeric:tabular-nums;letter-spacing:.01em;}
 .cal-bigdate .md .sl{color:#9aa0aa;margin:0 1px;font-weight:700;}
 .cal-dow-badge{width:22px;height:22px;border-radius:50%;background:#c7cad1;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex:none;}
-.cal-legend{font-size:12px;color:#333;font-weight:700;display:flex;align-items:center;gap:6px;margin-top:14px;}
-.cal-legend .dot{width:9px;height:9px;border-radius:50%;background:#e0322c;display:inline-block;}
+.cal-legend-title{font-size:12px;color:#333;font-weight:700;margin-top:14px;margin-bottom:6px;}
+.cal-leg-row{font-size:11px;color:#555;font-weight:600;display:flex;align-items:center;gap:6px;margin-bottom:3px;}
+.cal-leg-row .sw{width:11px;height:11px;border-radius:3px;flex:none;display:inline-block;}
 .cal-right{flex:1;min-width:0;}
 .cal-header{display:flex;align-items:center;justify-content:space-between;gap:4px;padding:0 0 7px;}
 .cal-navbtn{background:#fff;border:1px solid #cfd2da;border-radius:7px;padding:3px 7px;font-size:10px;font-weight:700;color:#333;cursor:pointer;white-space:nowrap;user-select:none;transition:background .12s;}
@@ -192,8 +193,10 @@
 .cal-day.oth{background:#f1f2f4;color:transparent;}
 .cal-day.today{background:#fff;box-shadow:inset 0 0 0 2px #1a1a1a;color:#111;}
 .cal-day.has-dl{cursor:pointer;}
-.cal-dot{position:absolute;left:50%;bottom:3px;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:#e0322c;pointer-events:none;}
-.cal-dot.past{background:#c0c4cc;}
+.cal-day.dl-near{background:#f7c1c1;color:#791f1f;}
+.cal-day.dl-later{background:#fac775;color:#633806;}
+.cal-day.dl-past{background:#dcdce0;color:#8a8a8a;}
+.cal-day.today.dl-near,.cal-day.today.dl-later,.cal-day.today.dl-past{box-shadow:inset 0 0 0 2px #1a1a1a;}
 .cal-tip{position:fixed;z-index:9999;background:#2b2f3a;color:#fff;font-size:11px;line-height:1.5;padding:7px 10px;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.25);max-width:230px;pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .12s ease,transform .12s ease;white-space:normal;}
 .cal-tip.show{opacity:1;transform:translateY(0);}
 .cal-tip .tip-line{display:block;}
@@ -266,7 +269,10 @@
       <div class="cal-left">
         <div class="cal-year" id="cb-year"></div>
         <div class="cal-bigdate"><span class="md" id="cb-md"></span><span class="cal-dow-badge" id="cb-dow"></span></div>
-        <div class="cal-legend"><span class="dot"></span> 補助金締切</div>
+        <div class="cal-legend-title">補助金締切</div>
+        <div class="cal-leg-row"><span class="sw" style="background:#f7c1c1"></span>まもなく</div>
+        <div class="cal-leg-row"><span class="sw" style="background:#fac775"></span>先の予定</div>
+        <div class="cal-leg-row"><span class="sw" style="background:#dcdce0"></span>終了</div>
       </div>
       <div class="cal-right">
         <div class="cal-header">
@@ -571,8 +577,8 @@ function renderCalendar(){
     var dls=deadlineMap[y+"-"+m+"-"+dd];if(dls&&dls.length)cls+=" has-dl";
     var cell=mk(dd,dow,cls);
     if(dls&&dls.length){
-      var allPast=dls.every(function(x){return x.past;});
-      var dot=document.createElement("span");dot.className="cal-dot"+(allPast?" past":"");cell.appendChild(dot);
+      var minDiff=Math.min.apply(null,dls.map(function(x){return (typeof x.diff==="number")?x.diff:(x.past?-1:999);}));
+      cell.className += (minDiff<0) ? " dl-past" : (minDiff<=7 ? " dl-near" : " dl-later");
       cell.setAttribute("data-tip",dls.map(function(x){return "〆"+(m+1)+"/"+dd+"  "+(x.muni?"["+x.muni+"] ":"")+x.title;}).join("\n"));
       cell.addEventListener("mouseenter",showCalTip);cell.addEventListener("mouseleave",hideCalTip);cell.addEventListener("click",toggleCalTip);
     }
@@ -600,7 +606,7 @@ function loadCalendarDeadlines(){
         if(em!==null&&em>=10&&mo<=3)yr+=1;
         var dl=new Date(yr,mo-1,da),td=new Date();td.setHours(0,0,0,0);
         var diff=Math.round((dl-td)/86400000),key=yr+"-"+(mo-1)+"-"+da;
-        (deadlineMap[key]=deadlineMap[key]||[]).push({muni:it.muni||"",title:it.title||"",past:diff<0});
+        (deadlineMap[key]=deadlineMap[key]||[]).push({muni:it.muni||"",title:it.title||"",past:diff<0,diff:diff});
       });
       renderCalendar();
     }).catch(function(){renderCalendar();});
