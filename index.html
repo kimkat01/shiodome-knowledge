@@ -149,6 +149,13 @@
   .t-muni{color:var(--muni); background:var(--muni-bg);}
   .dl-title{font-size:12px; line-height:1.45; color:var(--ink);
     display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;}
+  .dl-row.has-body{cursor:pointer;}
+  .dl-row.has-body:hover .dl-title{color:#5a54c8;}
+  .dl-caret{float:right; color:var(--sub); font-size:12px; margin-left:6px; transition:transform .15s;}
+  .dl-row.open .dl-caret{transform:rotate(90deg);}
+  .dl-row.open .dl-title{-webkit-line-clamp:unset; display:block; overflow:visible;}
+  .dl-detail{display:none; margin-top:8px; padding:10px 12px; background:#faf9fe; border:1px solid var(--line); border-radius:10px; font-size:12px; line-height:1.7; color:#333; white-space:pre-wrap; word-break:break-word; max-height:320px; overflow-y:auto;}
+  .dl-row.open .dl-detail{display:block;}
   .load-s,.empty-s{font-size:12px; color:var(--sub); padding:8px 2px;}
 
   /* 今週の注目 */
@@ -579,18 +586,27 @@ function loadHojyokin(){
             dTag=`<span class="tag ${cls}">${label}</span>`;
           }
         }
+        const hasBody = !!(it.body && String(it.body).trim());
         return `
-        <div class="dl-row">
+        <div class="dl-row${hasBody?" has-body":""}">
           <div class="dl-date">${esc(it.date||"")}</div>
           <div class="dl-body">
-            <span class="tag ${kCls}">${kLabel}</span>${dTag}${it.muni?`<span class="tag t-muni">${esc(it.muni)}</span>`:""}
+            <span class="tag ${kCls}">${kLabel}</span>${dTag}${it.muni?`<span class="tag t-muni">${esc(it.muni)}</span>`:""}${hasBody?`<span class="dl-caret">›</span>`:""}
             <div class="dl-title">${esc(it.title||"")}</div>
+            ${hasBody?`<div class="dl-detail">${esc(it.body)}</div>`:""}
           </div>
         </div>`;
       }).join("");
     })
     .catch(()=>{ box.innerHTML='<div class="empty-s">読み込みに失敗しました（ボードで確認してください）</div>'; });
 }
+
+/* 補助金の行をクリックすると、その場で本文を開閉する（本文がある行のみ） */
+document.getElementById("deadline-list").addEventListener("click", function(e){
+  if(e.target.closest(".dl-detail")) return;   // 本文内の操作（文字選択など）では閉じない
+  const row = e.target.closest(".dl-row.has-body");
+  if(row) row.classList.toggle("open");
+});
 
 render();
 loadHojyokin();
