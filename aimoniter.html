@@ -1159,8 +1159,6 @@ function buildFrameTimes(){
 async function analyzeVisual(){
   if(visualRunning)return;
   if(!videoEl||!duration){toast('先に映像を読み込んでください');return;}
-  const key=localStorage.getItem('vm_apikey')||'';
-  if(!key){stat('⚠ 設定でAPIキーを保存してください','var(--red)');document.getElementById('keybar').classList.add('show');return;}
   visualRunning=true;
   const btn=document.getElementById('visualBtn');
   if(btn){btn.disabled=true;btn.textContent='映像解析中…';}
