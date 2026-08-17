@@ -277,7 +277,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:
   <div class="hd">
     <span class="logo">AI<b>moniter</b> 解析</span>
     <span class="tag">映像を読み込み、言葉を解析する</span>
-    <div class="keys">
+    <div class="keys" style="display:none;">
       <span class="kdot" id="kdot">キー未設定</span>
       <button class="gear" onclick="toggleKeys()">⚙ 設定</button>
     </div>
@@ -757,8 +757,6 @@ async function detectAll(sens){
 /* ---- main ---- */
 async function analyze(){
   if(running)return;
-  const oKey=localStorage.getItem('vm_openai_key')||'',aKey=localStorage.getItem('vm_apikey')||'';
-  if(!oKey||!aKey){stat('⚠ 設定でAPIキーを保存してください','var(--red)');document.getElementById('keybar').classList.add('show');return;}
   if(!mediaFile){stat('⚠ 映像を読み込んでください','var(--yellow)');return;}
   running=true;const btn=document.getElementById('analyzeBtn');btn.disabled=true;btn.textContent='解析中…';
   document.getElementById('feed').innerHTML='';document.getElementById('count').textContent='';
