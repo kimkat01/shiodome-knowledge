@@ -366,14 +366,14 @@ body{font-family:'Noto Sans JP',sans-serif;background:
         <button class="rpbtn" id="visualBtn" onclick="analyzeVisual()" title="映像フレームを解析">🎥 映像を解析</button>
       </div>
       <div class="rtabs">
-        <button class="rtab t-sex on" data-rtab="sex" onclick="switchRTab('sex')">性暴力<span class="tabct" id="sexct"></span></button>
-        <button class="rtab t-bad" data-rtab="bad" onclick="switchRTab('bad')">不適切保育<span class="tabct" id="badct"></span></button>
+        <button class="rtab on" data-rtab="full" onclick="switchRTab('full')">全文</button>
         <button class="rtab t-good" data-rtab="good" onclick="switchRTab('good')">良い保育<span class="tabct" id="goodct"></span></button>
-        <button class="rtab" data-rtab="full" onclick="switchRTab('full')">全文</button>
+        <button class="rtab t-bad" data-rtab="bad" onclick="switchRTab('bad')">不適切保育<span class="tabct" id="badct"></span></button>
+        <button class="rtab t-sex" data-rtab="sex" onclick="switchRTab('sex')">性暴力<span class="tabct" id="sexct"></span></button>
       </div>
 
       <!-- 性暴力の兆候 -->
-      <section class="panel rtabpane on" id="rt-sex">
+      <section class="panel rtabpane" id="rt-sex">
         <div class="legend"><span style="color:var(--text3)">この画面は「人が映像で確認すべき兆候」の抽出です。AIは断定しません。🔊音声＝性的言動／🎥映像＝1対1・隔離・死角などの状況リスク。</span></div>
         <div class="feed" id="sexFeed"><div class="empty">性暴力の兆候（性的言動・状況リスク）が検出されるとここに一覧されます。</div></div>
       </section>
@@ -411,7 +411,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:
       </section>
 
       <!-- 全文 -->
-      <section class="panel panel-text rtabpane" id="rt-full">
+      <section class="panel panel-text rtabpane on" id="rt-full">
         <div class="legend">
           <span><i style="background:var(--red)"></i>不適切</span>
           <span><i style="background:var(--purple)"></i>性暴力</span>
