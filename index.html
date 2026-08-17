@@ -125,6 +125,11 @@
   .w-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:11px;}
   .w-head b{font-size:14px;}
   .w-head .sub{font-size:11px; color:var(--sub);}
+  .refresh-btn{font:inherit; font-size:12px; font-weight:700; color:var(--hojyokin); background:var(--hojyokin-bg); border:none; padding:5px 12px; border-radius:999px; cursor:pointer; display:inline-flex; align-items:center; gap:5px;}
+  .refresh-btn:hover{filter:brightness(.97);}
+  .refresh-btn:disabled{opacity:.6; cursor:default;}
+  .refresh-btn.spin .ic{display:inline-block; animation:rbspin .8s linear infinite;}
+  @keyframes rbspin{to{transform:rotate(360deg);}}
   .w-all{font-size:11px; color:#6a5cd0; text-decoration:none;}
 
   /* 予定・締め切り（補助金） */
@@ -309,7 +314,7 @@
     </div>
 
     <div class="widget">
-      <div class="w-head"><b>💰 補助金情報</b></div>
+      <div class="w-head"><b>💰 補助金情報</b><button class="refresh-btn" id="hojyokin-refresh" onclick="refreshHojyokin()" title="補助金情報を最新に更新"><span class="ic">🔄</span>更新</button></div>
       <div id="deadline-list"><div class="load-s">補助金情報を読み込み中…</div></div>
     </div>
 
@@ -589,6 +594,15 @@ function loadHojyokin(){
 
 render();
 loadHojyokin();
+
+/* 「🔄 更新」ボタン：補助金一覧とカレンダーの両方を最新のhojyokin.jsonから取り直す */
+function refreshHojyokin(){
+  var btn=document.getElementById("hojyokin-refresh");
+  if(btn){ btn.disabled=true; btn.classList.add("spin"); }
+  try{ loadHojyokin(); }catch(e){}
+  try{ loadCalendarDeadlines(); }catch(e){}
+  if(btn){ setTimeout(function(){ btn.disabled=false; btn.classList.remove("spin"); }, 1500); }
+}
 
 /* ===== カレンダー（掲示板メイン版で追加：ポータルから移設・自己完結） ===== */
 function updateTime(){
