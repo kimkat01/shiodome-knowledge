@@ -164,6 +164,41 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 </head>
 <body>
 
+<div id="pw-gate" style="position:fixed;inset:0;background:#4169e1;z-index:9999;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <div style="background:#fff;border-radius:16px;padding:36px 32px;width:320px;max-width:90vw;box-shadow:0 10px 40px rgba(0,0,0,.25);text-align:center;">
+    <div style="font-size:16px;font-weight:700;color:#2b2b3a;margin-bottom:6px;">経営ダッシュボード</div>
+    <div style="font-size:12px;color:#8a8f9c;margin-bottom:18px;">パスワードを入力してください</div>
+    <input id="pw-input" type="password" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;margin-bottom:10px;" autocomplete="off">
+    <div id="pw-error" style="color:#e33;font-size:12px;height:16px;margin-bottom:6px;"></div>
+    <button id="pw-submit" style="width:100%;padding:10px;border:none;border-radius:8px;background:#4169e1;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">開く</button>
+  </div>
+</div>
+<script>
+(function(){
+  var PW = "shiodome8000";
+  var gate = document.getElementById('pw-gate');
+  var input = document.getElementById('pw-input');
+  var err = document.getElementById('pw-error');
+  function tryUnlock(){
+    if(input.value === PW){
+      sessionStorage.setItem('keieiDashboardAuth','1');
+      gate.style.display = 'none';
+    } else {
+      err.textContent = 'パスワードが違います';
+      input.value = '';
+      input.focus();
+    }
+  }
+  if(sessionStorage.getItem('keieiDashboardAuth') === '1'){
+    gate.style.display = 'none';
+  } else {
+    input.focus();
+  }
+  document.getElementById('pw-submit').addEventListener('click', tryUnlock);
+  input.addEventListener('keydown', function(e){ if(e.key === 'Enter') tryUnlock(); });
+})();
+</script>
+
 <header class="header">
   <div>
     <div class="header-title">学校法人 柴学園　経営ダッシュボード</div>
