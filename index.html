@@ -248,8 +248,6 @@
     <div class="brand" style="cursor:default;">
       <span class="logo">し</span><span><b>しおどめ保育園三郷中央</b><small>ナレッジボード</small></span>
     </div>
-    <div class="tool-item home active">
-      <svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg>しおどめポータル</div>
     <a class="tool-item" href="https://kimkat01.github.io/shiodome-knowledge/aimoniter.html" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="12" rx="1"/><path d="M8 20h8M12 16v4"/></svg>AIモニタリング</a>
     <a class="tool-item" href="https://kimkat01.github.io/shiodome-knowledge/hiyari.html" target="_blank" rel="noopener">
@@ -261,11 +259,11 @@
     <a class="tool-item" href="https://kimkat01.github.io/shiodome-knowledge/corporate-book-flipbook.html" target="_blank" rel="noopener" onclick="return cbGate(event);">
       <svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 012-2h12v16H6a2 2 0 00-2 2z"/><path d="M4 19a2 2 0 012-2h12"/></svg>コーポレートブック</a>
     <a class="tool-item" href="https://kimkat01.github.io/shiodome-knowledge/keiei-dashboard.html" target="_blank" rel="noopener">
-      <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>経営情報</a>
-    <div class="tool-item locked" onclick="comingSoon('申請承認')">
+      <svg viewBox="0 0 24 24"><path d="M4 4v16h16"/><path d="M8 16v-4M12 16V8M16 16v-7"/></svg>経営情報</a>
+    <div class="tool-item" onclick="comingSoon('申請承認')">
       <svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4"/><path d="M9 13l2 2 4-4"/></svg>申請承認<span class="soon-tag">製作中</span></div>
-    <div class="tool-item locked" onclick="comingSoon('あげますネット')">
-      <svg viewBox="0 0 24 24"><path d="M12 20V8"/><path d="M8 12l4-4 4 4"/><path d="M5 5h14"/></svg>あげますネット<span class="soon-tag">製作中</span></div>
+    <div class="tool-item" onclick="comingSoon('あげますねっと')">
+      <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>あげますねっと<span class="soon-tag">製作中</span></div>
 
     <button class="nav-post" id="navPost">＋ 投稿する</button>
   </aside>
@@ -336,6 +334,17 @@
 
 </div>
 
+<!-- コーポレートブック パスワード（経営ダッシュボードと同デザイン） -->
+<div id="cb-gate" style="position:fixed;inset:0;background:rgba(20,22,40,.42);z-index:10002;display:none;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:36px 32px;width:320px;max-width:90vw;box-shadow:0 10px 40px rgba(0,0,0,.25);text-align:center;">
+    <div style="font-size:16px;font-weight:700;color:#2b2b3a;margin-bottom:6px;">コーポレートブック</div>
+    <div style="font-size:12px;color:#8a8f9c;margin-bottom:18px;">パスワードを入力してください</div>
+    <input id="cb-input" type="password" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;margin-bottom:10px;" autocomplete="off">
+    <div id="cb-error" style="color:#e33;font-size:12px;height:16px;margin-bottom:6px;"></div>
+    <button id="cb-submit" style="width:100%;padding:10px;border:none;border-radius:8px;background:#4169e1;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">開く</button>
+  </div>
+</div>
+
 <!-- トースト（製作中の通知） -->
 <div class="toast" id="toast"></div>
 
@@ -365,7 +374,36 @@ function toast(msg){
   _toastTimer=setTimeout(()=>el.classList.remove("show"),2200);
 }
 function comingSoon(name){ toast((name?name+"は":"")+"ただいま製作中です"); }
-function cbGate(e){ var pw=prompt("コーポレートブックを開くパスワードを入力してください"); if(pw==="shiodome8000"){ return true; } if(pw!==null){ alert("パスワードが違います"); } e.preventDefault(); return false; }
+function cbGate(e){
+  if(sessionStorage.getItem('corporateBookAuth')==='1'){ return true; }
+  e.preventDefault();
+  var g=document.getElementById('cb-gate');
+  var i=document.getElementById('cb-input');
+  document.getElementById('cb-error').textContent='';
+  i.value=''; g.style.display='flex'; i.focus();
+  return false;
+}
+(function(){
+  var PW="shiodome8000";
+  var CB_URL="https://kimkat01.github.io/shiodome-knowledge/corporate-book-flipbook.html";
+  var g=document.getElementById('cb-gate');
+  var i=document.getElementById('cb-input');
+  var err=document.getElementById('cb-error');
+  function tryCb(){
+    if(i.value===PW){
+      sessionStorage.setItem('corporateBookAuth','1');
+      g.style.display='none';
+      window.open(CB_URL,'_blank','noopener');
+    } else {
+      err.textContent='パスワードが違います';
+      i.value=''; i.focus();
+    }
+  }
+  document.getElementById('cb-submit').addEventListener('click', tryCb);
+  i.addEventListener('keydown', function(e){ if(e.key==='Enter') tryCb(); });
+  g.addEventListener('click', function(e){ if(e.target===g) g.style.display='none'; });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape') g.style.display='none'; });
+})();
 function openGuide(){ const o=document.getElementById("guideOv"); if(o)o.classList.add("show"); }
 function closeGuide(){ const o=document.getElementById("guideOv"); if(o)o.classList.remove("show"); }
 document.addEventListener("keydown",e=>{ if(e.key==="Escape")closeGuide(); });
