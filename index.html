@@ -61,12 +61,14 @@
 
   .me{display:flex; gap:8px; align-items:center; flex-wrap:wrap; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:10px 12px; margin-bottom:12px;}
   .me label{font-size:12px; color:var(--sub);}
-  .me select,.me input{font:inherit; font-size:13px; padding:8px 10px; border:1px solid var(--line); border-radius:12px; background:#fbfbfe; color:var(--ink); outline:none;}
+  .me select,.me input{font:inherit; font-size:13px; padding:8px 10px; border:1px solid var(--line); border-radius:12px; background:#fbfbfe; color:#000; outline:none;}
   .me input{flex:1; min-width:110px;}
 
-  .composer{background:var(--card); border:1px solid var(--line); border-radius:22px; padding:15px; margin-bottom:16px; box-shadow:0 8px 26px rgba(90,70,190,.07);}
-  .composer textarea{width:100%; border:none; resize:vertical; min-height:52px; font:inherit; font-size:15px; color:var(--ink); outline:none; background:transparent;}
+  .composer{background:var(--card); border:1px solid var(--line); border-radius:22px; padding:18px; margin-bottom:16px; box-shadow:0 8px 26px rgba(90,70,190,.07); transition:box-shadow .15s ease, border-color .15s ease;}
+  .composer.drag-over{border-color:#7c5cf0; box-shadow:0 0 0 3px rgba(124,92,240,.18);}
+  .composer textarea{width:100%; border:none; resize:vertical; min-height:180px; font:inherit; font-size:16px; line-height:1.7; color:#000; outline:none; background:transparent;}
   .composer textarea::placeholder{color:#b0aec6;}
+  .drop-hint{font-size:12px; color:var(--sub); margin-top:6px; padding:0 2px;}
   .comp-foot{display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap;}
   .icon-btn{font:inherit; font-size:18px; line-height:1; background:#f7f5fe; border:1px solid var(--line); width:40px; height:40px; border-radius:12px; cursor:pointer;}
   .icon-btn:hover{background:#f0edfd;}
@@ -80,6 +82,26 @@
   .preview.show{display:block;}
   .preview img{max-width:100%; border-radius:16px; display:block;}
   .preview .rm{position:absolute; top:8px; right:8px; width:28px; height:28px; border-radius:50%; background:rgba(20,10,40,.6); color:#fff; border:none; cursor:pointer; font-size:16px;}
+  .file-chip{display:inline-flex; align-items:center; gap:8px; background:#f7f5fe; border:1px solid var(--line); border-radius:14px; padding:9px 14px; font-size:13px; color:var(--ink); text-decoration:none; max-width:100%;}
+  .file-chip span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .p-file{margin-top:12px;}
+
+  /* ===== フィード検索 ===== */
+  .feed-toolbar{margin-bottom:14px;}
+  .search-box{display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--line); border-radius:999px; padding:9px 16px; box-shadow:0 4px 14px rgba(90,70,190,.05);}
+  .search-box .search-ic{font-size:14px; opacity:.6;}
+  .search-box input{flex:1; border:none; outline:none; background:transparent; font:inherit; font-size:14px; color:#000;}
+  .search-box input::placeholder{color:#b0aec6;}
+  .search-clear{border:none; background:#f0edfd; color:var(--sub); width:22px; height:22px; border-radius:50%; cursor:pointer; font-size:13px; line-height:1;}
+
+  /* ===== 投稿モーダル ===== */
+  .post-modal-ov{position:fixed; inset:0; background:rgba(20,22,40,.42); display:none; align-items:center; justify-content:center; z-index:10001; padding:20px;}
+  .post-modal-ov.show{display:flex;}
+  .post-modal-card{background:#fff; border-radius:22px; max-width:640px; width:100%; padding:24px 24px 22px; box-shadow:0 18px 50px rgba(20,22,50,.3); max-height:92vh; overflow-y:auto;}
+  .post-modal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
+  .post-modal-head h2{margin:0; font-size:17px; color:#232433;}
+  .post-modal-close{border:none; background:#f0edfd; color:var(--sub); width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:15px; line-height:1;}
+  .like-by{font-size:11px; color:var(--sub); margin-top:8px; padding:0 2px; line-height:1.5;}
 
   .feed{display:flex; flex-direction:column; gap:20px;}
   .post{background:var(--card); border:1px solid var(--line); border-radius:22px; padding:18px 20px; box-shadow:0 6px 20px rgba(90,70,190,.05); animation:rise .3s ease both;}
@@ -274,25 +296,11 @@
   <main class="col-center">
     <div class="c-head"><h1>しおどめポータル</h1><span id="feedLabel">すべての投稿</span></div>
 
-    <div class="me">
-      <label for="who">投稿者</label>
-      <select id="who"></select>
-      <input id="myname" type="text" placeholder="お名前" value="山田">
-    </div>
-
-    <div class="composer" id="composer">
-      <textarea id="body" placeholder="いまの共有を書く…（例：良かった保育の工夫、ヒヤリの気づき、質問など）"></textarea>
-      <div class="preview" id="preview"><button class="rm" id="rmImg" title="削除">×</button><img id="pvImg" alt="添付プレビュー"></div>
-      <div class="comp-foot">
-        <input type="file" id="file" accept="image/*" hidden>
-        <button class="icon-btn" id="attach" title="写真を追加">📷</button>
-        <div class="topics" id="topics">
-          <span class="topic" data-t="お知らせ" role="button" aria-pressed="false">お知らせ</span>
-          <span class="topic" data-t="質問" role="button" aria-pressed="false">質問</span>
-          <span class="topic" data-t="ノウハウ" role="button" aria-pressed="false">ノウハウ</span>
-          <span class="topic" data-t="できごと" role="button" aria-pressed="false">できごと</span>
-        </div>
-        <button class="post-btn" id="postBtn" disabled>投稿</button>
+    <div class="feed-toolbar">
+      <div class="search-box">
+        <span class="search-ic">🔍</span>
+        <input id="searchInput" type="text" placeholder="キーワードで投稿を検索…">
+        <button class="search-clear" id="searchClear" title="クリア" hidden>×</button>
       </div>
     </div>
 
@@ -347,6 +355,37 @@
   </div>
 </div>
 
+<!-- 投稿 入力・編集モーダル -->
+<div class="post-modal-ov" id="postModalOv" onclick="if(event.target===this)closePostModal();">
+  <div class="post-modal-card">
+    <div class="post-modal-head">
+      <h2 id="postModalTitle">投稿する</h2>
+      <button class="post-modal-close" onclick="closePostModal()">×</button>
+    </div>
+    <div class="me">
+      <label for="who">投稿者</label>
+      <select id="who"></select>
+      <input id="myname" type="text" placeholder="お名前" value="山田">
+    </div>
+    <div class="composer" id="composer">
+      <textarea id="body" placeholder="いまの共有を書く…（例：良かった保育の工夫、ヒヤリの気づき、質問など）"></textarea>
+      <div class="preview" id="preview"><button class="rm" id="rmImg" title="削除">×</button><img id="pvImg" alt="添付プレビュー"></div>
+      <div class="drop-hint">写真・Excel・PDFはここにドラッグ＆ドロップでも添付できます</div>
+      <div class="comp-foot">
+        <input type="file" id="file" accept="image/*,.pdf,application/pdf,.xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.csv" hidden>
+        <button class="icon-btn" id="attach" title="ファイルを添付（写真・Excel・PDF）">📎</button>
+        <div class="topics" id="topics">
+          <span class="topic" data-t="お知らせ" role="button" aria-pressed="false">お知らせ</span>
+          <span class="topic" data-t="質問" role="button" aria-pressed="false">質問</span>
+          <span class="topic" data-t="ノウハウ" role="button" aria-pressed="false">ノウハウ</span>
+          <span class="topic" data-t="できごと" role="button" aria-pressed="false">できごと</span>
+        </div>
+        <button class="post-btn" id="postBtn" disabled>投稿</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- トースト（製作中の通知） -->
 <div class="toast" id="toast"></div>
 
@@ -356,7 +395,10 @@
     <h2>使い方ガイド</h2>
     <p class="g-sub">しおどめポータルの基本的な使い方</p>
     <ol>
-      <li><b>投稿する：</b>中央の入力欄に共有したい内容を書き、トピック（お知らせ／質問／ノウハウ／できごと）を選んで「投稿」を押します。写真は 📷 から添付できます。</li>
+      <li><b>投稿する：</b>左メニューの「＋投稿する」を押すと入力画面が開きます。投稿者・内容を入力し、トピック（お知らせ／質問／ノウハウ／できごと）を選んで「投稿」を押してください。写真だけでなく、Excel・PDFファイルも 📎 から添付できます。</li>
+      <li><b>投稿を編集する：</b>自分の投稿には「編集」ボタンが表示されます。押すと入力画面が開き、内容を書き直して更新できます。</li>
+      <li><b>フィードを検索する：</b>フィード上部の検索欄にキーワードを入力すると、該当する投稿だけに絞り込まれます。</li>
+      <li><b>いいね：</b>♡を押すと「いいね」でき、誰がいいねしたかが投稿の下に表示されます。</li>
       <li><b>ツールを開く：</b>左メニューから各ツール（ヒヤリハットくん・有給チェッカー・規約・マニュアル・コーポレートブック）へ移動できます。</li>
       <li><b>補助金の締切を見る：</b>右のカレンダーは色で締切の近さを示します（赤＝まもなく／オレンジ＝先の予定／グレー＝終了）。日付にマウスを乗せると内容が表示されます。</li>
       <li><b>補助金情報：</b>カレンダー下の一覧に、自治体ごとの申請・締切情報がまとまっています。</li>
@@ -442,18 +484,18 @@ const SAMPLE_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEB
 let posts = [
   { id:1, code:"本部", name:"藤井", org:"hq", topic:"お知らせ", ts: now-1000*60*35,
     body:"来月の合同研修の日程が決まりました。詳細は近日中にナレッジボードに掲載します。各園、シフト調整のご準備をお願いします。",
-    likes:9, liked:false, img:null,
+    likes:3, liked:false, likedBy:["中村","高橋","伊藤"], img:null,
     comments:[ {code:"S03", name:"中村", org:"shiba", text:"了解しました！助かります。"} ] },
   { id:2, code:"S07", name:"小林", org:"shiba", topic:"ノウハウ", ts: now-1000*60*60*2,
     body:"雨の日の室内遊び、新聞紙プールが大好評でした。片付けも子どもたちが競うように手伝ってくれて楽ちんでした🎉",
-    likes:14, liked:true, img:SAMPLE_IMG,
+    likes:4, liked:true, likedBy:["渡辺","小林","佐藤","田中"], img:SAMPLE_IMG,
     comments:[
       {code:"Y02", name:"渡辺", org:"yuga", text:"うちでもやってみます！新聞紙どのくらい用意しましたか？"},
       {code:"S07", name:"小林", org:"shiba", text:"45Lゴミ袋2つ分くらいで十分でした〜"}
     ] },
   { id:3, code:"Y01", name:"高橋", org:"yuga", topic:"質問", ts: now-1000*60*60*5,
     body:"アレルギー対応の献立表、最新のひな形ってどこにありましたっけ？探しても見つからず…",
-    likes:2, liked:false, img:null,
+    likes:1, liked:false, likedBy:["藤井"], img:null,
     comments:[ {code:"本部", name:"藤井", org:"hq", text:"「申請ひな形」の中に上げ直しました。確認してみてください。"} ] },
 ];
 
@@ -466,8 +508,14 @@ function ago(ts){
 }
 function initial(name){ return (name||"?").trim().charAt(0) || "?"; }
 
-/* フィルタ */
+/* フィルタ・検索 */
 let filter = {type:"all", value:null};
+let searchQuery = "";
+function passSearch(p){
+  if(!searchQuery) return true;
+  const q = searchQuery.toLowerCase();
+  return (p.body&&p.body.toLowerCase().includes(q)) || (p.name&&p.name.toLowerCase().includes(q)) || (p.topic&&p.topic.toLowerCase().includes(q));
+}
 const LABELS = {all:"すべての投稿", お知らせ:"#お知らせ", 質問:"#質問", ノウハウ:"#ノウハウ", できごと:"#できごと",
   mine:"自分の園の投稿", save:"保存した投稿", notice:"通知", me:"プロフィール"};
 function setFilter(type){
@@ -484,11 +532,31 @@ function passFilter(p){
   return p.topic===t; // トピック系
 }
 
+function fileIcon(mime){
+  mime = mime||"";
+  if(mime.includes("pdf")) return "📄";
+  if(mime.includes("sheet")||mime.includes("excel")||mime.includes("csv")) return "📊";
+  if(mime.startsWith("image")) return "🖼️";
+  return "📎";
+}
+function attachHtml(a){
+  if(!a) return "";
+  if(typeof a === "string") return `<div class="p-photo"><img src="${a}" alt="添付写真"></div>`;
+  if(a.kind==="image") return `<div class="p-photo"><img src="${a.url}" alt="添付写真"></div>`;
+  return `<div class="p-file"><a class="file-chip" href="${a.url}" download="${esc(a.name||"添付ファイル")}">${fileIcon(a.mime)} <span>${esc(a.name||"添付ファイル")}</span></a></div>`;
+}
+function likeByHtml(p){
+  const by = p.likedBy||[];
+  if(!by.length) return "";
+  const shown = by.slice(0,6).map(esc).join("、");
+  return `<div class="like-by">♥ ${by.length}人がいいね：${shown}${by.length>6?` 他${by.length-6}人`:""}</div>`;
+}
+
 const feed = document.getElementById("feed");
 function render(){
   const meName = myname.value.trim()||"名無し";
-  const list = posts.slice().sort((a,b)=>b.ts-a.ts).filter(passFilter);
-  feed.innerHTML = list.length ? "" : '<div class="empty-feed">該当する投稿はまだありません。</div>';
+  const list = posts.slice().sort((a,b)=>b.ts-a.ts).filter(passFilter).filter(passSearch);
+  feed.innerHTML = list.length ? "" : `<div class="empty-feed">${searchQuery?"該当する投稿が見つかりません。":"該当する投稿はまだありません。"}</div>`;
   list.forEach(p=>{
     const mine = p.code===who.value && p.name===meName;
     const el=document.createElement("div"); el.className="post"+(mine?" mine":""); el.dataset.pid=p.id;
@@ -500,11 +568,13 @@ function render(){
         ${p.topic?`<span class="chip">#${esc(p.topic)}</span>`:""}
       </div>
       ${p.body?`<div class="p-body">${esc(p.body)}</div>`:""}
-      ${p.img?`<div class="p-photo"><img src="${p.img}" alt="添付写真"></div>`:""}
+      ${attachHtml(p.img)}
       <div class="p-acts">
         <button class="act ${p.liked?'liked':''}" data-like="${p.id}">${p.liked?'♥':'♡'} <span>いいね${p.likes?` ${p.likes}`:''}</span></button>
         <button class="act" data-toggle="${p.id}">💬 <span>コメント${p.comments.length?` ${p.comments.length}`:''}</span></button>
+        ${mine?`<button class="act" data-edit="${p.id}">✎ 編集</button>`:""}
       </div>
+      ${likeByHtml(p)}
       <div class="comments" id="c-${p.id}">
         ${p.comments.map(c=>`
           <div class="cmt"><div class="avatar" style="background:${orgColor(c.org)}">${initial(c.name)}</div>
@@ -529,9 +599,9 @@ function renderHot(){
     </div>`).join("");
 }
 
-/* 投稿 */
+/* 投稿（モーダル） */
 const bodyEl=document.getElementById("body"), postBtn=document.getElementById("postBtn");
-let topic=null, attached=null;
+let topic=null, attached=null, postEditId=null;
 document.getElementById("topics").addEventListener("click",e=>{
   const t=e.target.closest(".topic"); if(!t) return;
   const on=t.getAttribute("aria-pressed")==="true";
@@ -543,36 +613,97 @@ bodyEl.addEventListener("input", refreshPostBtn);
 
 const fileInput=document.getElementById("file");
 document.getElementById("attach").addEventListener("click",()=>fileInput.click());
+function showAttachPreview(){
+  const prev=document.getElementById("preview");
+  if(!attached){ prev.classList.remove("show"); prev.innerHTML=`<button class="rm" id="rmImg" title="削除">×</button><img id="pvImg" alt="添付プレビュー">`; return; }
+  const isImg = typeof attached==="string" || attached.kind==="image";
+  if(isImg){
+    const url = typeof attached==="string" ? attached : attached.url;
+    prev.innerHTML = `<button class="rm" id="rmImg" title="削除">×</button><img id="pvImg" alt="添付プレビュー" src="${url}">`;
+  } else {
+    prev.innerHTML = `<button class="rm" id="rmImg" title="削除">×</button><div class="file-chip">${fileIcon(attached.mime)} <span>${esc(attached.name||"添付ファイル")}</span></div>`;
+  }
+  prev.classList.add("show");
+  document.getElementById("rmImg").addEventListener("click",()=>{ attached=null; showAttachPreview(); refreshPostBtn(); });
+}
 fileInput.addEventListener("change",()=>{
   const f=fileInput.files[0]; if(!f) return;
-  resizeImage(f,1000,0.8).then(u=>{ attached=u; document.getElementById("pvImg").src=u; document.getElementById("preview").classList.add("show"); refreshPostBtn(); });
+  handleAttachFile(f);
   fileInput.value="";
 });
-document.getElementById("rmImg").addEventListener("click",()=>{ attached=null; document.getElementById("preview").classList.remove("show"); refreshPostBtn(); });
+function handleAttachFile(f){
+  const isImage = f.type.startsWith("image/");
+  if(isImage){
+    resizeImage(f,1000,0.8).then(u=>{ attached={kind:"image", url:u, name:f.name}; showAttachPreview(); refreshPostBtn(); });
+  } else {
+    const reader=new FileReader();
+    reader.onload=()=>{ attached={kind:"file", url:reader.result, name:f.name, mime:f.type||""}; showAttachPreview(); refreshPostBtn(); };
+    reader.readAsDataURL(f);
+  }
+}
+const composerEl=document.getElementById("composer");
+["dragenter","dragover"].forEach(ev=>composerEl.addEventListener(ev,e=>{ e.preventDefault(); e.stopPropagation(); composerEl.classList.add("drag-over"); }));
+["dragleave","drop"].forEach(ev=>composerEl.addEventListener(ev,e=>{ e.preventDefault(); e.stopPropagation(); if(ev==="dragleave" && composerEl.contains(e.relatedTarget)) return; composerEl.classList.remove("drag-over"); }));
+composerEl.addEventListener("drop",e=>{
+  const f=e.dataTransfer.files && e.dataTransfer.files[0]; if(!f) return;
+  handleAttachFile(f);
+});
 function resizeImage(file,maxW,q){
   return new Promise(res=>{ const img=new Image(), url=URL.createObjectURL(file);
     img.onload=()=>{ const s=Math.min(1,maxW/img.width), w=Math.round(img.width*s), h=Math.round(img.height*s);
       const cv=document.createElement("canvas"); cv.width=w; cv.height=h; cv.getContext("2d").drawImage(img,0,0,w,h);
       URL.revokeObjectURL(url); res(cv.toDataURL("image/jpeg",q)); }; img.src=url; });
 }
+
+/* モーダル開閉 */
+function openPostModal(editPost){
+  postEditId = editPost ? editPost.id : null;
+  document.getElementById("postModalTitle").textContent = editPost ? "投稿を編集" : "投稿する";
+  postBtn.textContent = editPost ? "更新する" : "投稿";
+  if(editPost){
+    who.value = editPost.code; myname.value = editPost.name;
+    bodyEl.value = editPost.body||""; topic = editPost.topic||null; attached = editPost.img||null;
+  } else {
+    bodyEl.value=""; topic=null; attached=null;
+  }
+  document.querySelectorAll(".topic").forEach(x=>x.setAttribute("aria-pressed", x.dataset.t===topic?"true":"false"));
+  showAttachPreview();
+  refreshPostBtn();
+  document.getElementById("postModalOv").classList.add("show");
+  bodyEl.focus();
+}
+function closePostModal(){ document.getElementById("postModalOv").classList.remove("show"); }
+
 postBtn.addEventListener("click",()=>{
   const o=findOrg(who.value), name=myname.value.trim()||"名無し";
-  posts.push({ id:++uid, code:o.code, name, org:o.org, topic, ts:Date.now(), body:bodyEl.value.trim(), img:attached, likes:0, liked:false, comments:[] });
-  bodyEl.value=""; topic=null; attached=null;
-  document.getElementById("preview").classList.remove("show");
-  document.querySelectorAll(".topic").forEach(x=>x.setAttribute("aria-pressed","false"));
-  if(filter.type!=="all" && filter.type!=="notice" && filter.type!=="save") setFilter("all");
-  refreshPostBtn(); render();
+  if(postEditId){
+    const p=posts.find(x=>x.id===postEditId);
+    if(p){ p.code=o.code; p.name=name; p.org=o.org; p.topic=topic; p.body=bodyEl.value.trim(); p.img=attached; }
+  } else {
+    posts.push({ id:++uid, code:o.code, name, org:o.org, topic, ts:Date.now(), body:bodyEl.value.trim(), img:attached, likes:0, liked:false, likedBy:[], comments:[] });
+  }
+  postEditId=null;
+  closePostModal();
+  if(filter.type!=="all" && filter.type!=="notice" && filter.type!=="save") setFilter("all"); else render();
 });
 who.addEventListener("change", render);
 myname.addEventListener("input", render);
 
-/* いいね・コメント */
+/* いいね・コメント・編集 */
 feed.addEventListener("click",e=>{
   const like=e.target.closest("[data-like]");
-  if(like){ const p=posts.find(x=>x.id==like.dataset.like); p.liked=!p.liked; p.likes+=p.liked?1:-1; render(); return; }
+  if(like){
+    const p=posts.find(x=>x.id==like.dataset.like); const name=myname.value.trim()||"名無し";
+    if(!p.likedBy) p.likedBy=[];
+    p.liked=!p.liked;
+    if(p.liked){ p.likes+=1; if(!p.likedBy.includes(name)) p.likedBy.push(name); }
+    else { p.likes-=1; p.likedBy=p.likedBy.filter(n=>n!==name); }
+    render(); return;
+  }
   const tog=e.target.closest("[data-toggle]");
   if(tog){ document.getElementById("c-"+tog.dataset.toggle).classList.toggle("open"); return; }
+  const edit=e.target.closest("[data-edit]");
+  if(edit){ const p=posts.find(x=>x.id==edit.dataset.edit); if(p) openPostModal(p); return; }
   const send=e.target.closest("[data-csend]");
   if(send){ const id=send.dataset.csend, input=feed.querySelector(`[data-cin="${id}"]`), txt=input.value.trim(); if(!txt) return;
     const o=findOrg(who.value), name=myname.value.trim()||"名無し";
@@ -583,12 +714,22 @@ feed.addEventListener("click",e=>{
 feed.addEventListener("input",e=>{ const cin=e.target.closest("[data-cin]"); if(cin){ feed.querySelector(`[data-csend="${cin.dataset.cin}"]`).disabled = cin.value.trim()===""; } });
 feed.addEventListener("keydown",e=>{ const cin=e.target.closest("[data-cin]"); if(cin && e.key==="Enter"){ feed.querySelector(`[data-csend="${cin.dataset.cin}"]`).click(); } });
 
+/* フィード検索 */
+document.getElementById("searchInput").addEventListener("input", e=>{
+  searchQuery = e.target.value.trim();
+  document.getElementById("searchClear").hidden = !searchQuery;
+  render();
+});
+document.getElementById("searchClear").addEventListener("click", ()=>{
+  searchQuery=""; document.getElementById("searchInput").value=""; document.getElementById("searchClear").hidden=true; render();
+});
+
 /* ナビ・トピック・注目 */
 document.querySelectorAll(".nav-item").forEach(n=>n.addEventListener("click",()=>setFilter(n.dataset.filter)));
 document.querySelectorAll(".rt").forEach(c=>c.addEventListener("click",()=>{
   setFilter(filter.type===c.dataset.t ? "all" : c.dataset.t);
 }));
-document.getElementById("navPost").addEventListener("click",()=>{ window.scrollTo({top:0,behavior:"smooth"}); bodyEl.focus(); });
+document.getElementById("navPost").addEventListener("click",()=>openPostModal(null));
 document.getElementById("hot-list").addEventListener("click",e=>{
   const r=e.target.closest("[data-goto]"); if(!r) return;
   if(filter.type!=="all") setFilter("all");
