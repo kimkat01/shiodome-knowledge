@@ -408,6 +408,10 @@
         <label for="riyu">件名の説明・詳細理由<span class="req">必須</span></label>
         <textarea id="riyu" name="riyu" placeholder="例）職員室のエアコンが故障し修理不能のため、新規に購入したい。夏季の保育環境を確保するため、早急な対応が必要。" required></textarea>
       </div>
+      <div class="field">
+        <label for="kouka">想定される効果</label>
+        <textarea id="kouka" name="kouka" placeholder="例）夏季も適温での保育環境が確保でき、職員・園児の熱中症リスクを低減できる。"></textarea>
+      </div>
     </section>
 
     <!-- ①時期 -->
@@ -653,6 +657,7 @@ function buildPayload(f){
     kianja:    f.kianja.value.trim(),
     kenmei:    f.kenmei.value.trim(),
     riyu:      f.riyu.value.trim(),
+    kouka:     f.kouka.value.trim(),
     jiki:      f.jiki.value.trim(),
     vendors: [
       {name:f.v1_name.value.trim(), amt:f.v1_amt.value.trim()},
@@ -707,6 +712,11 @@ function renderDoc(p){
     + '<div class="doc-block grow">'
     +   '<div class="bh">件名の説明・詳細理由</div>'
     +   '<div class="bb'+(p.riyu?'':' empty')+'">'+escapeHtml(p.riyu||'未入力')+'</div>'
+    + '</div>'
+
+    + '<div class="doc-block">'
+    +   '<div class="bh">想定される効果</div>'
+    +   '<div class="bb'+(p.kouka?'':' empty')+'">'+escapeHtml(p.kouka||'（記入なし）')+'</div>'
     + '</div>'
 
     + '<div class="doc-block">'
