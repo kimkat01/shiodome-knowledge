@@ -125,6 +125,7 @@
   .act{display:inline-flex; align-items:center; gap:6px; font:inherit; font-size:13px; color:var(--sub); background:none; border:none; cursor:pointer; padding:6px 12px; border-radius:999px;}
   .act:hover{background:rgba(120,100,220,.08);}
   .act.liked{color:var(--like); font-weight:700; background:rgba(224,81,122,.09);}
+  .act.danger:hover{color:#d64550; background:rgba(214,69,80,.09);}
   .comments{margin-top:12px; display:none; flex-direction:column; gap:10px;}
   .comments.open{display:flex;}
   .cmt{display:flex; gap:9px;}
@@ -513,8 +514,10 @@ let filter = {type:"all", value:null};
 let searchQuery = "";
 function passSearch(p){
   if(!searchQuery) return true;
-  const q = searchQuery.toLowerCase();
-  return (p.body&&p.body.toLowerCase().includes(q)) || (p.name&&p.name.toLowerCase().includes(q)) || (p.topic&&p.topic.toLowerCase().includes(q));
+  const q = searchQuery.toLowerCase().replace(/^#/,"");
+  const org = findOrg(p.code);
+  const hay = [p.body, p.name, p.topic, p.code, org&&org.name].filter(Boolean).join(" ").toLowerCase();
+  return hay.includes(q);
 }
 const LABELS = {all:"すべての投稿", お知らせ:"#お知らせ", 質問:"#質問", ノウハウ:"#ノウハウ", できごと:"#できごと",
   mine:"自分の園の投稿", save:"保存した投稿", notice:"通知", me:"プロフィール"};
@@ -572,7 +575,7 @@ function render(){
       <div class="p-acts">
         <button class="act ${p.liked?'liked':''}" data-like="${p.id}">${p.liked?'♥':'♡'} <span>いいね${p.likes?` ${p.likes}`:''}</span></button>
         <button class="act" data-toggle="${p.id}">💬 <span>コメント${p.comments.length?` ${p.comments.length}`:''}</span></button>
-        ${mine?`<button class="act" data-edit="${p.id}">✎ 編集</button>`:""}
+        ${mine?`<button class="act" data-edit="${p.id}">✎ 編集</button><button class="act danger" data-del="${p.id}">🗑 削除</button>`:""}
       </div>
       ${likeByHtml(p)}
       <div class="comments" id="c-${p.id}">
@@ -704,6 +707,14 @@ feed.addEventListener("click",e=>{
   if(tog){ document.getElementById("c-"+tog.dataset.toggle).classList.toggle("open"); return; }
   const edit=e.target.closest("[data-edit]");
   if(edit){ const p=posts.find(x=>x.id==edit.dataset.edit); if(p) openPostModal(p); return; }
+  const del=e.target.closest("[data-del]");
+  if(del){
+    if(confirm("この投稿を削除します。よろしいですか？")){
+      const idx=posts.findIndex(x=>x.id==del.dataset.del);
+      if(idx>-1){ posts.splice(idx,1); render(); }
+    }
+    return;
+  }
   const send=e.target.closest("[data-csend]");
   if(send){ const id=send.dataset.csend, input=feed.querySelector(`[data-cin="${id}"]`), txt=input.value.trim(); if(!txt) return;
     const o=findOrg(who.value), name=myname.value.trim()||"名無し";
