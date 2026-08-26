@@ -484,9 +484,9 @@ function cleanTranscript(segs){
   const halluc=(segs.length>=8&&dk&&dc/segs.length>=0.5);
   let out=collapsed;
   if(halluc){out=collapsed.filter(s=>norm(s.text)!==dk);}
-  // 英語（非日本語）の幻聴を検出・除去
+  // 英語（非日本語）の幻聴を検出・除去（セグメント数が少なくても検出できるよう、しきい値を1件以上に）
   let englishHalluc=false;
-  if(out.length>=4){
+  if(out.length>=1){
     const noJp=out.filter(s=>norm(s.text)&&!hasJapanese(s.text));
     if(noJp.length/out.length>=0.5){englishHalluc=true;out=out.filter(s=>hasJapanese(s.text));}
   }
@@ -722,15 +722,29 @@ async function whisperBlob(blob,name,offset){
 function addLogEcho(t){log('  ⚠ プロンプト混入を除去: '+t.slice(0,18),'err');}
 async function transcribeFile(file,onProgress){
   const CH=600;
-  if(file.size<=24*1024*1024){stat('🎙 文字起こし中…');const s=await whisperBlob(file,file.name,0);onProgress&&onProgress(s);return s;}
-  log('⚙ 25MB超 → 16kHz圧縮して分割');
   const ctx=new (window.AudioContext||window.webkitAudioContext)();
-  let ab;try{ab=await ctx.decodeAudioData(await file.arrayBuffer());}catch(e){ctx.close();throw new Error('音声デコード失敗（長すぎる可能性）。分割してお試しを');}
+  let ab;
+  try{ab=await ctx.decodeAudioData(await file.arrayBuffer());}
+  catch(e){
+    ctx.close();
+    log('⚠ 音声デコードに失敗したため、ノーマライズなしでそのまま送信します','err');
+    stat('🎙 文字起こし中…');const s=await whisperBlob(file,file.name,0);onProgress&&onProgress(s);return s;
+  }
   ctx.close();const dur=ab.duration,n=Math.ceil(dur/CH);let all=[];
-  // 音量の正規化（小さすぎる声を増幅して幻聴を減らす）
-  let peak=0;const ch0=ab.getChannelData(0);for(let i=0;i<ch0.length;i+=97){const v=Math.abs(ch0[i]);if(v>peak)peak=v;}
-  const gain=peak>0?Math.min(0.97/peak,10):1;
-  if(gain>1.2)log('🔊 音量が小さいため約'+gain.toFixed(1)+'倍に正規化','ok');
+  // 音量のノーマライズ（外部編集ソフトの「ノーマライズ」と同様：ピークをほぼ最大まで引き上げる）
+  let peak=0;const ch0=ab.getChannelData(0);
+  const step=Math.max(1,Math.floor(ch0.length/2000000)); // 全長に関わらず約200万点をサンプリングし精度を確保
+  for(let i=0;i<ch0.length;i+=step){const v=Math.abs(ch0[i]);if(v>peak)peak=v;}
+  const gain=peak>0?Math.min(0.97/peak,80):1; // 上限は80倍（極端な無音誤検知でのノイズ爆発を防止しつつ、旧上限10倍より大幅に緩和）
+  if(gain>1.05)log('🔊 音量をノーマライズ（約'+gain.toFixed(1)+'倍）','ok');
+  if(n<=1){
+    stat('🎙 文字起こし中…');
+    const wav=await renderChunkWav(ab,0,dur,16000,gain);
+    const segs=await whisperBlob(wav,'c0.wav',0);
+    onProgress&&onProgress(segs);
+    return segs;
+  }
+  log('⚙ 長尺のため16kHzに圧縮して分割');
   for(let i=0;i<n;i++){const st=i*CH,len=Math.min(CH,dur-st);stat('🎙 文字起こし '+(i+1)+'/'+n+'…');log('  チャンク'+(i+1)+'/'+n+' 変換中');const wav=await renderChunkWav(ab,st,len,16000,gain);const segs=await whisperBlob(wav,'c'+i+'.wav',st);all=all.concat(segs);onProgress&&onProgress(all);}
   return all;
 }
@@ -766,15 +780,16 @@ async function analyze(){
     // 1) transcribe (progressive render)
     await transcribeFile(mediaFile,(segsSoFar)=>{segments=segsSoFar.slice();renderFeed();});
     if(!segments.length)throw new Error('文字起こし結果が空でした');
-    // 幻聴ループの検出・除去
+    // 幻聴ループ／英語幻聴の検出・除去
     let clean=cleanTranscript(segments);
     segments=clean.segs;
     renderFeed();
-    // 幻聴で発話が全滅した場合、gpt-4o-transcribe-diarizeへ自動切替して1回だけ再挑戦（園長は何も操作しなくてよい）
+    // 幻聴（同一フレーズ連呼 または 英語化）で発話が全滅した場合、gpt-4o-transcribe-diarizeへ自動切替して1回だけ再挑戦（園長は何も操作しなくてよい）
     let autoRetried=false;
     const asrSel=document.getElementById('asrModel');
-    if(!segments.length&&clean.halluc&&asrSel&&asrSel.value!=='gpt-4o-transcribe-diarize'){
-      log('⚠ 幻聴ループにより発話が全滅（「'+String(clean.dominant).slice(0,10)+'」が'+clean.dominantCount+'/'+clean.origCount+'回）。gpt-4o-transcribe-diarizeへ自動切替して再文字起こしします','err');
+    if(!segments.length&&(clean.halluc||clean.englishHalluc)&&asrSel&&asrSel.value!=='gpt-4o-transcribe-diarize'){
+      const reason=clean.halluc?('「'+String(clean.dominant).slice(0,10)+'」が'+clean.dominantCount+'/'+clean.origCount+'回の連呼'):'文字起こしが英語化';
+      log('⚠ 幻聴（'+reason+'）により発話が全滅。gpt-4o-transcribe-diarizeへ自動切替して再文字起こしします','err');
       stat('🔁 モデルを切り替えて再文字起こし中…','var(--yellow)');
       asrSel.value='gpt-4o-transcribe-diarize';persistAsr();
       autoRetried=true;
@@ -795,8 +810,10 @@ async function analyze(){
     }
     if(clean.englishHalluc){
       log('⚠ 英語での幻聴を検出・除去。日本語の発話が不明瞭な区間の可能性（音声を近く・明瞭に）','err');
-      stat('⚠ 英語の幻聴を除去。この区間は聞き取れる発話が乏しい可能性','var(--yellow)');
-      toast('英語の幻聴を除去しました。音声が不明瞭な区間の可能性があります');
+      if(!autoRetried){
+        stat('⚠ 英語の幻聴を除去。この区間は聞き取れる発話が乏しい可能性','var(--yellow)');
+        toast('英語の幻聴を除去しました。音声が不明瞭な区間の可能性があります');
+      }
     }
     if(!segments.length){
       log('（幻聴除去後、有効な発話が残りませんでした。gpt-4o-transcribe-diarizeでも改善しない場合は、音声が非常に不明瞭な可能性があります）','err');
