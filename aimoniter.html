@@ -767,20 +767,42 @@ async function analyze(){
     await transcribeFile(mediaFile,(segsSoFar)=>{segments=segsSoFar.slice();renderFeed();});
     if(!segments.length)throw new Error('文字起こし結果が空でした');
     // 幻聴ループの検出・除去
-    const clean=cleanTranscript(segments);
+    let clean=cleanTranscript(segments);
     segments=clean.segs;
     renderFeed();
+    // 幻聴で発話が全滅した場合、gpt-4o-transcribe-diarizeへ自動切替して1回だけ再挑戦（園長は何も操作しなくてよい）
+    let autoRetried=false;
+    const asrSel=document.getElementById('asrModel');
+    if(!segments.length&&clean.halluc&&asrSel&&asrSel.value!=='gpt-4o-transcribe-diarize'){
+      log('⚠ 幻聴ループにより発話が全滅（「'+String(clean.dominant).slice(0,10)+'」が'+clean.dominantCount+'/'+clean.origCount+'回）。gpt-4o-transcribe-diarizeへ自動切替して再文字起こしします','err');
+      stat('🔁 モデルを切り替えて再文字起こし中…','var(--yellow)');
+      asrSel.value='gpt-4o-transcribe-diarize';persistAsr();
+      autoRetried=true;
+      segments=[];renderFeed();
+      await transcribeFile(mediaFile,(segsSoFar)=>{segments=segsSoFar.slice();renderFeed();});
+      if(!segments.length)throw new Error('文字起こし結果が空でした（モデル切替後の再挑戦でも失敗）');
+      clean=cleanTranscript(segments);
+      segments=clean.segs;
+      renderFeed();
+      if(segments.length)log('✅ gpt-4o-transcribe-diarizeで再文字起こしに成功しました','ok');
+    }
     if(clean.halluc){
       log('⚠ 幻聴ループを検出（「'+String(clean.dominant).slice(0,10)+'」が'+clean.dominantCount+'/'+clean.origCount+'回）。この区間は発話が不明瞭な可能性','err');
-      stat('⚠ 文字起こしが不安定。設定で gpt-4o-transcribe-diarize に変えて再解析を','var(--yellow)');
-      toast('文字起こしが不安定です（幻聴を除去）。モデルを変えて再解析してください');
+      if(!autoRetried){
+        stat('⚠ 文字起こしが不安定。設定で gpt-4o-transcribe-diarize に変えて再解析を','var(--yellow)');
+        toast('文字起こしが不安定です（幻聴を除去）。モデルを変えて再解析してください');
+      }
     }
     if(clean.englishHalluc){
       log('⚠ 英語での幻聴を検出・除去。日本語の発話が不明瞭な区間の可能性（音声を近く・明瞭に）','err');
       stat('⚠ 英語の幻聴を除去。この区間は聞き取れる発話が乏しい可能性','var(--yellow)');
       toast('英語の幻聴を除去しました。音声が不明瞭な区間の可能性があります');
     }
-    if(!segments.length){log('（幻聴除去後、有効な発話が残りませんでした）','err');document.getElementById('reBtn').disabled=false;running=false;btn.disabled=false;btn.textContent='▶ 解析開始';return;}
+    if(!segments.length){
+      log('（幻聴除去後、有効な発話が残りませんでした。gpt-4o-transcribe-diarizeでも改善しない場合は、音声が非常に不明瞭な可能性があります）','err');
+      stat('⚠ 有効な発話が検出できませんでした','var(--red)');
+      document.getElementById('reBtn').disabled=false;running=false;btn.disabled=false;btn.textContent='▶ 解析開始';return;
+    }
     log('📝 文字起こし '+segments.length+'セグメント','ok');
     // 1.5) apply learned corrections
     const nFixed=applyCorrections(segments);
