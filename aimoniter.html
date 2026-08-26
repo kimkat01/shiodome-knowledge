@@ -830,24 +830,29 @@ async function analyze(){
   try{
     // 1) transcribe (progressive render)
     await transcribeFile(mediaFile,(segsSoFar)=>{segments=segsSoFar.slice();renderFeed();});
-    if(!segments.length)throw new Error('文字起こし結果が空でした');
-    // 幻聴ループ／英語幻聴の検出・除去
-    let clean=cleanTranscript(segments);
+    // 幻聴ループ／英語幻聴の検出・除去（文字起こし時点ですでに空の場合はスキップ）
+    let clean=segments.length?cleanTranscript(segments):{segs:[],halluc:false,englishHalluc:false};
     segments=clean.segs;
     renderFeed();
-    // 幻聴（同一フレーズ連呼 または 英語化）で発話が全滅した場合、もう一方のモデルへ自動切替して1回だけ再挑戦（園長は何も操作しなくてよい）
+    // 発話が全滅した場合（文字起こし直後／幻聴除去後のどちらでも）、もう一方のモデルへ自動切替して1回だけ再挑戦
     let autoRetried=false;
     const asrSel=document.getElementById('asrModel');
-    if(!segments.length&&(clean.halluc||clean.englishHalluc)&&asrSel){
+    if(!segments.length&&asrSel){
       const altModel=asrSel.value==='gpt-4o-transcribe-diarize'?'whisper-1':'gpt-4o-transcribe-diarize';
-      const reason=clean.halluc?('「'+String(clean.dominant).slice(0,10)+'」が'+clean.dominantCount+'/'+clean.origCount+'回の連呼'):'文字起こしが英語化';
-      log('⚠ 幻聴（'+reason+'）により発話が全滅。'+altModel+'へ自動切替して再文字起こしします','err');
+      const reason=clean.halluc?('「'+String(clean.dominant).slice(0,10)+'」が'+clean.dominantCount+'/'+clean.origCount+'回の連呼')
+                  :clean.englishHalluc?'文字起こしが他言語化'
+                  :'有効な発話が検出されず';
+      log('⚠ 発話が全滅（'+reason+'）。'+altModel+'へ自動切替して再文字起こしします','err');
       stat('🔁 モデルを切り替えて再文字起こし中…','var(--yellow)');
       asrSel.value=altModel;persistAsr();
       autoRetried=true;
       segments=[];renderFeed();
       await transcribeFile(mediaFile,(segsSoFar)=>{segments=segsSoFar.slice();renderFeed();});
-      if(!segments.length)throw new Error('文字起こし結果が空でした（モデル切替後の再挑戦でも失敗）');
+      if(!segments.length){
+        log('（モデル切替後の再挑戦でも文字起こし結果が空でした）','err');
+        stat('⚠ 有効な発話が検出できませんでした','var(--red)');
+        document.getElementById('reBtn').disabled=false;running=false;btn.disabled=false;btn.textContent='▶ 解析開始';return;
+      }
       clean=cleanTranscript(segments);
       segments=clean.segs;
       renderFeed();
