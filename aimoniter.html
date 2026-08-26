@@ -1203,14 +1203,68 @@ async function analyzeBackingFrame(base64Img,timeLabel,quote,category){
   }catch(e){return {_error:e.message};}
 }
 
-/* --- 解析対象の時刻リストを作る（粗スキャン）--- */
-function buildFrameTimes(){
+/* --- 軽量モーション検出（AIを使わず、低解像度フレームの差分で「動きが急な時刻」を拾う）
+   等間隔の粗スキャンだけだと、叩く・こづく等の一瞬の動作をサンプリングの合間で取りこぼすため、
+   動きが急だった時刻を追加候補としてAI解析に回す --- */
+function sampleLowResAt(sec){
+  return new Promise((resolve)=>{
+    const src=captureEl||videoEl;
+    if(!src||!isFinite(sec)){resolve(null);return;}
+    let done=false;const W=48,H=27;
+    const grab=()=>{
+      if(done)return;done=true;
+      src.removeEventListener('seeked',grab);clearTimeout(to);
+      try{
+        const cv=document.createElement('canvas');cv.width=W;cv.height=H;
+        const ctx=cv.getContext('2d',{willReadFrequently:true});
+        ctx.drawImage(src,0,0,W,H);
+        resolve(ctx.getImageData(0,0,W,H).data);
+      }catch(e){resolve(null);}
+    };
+    src.addEventListener('seeked',grab);
+    const to=setTimeout(grab,600);
+    try{src.pause();src.currentTime=Math.min(sec,(duration||sec));}catch(e){clearTimeout(to);resolve(null);}
+  });
+}
+async function detectMotionSpikes(dur,maxExtra){
+  if(!dur||dur<=0)return [];
+  const targetSamples=Math.min(300,Math.max(30,Math.round(dur)));
+  const step=Math.max(0.8,dur/targetSamples);
+  let prev=null;const diffs=[];
+  for(let t=0.3;t<dur;t+=step){
+    const d=await sampleLowResAt(t);
+    if(d&&prev){
+      let sum=0;
+      for(let i=0;i<d.length;i+=4){sum+=Math.abs(d[i]-prev[i])+Math.abs(d[i+1]-prev[i+1])+Math.abs(d[i+2]-prev[i+2]);}
+      diffs.push({t,score:sum});
+    }
+    if(d)prev=d;
+  }
+  diffs.sort((a,b)=>b.score-a.score);
+  const picked=[];
+  for(const d of diffs){
+    if(picked.length>=maxExtra)break;
+    if(picked.some(p=>Math.abs(p-d.t)<6))continue; // 近い時刻の重複は除く
+    picked.push(d.t);
+  }
+  return picked.sort((a,b)=>a-b);
+}
+
+/* --- 解析対象の時刻リストを作る（粗スキャン＋動き検出で追加）--- */
+async function buildFrameTimes(){
   const times=new Set();
   const dur=duration||0;
   if(dur<=0)return [];
   // 粗スキャン：等間隔で最大12点（全体の流れ・良い保育を拾う）
   const N=Math.min(12,Math.max(3,Math.ceil(dur/20)));
   for(let i=0;i<N;i++){times.add(Math.round(dur*(i+0.5)/N));}
+  // 動き検出：急な動き（叩く・こづく等の一瞬の動作）があった時刻を追加で拾う
+  try{
+    log('🔎 動き検出スキャン中（一瞬の動作の取りこぼし防止）…','');
+    const extra=await detectMotionSpikes(dur,10);
+    extra.forEach(t=>times.add(Math.round(t)));
+    if(extra.length)log('🔎 動きの急な箇所を'+extra.length+'件、追加候補として検出','ok');
+  }catch(e){log('⚠ 動き検出スキャン失敗（粗スキャンのみで続行）: '+e.message,'err');}
   return Array.from(times).sort((a,b)=>a-b);
 }
 
@@ -1223,10 +1277,10 @@ async function analyzeVisual(){
   if(btn){btn.disabled=true;btn.textContent='映像解析中…';}
   visualEvents=[];
   try{
-    const times=buildFrameTimes();
+    const times=await buildFrameTimes();
     if(!times.length){toast('解析できる長さがありません');visualRunning=false;if(btn){btn.disabled=false;btn.textContent='🎥 映像を解析';}return;}
     const sens=document.getElementById('sens').value;
-    log('🎥 映像解析開始（'+times.length+'フレーム：粗スキャン＋危険点）','');
+    log('🎥 映像解析開始（'+times.length+'フレーム：粗スキャン＋動き検出＋危険点）','');
     let done=0;
     for(const t of times){
       stat('🎥 映像解析 '+(done+1)+'/'+times.length+'…');
