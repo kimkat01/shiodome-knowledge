@@ -571,7 +571,7 @@ function refreshKeys(){
   else{el.classList.remove('ok');el.textContent=(!o&&!a)?'キー未設定':'キー一部未設定';}
 }
 (function(){const o=localStorage.getItem('vm_openai_key')||'',a=localStorage.getItem('vm_apikey')||'';if(o)document.getElementById('openaiKey').value=o;if(a)document.getElementById('anthropicKey').value=a;
-  const m=localStorage.getItem('vm_asr_model')||'gpt-4o-transcribe-diarize';let pr=localStorage.getItem('vm_asr_prompt');
+  const m=localStorage.getItem('vm_asr_model')||'whisper-1';let pr=localStorage.getItem('vm_asr_prompt');
   if(pr&&pr.length>40){pr='';try{localStorage.setItem('vm_asr_prompt','');}catch(e){}}
   document.getElementById('asrModel').value=m;
   document.getElementById('asrPrompt').value=(pr!=null?pr:DEFAULT_ASR_PROMPT);
@@ -725,13 +725,13 @@ async function renderChunkWav(buf,start,len,rate){
 }
 const DEFAULT_ASR_PROMPT_UNUSED=null;
 function persistAsr(){
-  const m=document.getElementById('asrModel')?.value||'gpt-4o-transcribe-diarize';
+  const m=document.getElementById('asrModel')?.value||'whisper-1';
   const p=document.getElementById('asrPrompt')?.value||'';
   try{localStorage.setItem('vm_asr_model',m);localStorage.setItem('vm_asr_prompt',p);}catch(e){}
 }
 async function whisperBlob(blob,name,offset){
   const key=localStorage.getItem('vm_openai_key')||'';
-  const model=document.getElementById('asrModel')?.value||'gpt-4o-transcribe-diarize';
+  const model=document.getElementById('asrModel')?.value||'whisper-1';
   const prompt=(document.getElementById('asrPrompt')?.value||'').trim();
   const fd=new FormData();fd.append('file',blob,name);fd.append('model',model);fd.append('language','ja');
   if(model==='gpt-4o-transcribe-diarize'){
@@ -759,9 +759,11 @@ async function whisperBlob(blob,name,offset){
       const highCompression=typeof s.compression_ratio==='number'&&s.compression_ratio>2.4;
       if(noSpeech||highCompression){log('  ⚠ 幻聴の疑い（信頼度低）を除去: '+txt.slice(0,18),'err');return;}
       if(isKnownHallucinationPhrase(txt)){log('  ⚠ 定型幻聴フレーズを除去: '+txt.slice(0,18),'err');return;}
+      // 日本語の保育園録画で日本語を1文字も含まない発言は、モデルを問わずほぼ確実に他言語の幻聴
+      if(txt&&!hasJapanese(txt)){log('  ⚠ 日本語を含まない発言を除去（他言語の幻聴の疑い）: '+txt.slice(0,20),'err');return;}
       segs.push({start:st,end:(s.end!=null?s.end:st)+0,text:txt,speaker:s.speaker!=null?String(s.speaker):null});
     });
-  }else if(data.text&&data.text.trim()&&!isEcho(data.text)&&!isKnownHallucinationPhrase(data.text.trim())){segs.push({start:offset,end:offset+1,text:data.text.trim()});}
+  }else if(data.text&&data.text.trim()&&!isEcho(data.text)&&!isKnownHallucinationPhrase(data.text.trim())&&hasJapanese(data.text.trim())){segs.push({start:offset,end:offset+1,text:data.text.trim()});}
   return segs;
 }
 function addLogEcho(t){log('  ⚠ プロンプト混入を除去: '+t.slice(0,18),'err');}
@@ -1019,7 +1021,7 @@ function buildAnalysis(){
   return {
     tool:'AImoniter AnalyzeView',version:'v2',savedAt:new Date().toISOString(),
     media:{name:mediaFile?mediaFile.name:'',durationSec:Math.round(duration)},
-    asrModel:document.getElementById('asrModel')?.value||'gpt-4o-transcribe-diarize',
+    asrModel:document.getElementById('asrModel')?.value||'whisper-1',
     segments:segments.map(s=>({start:s.start,end:s.end,text:s.text,speaker:s.speaker||null,danger:s.danger||null,visualBacking:s.visualBacking||null,review:s.review||null})),
     detections:dets,
     visualEvents:(typeof visualEvents!=='undefined'?visualEvents:[]),
