@@ -571,7 +571,7 @@ function refreshKeys(){
   else{el.classList.remove('ok');el.textContent=(!o&&!a)?'キー未設定':'キー一部未設定';}
 }
 (function(){const o=localStorage.getItem('vm_openai_key')||'',a=localStorage.getItem('vm_apikey')||'';if(o)document.getElementById('openaiKey').value=o;if(a)document.getElementById('anthropicKey').value=a;
-  const m=localStorage.getItem('vm_asr_model')||'whisper-1';let pr=localStorage.getItem('vm_asr_prompt');
+  const m=localStorage.getItem('vm_asr_model')||'gpt-4o-transcribe-diarize';let pr=localStorage.getItem('vm_asr_prompt');
   if(pr&&pr.length>40){pr='';try{localStorage.setItem('vm_asr_prompt','');}catch(e){}}
   document.getElementById('asrModel').value=m;
   document.getElementById('asrPrompt').value=(pr!=null?pr:DEFAULT_ASR_PROMPT);
@@ -706,13 +706,13 @@ async function renderChunkWav(buf,start,len,rate){
 }
 const DEFAULT_ASR_PROMPT_UNUSED=null;
 function persistAsr(){
-  const m=document.getElementById('asrModel')?.value||'whisper-1';
+  const m=document.getElementById('asrModel')?.value||'gpt-4o-transcribe-diarize';
   const p=document.getElementById('asrPrompt')?.value||'';
   try{localStorage.setItem('vm_asr_model',m);localStorage.setItem('vm_asr_prompt',p);}catch(e){}
 }
 async function whisperBlob(blob,name,offset){
   const key=localStorage.getItem('vm_openai_key')||'';
-  const model=document.getElementById('asrModel')?.value||'whisper-1';
+  const model=document.getElementById('asrModel')?.value||'gpt-4o-transcribe-diarize';
   const prompt=(document.getElementById('asrPrompt')?.value||'').trim();
   const fd=new FormData();fd.append('file',blob,name);fd.append('model',model);fd.append('language','ja');
   if(model==='gpt-4o-transcribe-diarize'){
@@ -803,14 +803,15 @@ async function analyze(){
     let clean=cleanTranscript(segments);
     segments=clean.segs;
     renderFeed();
-    // 幻聴（同一フレーズ連呼 または 英語化）で発話が全滅した場合、gpt-4o-transcribe-diarizeへ自動切替して1回だけ再挑戦（園長は何も操作しなくてよい）
+    // 幻聴（同一フレーズ連呼 または 英語化）で発話が全滅した場合、もう一方のモデルへ自動切替して1回だけ再挑戦（園長は何も操作しなくてよい）
     let autoRetried=false;
     const asrSel=document.getElementById('asrModel');
-    if(!segments.length&&(clean.halluc||clean.englishHalluc)&&asrSel&&asrSel.value!=='gpt-4o-transcribe-diarize'){
+    if(!segments.length&&(clean.halluc||clean.englishHalluc)&&asrSel){
+      const altModel=asrSel.value==='gpt-4o-transcribe-diarize'?'whisper-1':'gpt-4o-transcribe-diarize';
       const reason=clean.halluc?('「'+String(clean.dominant).slice(0,10)+'」が'+clean.dominantCount+'/'+clean.origCount+'回の連呼'):'文字起こしが英語化';
-      log('⚠ 幻聴（'+reason+'）により発話が全滅。gpt-4o-transcribe-diarizeへ自動切替して再文字起こしします','err');
+      log('⚠ 幻聴（'+reason+'）により発話が全滅。'+altModel+'へ自動切替して再文字起こしします','err');
       stat('🔁 モデルを切り替えて再文字起こし中…','var(--yellow)');
-      asrSel.value='gpt-4o-transcribe-diarize';persistAsr();
+      asrSel.value=altModel;persistAsr();
       autoRetried=true;
       segments=[];renderFeed();
       await transcribeFile(mediaFile,(segsSoFar)=>{segments=segsSoFar.slice();renderFeed();});
@@ -818,12 +819,13 @@ async function analyze(){
       clean=cleanTranscript(segments);
       segments=clean.segs;
       renderFeed();
-      if(segments.length)log('✅ gpt-4o-transcribe-diarizeで再文字起こしに成功しました','ok');
+      if(segments.length)log('✅ '+altModel+'で再文字起こしに成功しました','ok');
     }
     if(clean.halluc){
       log('⚠ 幻聴ループを検出（「'+String(clean.dominant).slice(0,10)+'」が'+clean.dominantCount+'/'+clean.origCount+'回）。この区間は発話が不明瞭な可能性','err');
       if(!autoRetried){
-        stat('⚠ 文字起こしが不安定。設定で gpt-4o-transcribe-diarize に変えて再解析を','var(--yellow)');
+        const other=asrSel&&asrSel.value==='gpt-4o-transcribe-diarize'?'whisper-1':'gpt-4o-transcribe-diarize';
+        stat('⚠ 文字起こしが不安定。設定で'+other+'に変えて再解析を','var(--yellow)');
         toast('文字起こしが不安定です（幻聴を除去）。モデルを変えて再解析してください');
       }
     }
@@ -835,7 +837,7 @@ async function analyze(){
       }
     }
     if(!segments.length){
-      log('（幻聴除去後、有効な発話が残りませんでした。gpt-4o-transcribe-diarizeでも改善しない場合は、音声が非常に不明瞭な可能性があります）','err');
+      log('（幻聴除去後、有効な発話が残りませんでした。モデルを切り替えても改善しない場合は、音声が非常に不明瞭な可能性があります）','err');
       stat('⚠ 有効な発話が検出できませんでした','var(--red)');
       document.getElementById('reBtn').disabled=false;running=false;btn.disabled=false;btn.textContent='▶ 解析開始';return;
     }
@@ -987,7 +989,7 @@ function buildAnalysis(){
   return {
     tool:'AImoniter AnalyzeView',version:'v2',savedAt:new Date().toISOString(),
     media:{name:mediaFile?mediaFile.name:'',durationSec:Math.round(duration)},
-    asrModel:document.getElementById('asrModel')?.value||'whisper-1',
+    asrModel:document.getElementById('asrModel')?.value||'gpt-4o-transcribe-diarize',
     segments:segments.map(s=>({start:s.start,end:s.end,text:s.text,speaker:s.speaker||null,danger:s.danger||null,visualBacking:s.visualBacking||null,review:s.review||null})),
     detections:dets,
     visualEvents:(typeof visualEvents!=='undefined'?visualEvents:[]),
@@ -1096,16 +1098,24 @@ function captureFrameAt(sec){
   });
 }
 
-/* --- 1フレームをClaude(プロキシ)に送って判定 --- */
-async function analyzeFrame(base64Img,timeLabel,sensVal){
+/* --- 1フレーム（または動き検出時は前後を含む連続数コマ）をClaude(プロキシ)に送って判定 ---
+   base64Imgs は配列。1枚なら通常の静止画判定、複数枚なら「連続コマの変化」から動作を判断させる */
+async function analyzeFrame(base64Imgs,timeLabel,sensVal){
+  if(!Array.isArray(base64Imgs))base64Imgs=[base64Imgs];
+  const burst=base64Imgs.length>1;
   const key=localStorage.getItem('vm_apikey')||'';
   const withCare=window._visualOptions.careDetect!==false;
   const withGoodCare=window._visualOptions.goodCare!==false;
   const sensDesc = sensVal==='high' ? '少しでも気になる点があれば報告' :
                    sensVal==='low'  ? '明確な問題がある場合のみ報告' :
                                       '明らかな問題がある場合に報告';
-  const systemPrompt=`あなたは保育施設の映像を分析する専門AIです。
-この映像は天井の広角（魚眼）カメラによる俯瞰映像で、人物は小さく写り顔の表情はほとんど読めません。表情ではなく、人物の位置関係・姿勢（しゃがむ/立つ）・身体の向き・子どもとの距離・全体の構図から判断してください。
+  const intro=burst
+    ? `あなたは保育施設の映像を分析する専門AIです。
+これは天井の広角（魚眼）カメラの俯瞰映像から、動きが急だった瞬間の前後を含む連続${base64Imgs.length}コマの静止画です（1枚目→${base64Imgs.length}枚目の順に、約0.4秒間隔で時間が進みます）。人物は小さく写り顔の表情はほとんど読めません。
+【重要】1枚だけでは分からない「叩く・振り上げる・急に手を伸ばす」等の動作を、コマ間の姿勢・腕や手の位置の変化から読み取ってください。動きが連続的で自然な遊び・作業（物を渡す、片付ける等）なのか、突発的で対象（子ども）に向かう動きなのかを見極めてください。`
+    : `あなたは保育施設の映像を分析する専門AIです。
+この映像は天井の広角（魚眼）カメラによる俯瞰映像で、人物は小さく写り顔の表情はほとんど読めません。表情ではなく、人物の位置関係・姿勢（しゃがむ/立つ）・身体の向き・子どもとの距離・全体の構図から判断してください。`;
+  const systemPrompt=`${intro}
 映像フレームを1回の回答で以下3点を同時に評価し、必ずJSON形式のみで返してください。
 
 【1】不適切保育の検知（${sensDesc}）
@@ -1152,12 +1162,11 @@ good_care の形式：{"tag":"タグ名（例:👀目線合わせ）","axis":"em
 situation の形式：{"type":"isolation_1to1|separated|blind_spot","detail":"位置関係の客観描写20字以内"}`;
 
   try{
+    const content=base64Imgs.map(img=>({type:'image',source:{type:'base64',media_type:'image/jpeg',data:img}}));
+    content.push({type:'text',text:burst?('時刻 '+timeLabel+' 付近の連続'+base64Imgs.length+'コマを、動きの変化に注目して分析してください。'):('時刻 '+timeLabel+' のフレームを分析してください。')});
     const res=await fetch(PROXY+'/claude',{method:'POST',headers:{'Content-Type':'application/json','X-Anthropic-Key':key},
       body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:600,system:systemPrompt,
-        messages:[{role:'user',content:[
-          {type:'image',source:{type:'base64',media_type:'image/jpeg',data:base64Img}},
-          {type:'text',text:'時刻 '+timeLabel+' のフレームを分析してください。'}
-        ]}]})});
+        messages:[{role:'user',content}]})});
     if(!res.ok){const t=await res.text();throw new Error('Claude '+res.status+' '+t.slice(0,80));}
     const data=await res.json();
     const raw=data.content?.[0]?.text||'{}';
@@ -1250,22 +1259,26 @@ async function detectMotionSpikes(dur,maxExtra){
   return picked.sort((a,b)=>a-b);
 }
 
-/* --- 解析対象の時刻リストを作る（粗スキャン＋動き検出で追加）--- */
+/* --- 解析対象の時刻リストを作る（粗スキャン＋動き検出で追加）。{t, motion:true/false} の配列を返す --- */
 async function buildFrameTimes(){
-  const times=new Set();
+  const periodic=new Set();
   const dur=duration||0;
   if(dur<=0)return [];
   // 粗スキャン：等間隔で最大12点（全体の流れ・良い保育を拾う）
   const N=Math.min(12,Math.max(3,Math.ceil(dur/20)));
-  for(let i=0;i<N;i++){times.add(Math.round(dur*(i+0.5)/N));}
+  for(let i=0;i<N;i++){periodic.add(Math.round(dur*(i+0.5)/N));}
   // 動き検出：急な動き（叩く・こづく等の一瞬の動作）があった時刻を追加で拾う
+  let motion=[];
   try{
     log('🔎 動き検出スキャン中（一瞬の動作の取りこぼし防止）…','');
-    const extra=await detectMotionSpikes(dur,10);
-    extra.forEach(t=>times.add(Math.round(t)));
-    if(extra.length)log('🔎 動きの急な箇所を'+extra.length+'件、追加候補として検出','ok');
+    motion=await detectMotionSpikes(dur,10);
+    if(motion.length)log('🔎 動きの急な箇所を'+motion.length+'件、追加候補として検出','ok');
   }catch(e){log('⚠ 動き検出スキャン失敗（粗スキャンのみで続行）: '+e.message,'err');}
-  return Array.from(times).sort((a,b)=>a-b);
+  const motionSet=new Set(motion.map(t=>Math.round(t)));
+  const out=[];
+  periodic.forEach(t=>{if(!motionSet.has(t))out.push({t,motion:false});});
+  motionSet.forEach(t=>out.push({t,motion:true}));
+  return out.sort((a,b)=>a.t-b.t);
 }
 
 /* --- 映像解析メイン --- */
@@ -1282,11 +1295,25 @@ async function analyzeVisual(){
     const sens=document.getElementById('sens').value;
     log('🎥 映像解析開始（'+times.length+'フレーム：粗スキャン＋動き検出＋危険点）','');
     let done=0;
-    for(const t of times){
+    for(const item of times){
+      const t=item.t;
       stat('🎥 映像解析 '+(done+1)+'/'+times.length+'…');
-      const b64=await captureFrameAt(t);
-      if(!b64){done++;continue;}
-      const r=await analyzeFrame(b64,fmt(t),sens);
+      let imgs;
+      if(item.motion){
+        // 動き検出由来：前後0.4秒を含む3コマをバーストで撮影し、動作の変化を判定させる
+        const offs=[-0.4,0,0.4];
+        imgs=[];
+        for(const o of offs){
+          const tt=Math.max(0,Math.min(duration||t,t+o));
+          const b=await captureFrameAt(tt);
+          if(b)imgs.push(b);
+        }
+      }else{
+        const b=await captureFrameAt(t);
+        imgs=b?[b]:[];
+      }
+      if(!imgs.length){done++;continue;}
+      const r=await analyzeFrame(imgs,fmt(t),sens);
       if(r._error){log('  ⚠ '+fmt(t)+' 解析失敗: '+r._error,'err');done++;continue;}
       if(r.alert){visualEvents.push({t,kind:'alert',level:r.alert.level||'warning',category:r.alert.category||'不適切',detail:r.alert.detail||''});}
       if(r.care_ok){visualEvents.push({t,kind:'care_ok',detail:r.care_ok.detail||''});}
