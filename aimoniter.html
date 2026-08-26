@@ -688,6 +688,24 @@ function audioBufferToWav(buffer,gain){
   for(let i=0;i<samples.length;i++){let s=samples[i]*g;s=Math.tanh(K*s)/th;v.setInt16(off,s<0?s*0x8000:s*0x7FFF,true);off+=2;}
   return new Blob([ab],{type:'audio/wav'});
 }
+/* --- VoiceMinutes由来の幻聴対策：無音チェック＆定型幻聴フレーズ ---
+   無音のままWhisperに送るとそれっぽい文章を「幻聴」するため、送る前に検出してスキップする */
+const SILENCE_RMS_THRESHOLD=0.0015; // これ未満は「無音」とみなしWhisperに送らない
+function computeRMS(channelData){
+  let sum=0;for(let i=0;i<channelData.length;i++){sum+=channelData[i]*channelData[i];}
+  return Math.sqrt(sum/(channelData.length||1));
+}
+const HALLUCINATION_PHRASES=[
+  'ご視聴ありがとうございました','ご視聴いただきありがとうございます','ご視聴ありがとうございます',
+  '日本語字幕をオンに','チャンネル登録','高評価','最後までご視聴','次の動画でお会いしましょう',
+  '字幕視聴者の皆様','この動画が気に入ったら','コメント欄で教えて',
+  'Thank you for watching','Thanks for watching','Please subscribe','Like and subscribe',
+  'See you soon','Bye bye','Bye-bye','I don\'t know why'
+];
+function isKnownHallucinationPhrase(t){
+  if(!t)return false;
+  return HALLUCINATION_PHRASES.some(p=>t.includes(p));
+}
 /* コンプレッサー（大きい音を穏やかに抑える）→ チャンクごとのピークでノーマライズ（小さい声を持ち上げる）
    外部ソフトの単純な「ノーマライズ」より静かなセリフを聞き取りやすくしつつ、歪みが出ないよう控えめな設定にしている */
 async function renderChunkWav(buf,start,len,rate){
@@ -699,10 +717,11 @@ async function renderChunkWav(buf,start,len,rate){
   src.start(0,start,len);
   const rendered=await oc.startRendering();
   const ch=rendered.getChannelData(0);
+  const rms=computeRMS(ch);
   let peak=0;const step=Math.max(1,Math.floor(ch.length/1000000));
   for(let i=0;i<ch.length;i+=step){const v=Math.abs(ch[i]);if(v>peak)peak=v;}
   const gain=peak>0?Math.min(0.97/peak,8):1; // 上限は8倍（ソフトクリップと組み合わせても不自然にならない範囲）
-  return {blob:audioBufferToWav(rendered,gain),gain};
+  return {blob:audioBufferToWav(rendered,gain),gain,rms};
 }
 const DEFAULT_ASR_PROMPT_UNUSED=null;
 function persistAsr(){
@@ -732,8 +751,17 @@ async function whisperBlob(blob,name,offset){
   const pn=norm(prompt);
   const isEcho=(t)=>{const tn=norm(t);if(!tn)return true;if(pn&&pn.length>=6&&tn.length>=6&&(pn.includes(tn)||tn.includes(pn)))return true;return false;};
   if(arr.length){
-    arr.forEach(s=>{const st=(s.start!=null?s.start:0)+offset;const txt=(s.text||'').trim();if(isEcho(txt)){addLogEcho(txt);return;}segs.push({start:st,end:(s.end!=null?s.end:st)+0,text:txt,speaker:s.speaker!=null?String(s.speaker):null});});
-  }else if(data.text&&data.text.trim()&&!isEcho(data.text)){segs.push({start:offset,end:offset+1,text:data.text.trim()});}
+    arr.forEach(s=>{
+      const st=(s.start!=null?s.start:0)+offset;const txt=(s.text||'').trim();
+      if(isEcho(txt)){addLogEcho(txt);return;}
+      // Whisper自身が返す信頼度指標（whisper-1のverbose_jsonのみ）で幻聴の疑いを除外
+      const noSpeech=typeof s.no_speech_prob==='number'&&s.no_speech_prob>0.6;
+      const highCompression=typeof s.compression_ratio==='number'&&s.compression_ratio>2.4;
+      if(noSpeech||highCompression){log('  ⚠ 幻聴の疑い（信頼度低）を除去: '+txt.slice(0,18),'err');return;}
+      if(isKnownHallucinationPhrase(txt)){log('  ⚠ 定型幻聴フレーズを除去: '+txt.slice(0,18),'err');return;}
+      segs.push({start:st,end:(s.end!=null?s.end:st)+0,text:txt,speaker:s.speaker!=null?String(s.speaker):null});
+    });
+  }else if(data.text&&data.text.trim()&&!isEcho(data.text)&&!isKnownHallucinationPhrase(data.text.trim())){segs.push({start:offset,end:offset+1,text:data.text.trim()});}
   return segs;
 }
 function addLogEcho(t){log('  ⚠ プロンプト混入を除去: '+t.slice(0,18),'err');}
@@ -751,7 +779,8 @@ async function transcribeFile(file,onProgress){
   log('🔊 コンプレッサー＋ノーマライズで小さい声を持ち上げます','ok');
   if(n<=1){
     stat('🎙 文字起こし中…');
-    const {blob:wav,gain}=await renderChunkWav(ab,0,dur,16000);
+    const {blob:wav,gain,rms}=await renderChunkWav(ab,0,dur,16000);
+    if(rms<SILENCE_RMS_THRESHOLD){log('🔇 ほぼ無音のためスキップ（音量:'+rms.toFixed(4)+'）','ok');onProgress&&onProgress([]);return [];}
     if(gain>1.05)log('  音量を約'+gain.toFixed(1)+'倍に','ok');
     const segs=await whisperBlob(wav,'c0.wav',0);
     onProgress&&onProgress(segs);
@@ -761,7 +790,8 @@ async function transcribeFile(file,onProgress){
   for(let i=0;i<n;i++){
     const st=i*CH,len=Math.min(CH,dur-st);
     stat('🎙 文字起こし '+(i+1)+'/'+n+'…');log('  チャンク'+(i+1)+'/'+n+' 変換中');
-    const {blob:wav,gain}=await renderChunkWav(ab,st,len,16000);
+    const {blob:wav,gain,rms}=await renderChunkWav(ab,st,len,16000);
+    if(rms<SILENCE_RMS_THRESHOLD){log('  🔇 ほぼ無音のためスキップ（音量:'+rms.toFixed(4)+'）','ok');continue;}
     if(gain>1.05)log('  音量を約'+gain.toFixed(1)+'倍に','ok');
     const segs=await whisperBlob(wav,'c'+i+'.wav',st);all=all.concat(segs);onProgress&&onProgress(all);
   }
