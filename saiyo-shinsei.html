@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>採用申請 | しおどめ保育園○○</title>
+<style>
+  :root{
+    --blue:#4169e1;
+    --blue-dark:#2f4fc2;
+    --blue-pale:#eef1fd;
+    --ink:#20242e;
+    --sub:#6b7280;
+    --line:#e2e5ec;
+    --bg:#f4f5f8;
+    --card:#ffffff;
+    --danger:#e0554a;
+    --ok:#2e9e6c;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Hiragino Kaku Gothic ProN","Noto Sans JP",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  header{
+    background:var(--blue);
+    color:#fff;
+    padding:18px 20px;
+  }
+  .head-row{
+    max-width:760px;
+    margin:0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:14px;
+  }
+  .head-title{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:19px;
+    font-weight:700;
+    letter-spacing:.02em;
+  }
+  .head-title svg{width:22px;height:22px;flex-shrink:0;}
+  .head-sub{
+    font-size:12px;
+    opacity:.85;
+    margin-top:2px;
+    font-weight:400;
+  }
+  .stepper{
+    position:relative;
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    width:min(260px,44vw);
+  }
+  .stepper::before{
+    content:"";
+    position:absolute;
+    top:13px;
+    left:calc(100%/6);
+    right:calc(100%/6);
+    height:2px;
+    background:rgba(255,255,255,.35);
+    z-index:0;
+  }
+  .step{
+    position:relative;
+    z-index:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:5px;
+    font-size:10.5px;
+    opacity:.75;
+  }
+  .step.active,.step.done{opacity:1;}
+  .step .dot{
+    width:26px;height:26px;border-radius:50%;
+    background:rgba(255,255,255,.25);
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:700;
+    border:2px solid rgba(255,255,255,.5);
+  }
+  .step.active .dot{background:#fff;color:var(--blue);border-color:#fff;}
+  .step.done .dot{background:#fff;color:var(--blue);border-color:#fff;}
+
+  main{max-width:760px;margin:26px auto 90px;padding:0 16px;}
+
+  .card{
+    background:var(--card);
+    border-radius:var(--radius);
+    border:1px solid var(--line);
+    padding:22px 22px 24px;
+    margin-bottom:18px;
+  }
+  .card h2{
+    font-size:15px;
+    margin:0 0 4px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .card h2 .num{
+    width:22px;height:22px;border-radius:6px;
+    background:var(--blue-pale);color:var(--blue);
+    font-size:12px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .card .desc{font-size:12.5px;color:var(--sub);margin:0 0 16px;}
+
+  .field{margin-bottom:18px;}
+  .field:last-child{margin-bottom:0;}
+  .field > label.title{
+    display:block;font-size:13px;font-weight:700;margin-bottom:9px;
+  }
+  .field > label.title .req{color:var(--danger);font-weight:700;margin-left:3px;font-size:11px;}
+  .field > label.title .opt{color:var(--sub);font-weight:400;margin-left:6px;font-size:11px;}
+
+  .choice-grid{display:flex;flex-wrap:wrap;gap:8px;}
+  .choice{
+    position:relative;
+  }
+  .choice input{position:absolute;opacity:0;width:0;height:0;}
+  .choice span{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:9px 15px;
+    border:1.5px solid var(--line);
+    border-radius:999px;
+    font-size:13px;
+    cursor:pointer;
+    color:var(--ink);
+    background:#fff;
+    transition:.12s;
+    user-select:none;
+  }
+  .choice input:checked + span{
+    background:var(--blue);
+    border-color:var(--blue);
+    color:#fff;
+    font-weight:700;
+  }
+  .choice input:focus-visible + span{outline:2px solid var(--blue-dark);outline-offset:2px;}
+
+  .choice.check span{border-radius:9px;}
+  .choice.check span::before{
+    content:"";
+    width:15px;height:15px;border-radius:4px;
+    border:1.5px solid #c6cbd6;
+    background:#fff;
+    display:inline-block;
+    flex-shrink:0;
+  }
+  .choice.check input:checked + span::before{
+    background:#fff;
+    border-color:#fff;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234169e1' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+    background-size:11px;background-repeat:no-repeat;background-position:center;
+  }
+  .choice.check input:checked + span{background:var(--blue-pale);border-color:var(--blue);color:var(--blue-dark);}
+
+  .stepper-num{
+    display:inline-flex;align-items:center;
+    border:1.5px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .stepper-num button{
+    width:38px;height:38px;
+    border:none;background:var(--blue-pale);color:var(--blue);
+    font-size:18px;font-weight:700;cursor:pointer;
+  }
+  .stepper-num button:active{background:#dde3fb;}
+  .stepper-num .val{
+    width:52px;text-align:center;font-size:15px;font-weight:700;
+  }
+  .stepper-num .unit{font-size:12.5px;color:var(--sub);margin-left:10px;}
+
+  input[type=text],input[type=date],input[type=number],textarea,select{
+    width:100%;
+    border:1.5px solid var(--line);
+    border-radius:9px;
+    padding:11px 12px;
+    font-size:14px;
+    font-family:inherit;
+    color:var(--ink);
+    background:#fff;
+  }
+  input[type=text]:focus,input[type=date]:focus,input[type=number]:focus,textarea:focus,select:focus{
+    outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-pale);
+  }
+  textarea{resize:vertical;min-height:90px;line-height:1.6;}
+  input::placeholder,textarea::placeholder{color:#aab0bd;font-style:italic;}
+
+  .sub-reveal{
+    margin-top:12px;padding:14px;border-radius:10px;
+    background:var(--blue-pale);border:1px solid #d9e0fa;
+  }
+
+  .media-row{
+    border:1.5px solid var(--line);
+    border-radius:12px;
+    padding:16px;
+    margin-bottom:12px;
+    position:relative;
+  }
+  .media-row .row-head{
+    display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;
+  }
+  .media-row .row-head .tag{
+    font-size:11.5px;font-weight:700;color:var(--blue);background:var(--blue-pale);
+    padding:3px 9px;border-radius:999px;
+  }
+  .media-row .del{
+    background:none;border:none;color:var(--sub);font-size:12px;cursor:pointer;
+    display:flex;align-items:center;gap:4px;
+  }
+  .media-row .del:hover{color:var(--danger);}
+  .media-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .media-grid .full{grid-column:1/-1;}
+  .media-grid label{display:block;font-size:11.5px;color:var(--sub);margin-bottom:5px;}
+  .date-range{display:flex;align-items:center;gap:8px;}
+  .date-range span{color:var(--sub);font-size:12px;}
+
+  .add-media{
+    width:100%;
+    border:1.5px dashed #c3cbe0;
+    background:#fff;
+    color:var(--blue);
+    font-weight:700;
+    font-size:13.5px;
+    padding:13px;
+    border-radius:10px;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:6px;
+  }
+  .add-media:hover{background:var(--blue-pale);}
+
+  .no-media-toggle{
+    display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--sub);
+    margin-top:10px;
+  }
+
+  .nav-row{
+    display:flex;justify-content:space-between;gap:10px;margin-top:6px;
+  }
+  .btn{
+    padding:13px 22px;border-radius:10px;font-size:14.5px;font-weight:700;
+    border:none;cursor:pointer;
+  }
+  .btn-primary{background:var(--blue);color:#fff;}
+  .btn-primary:hover{background:var(--blue-dark);}
+  .btn-ghost{background:#fff;color:var(--ink);border:1.5px solid var(--line);}
+  .btn-ghost:hover{background:#f2f3f6;}
+  .btn:disabled{opacity:.5;cursor:not-allowed;}
+
+  /* 確認プレビュー(モーダル) */
+  .overlay{
+    position:fixed;inset:0;background:rgba(20,22,40,.5);
+    display:none;align-items:flex-start;justify-content:center;
+    padding:30px 14px;overflow:auto;z-index:50;
+  }
+  .overlay.show{display:flex;}
+  .doc{
+    background:#fff;border-radius:10px;width:100%;max-width:700px;
+    padding:0;overflow:hidden;
+  }
+  .doc-head{
+    background:var(--blue);color:#fff;padding:16px 22px;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .doc-head h3{margin:0;font-size:15.5px;}
+  .doc-body{padding:22px;}
+  .doc-title{
+    text-align:center;font-size:18px;font-weight:700;margin-bottom:4px;
+  }
+  .doc-meta{text-align:center;font-size:11.5px;color:var(--sub);margin-bottom:18px;}
+  .doc-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px;}
+  .doc-table th,.doc-table td{
+    border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top;
+  }
+  .doc-table th{background:#f7f8fb;width:34%;font-weight:700;color:var(--sub);font-size:12px;}
+  .doc-section-title{font-size:12.5px;font-weight:700;color:var(--blue-dark);margin:16px 0 6px;}
+  .doc-media-list li{font-size:13px;margin-bottom:4px;}
+  .approval-note{
+    margin-top:18px;padding:12px 14px;background:#f7f8fb;border-radius:8px;
+    font-size:12px;color:var(--sub);display:flex;align-items:center;gap:8px;
+  }
+  .doc-foot{
+    display:flex;justify-content:flex-end;gap:10px;
+    padding:16px 22px;border-top:1px solid var(--line);
+  }
+
+  .toast-screen{
+    display:none;text-align:center;padding:60px 20px;
+  }
+  .toast-screen.show{display:block;}
+  .toast-screen .ok-icon{
+    width:60px;height:60px;border-radius:50%;background:#e6f6ee;color:var(--ok);
+    display:flex;align-items:center;justify-content:center;margin:0 auto 18px;
+  }
+  .toast-screen h2{margin:0 0 8px;font-size:18px;}
+  .toast-screen p{color:var(--sub);font-size:13.5px;margin:0 0 22px;line-height:1.7;}
+
+  @media(max-width:520px){
+    .media-grid{grid-template-columns:1fr;}
+    .head-title{font-size:19px;}
+  }
+
+  /* ===== 文字を大きく・濃く（園長は高齢の方が多いため） ===== */
+  :root{--ink:#000000;--sub:#4b5563;}
+  body{font-size:16px;}
+  .head-title{font-size:22px;}
+  .head-sub{font-size:13.5px;}
+  .step{font-size:12.5px;font-weight:700;}
+  .card h2{font-size:19px;}
+  .card .desc{font-size:14.5px;}
+  .field > label.title{font-size:16.5px;}
+  .field > label.title .req{font-size:13px;}
+  .field > label.title .opt{font-size:13px;}
+  .choice span{font-size:16.5px;padding:12px 19px;font-weight:600;}
+  input[type=text],input[type=date],input[type=number],textarea,select{font-size:17px;padding:14px 15px;}
+  .stepper-num .val{font-size:19px;}
+  .stepper-num .unit{font-size:15.5px;}
+  .stepper-num button{width:44px;height:44px;font-size:21px;}
+  .media-row .row-head .tag{font-size:13px;}
+  .media-grid label{font-size:14px;font-weight:600;}
+  .add-media{font-size:15.5px;padding:15px;}
+  .no-media-toggle{font-size:15px;}
+  .btn{font-size:16.5px;padding:15px 24px;}
+  .doc-title{font-size:21px;}
+  .doc-meta{font-size:13.5px;}
+  .doc-table{font-size:15px;}
+  .doc-table th{font-size:14px;}
+  .doc-section-title{font-size:15px;}
+  .doc-media-list li{font-size:15px;}
+  .approval-note{font-size:14px;}
+  .toast-screen h2{font-size:20px;}
+  .toast-screen p{font-size:15.5px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="head-row">
+    <div>
+      <div class="head-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        採用申請
+      </div>
+      <div class="head-sub">しおどめ保育園○○ → 法人本部</div>
+    </div>
+    <div class="stepper" id="stepper">
+      <div class="step active" data-s="1"><div class="dot">1</div>基本情報</div>
+      <div class="step" data-s="2"><div class="dot">2</div>採用媒体</div>
+      <div class="step" data-s="3"><div class="dot">3</div>確認</div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<form id="form">
+
+  <!-- STEP 1 -->
+  <section class="step-pane" data-pane="1">
+    <div class="card">
+      <h2><span class="num">1</span>募集する職種・雇用形態</h2>
+      <p class="desc">タップで選択してください。</p>
+
+      <div class="field">
+        <label class="title">職種<span class="req">必須</span></label>
+        <div class="choice-grid" data-group="jobtype">
+          <label class="choice"><input type="radio" name="jobtype" value="保育士" required><span>保育士</span></label>
+          <label class="choice"><input type="radio" name="jobtype" value="栄養士"><span>栄養士</span></label>
+          <label class="choice"><input type="radio" name="jobtype" value="調理師"><span>調理師</span></label>
+          <label class="choice"><input type="radio" name="jobtype" value="調理員"><span>調理員</span></label>
+          <label class="choice"><input type="radio" name="jobtype" value="その他"><span>その他</span></label>
+        </div>
+        <div class="sub-reveal" id="jobtype-other-wrap" style="display:none;">
+          <input type="text" id="jobtype-other" placeholder="例）看護師">
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="title">雇用形態<span class="req">必須</span></label>
+        <div class="choice-grid" data-group="employtype">
+          <label class="choice"><input type="radio" name="employtype" value="正規職員" required><span>正規職員</span></label>
+          <label class="choice"><input type="radio" name="employtype" value="パート"><span>パート</span></label>
+        </div>
+      </div>
+
+      <div class="field" id="parttype-wrap" style="display:none;">
+        <label class="title">勤務区分（パート）<span class="req">必須</span></label>
+        <div class="choice-grid" data-group="parttype">
+          <label class="choice"><input type="radio" name="parttype" value="早番"><span>早番</span></label>
+          <label class="choice"><input type="radio" name="parttype" value="遅番"><span>遅番</span></label>
+          <label class="choice"><input type="radio" name="parttype" value="フル"><span>フル</span></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="title">採用予定人数<span class="req">必須</span></label>
+        <div class="stepper-num">
+          <button type="button" data-act="minus">−</button>
+          <div class="val" id="headcount-val">1</div>
+          <button type="button" data-act="plus">＋</button>
+        </div>
+        <span class="unit">名</span>
+      </div>
+
+      <div class="field">
+        <label class="title">採用希望時期<span class="req">必須</span></label>
+        <div class="choice-grid" data-group="timing">
+          <label class="choice"><input type="radio" name="timing" value="即日" required><span>即日</span></label>
+          <label class="choice"><input type="radio" name="timing" value="来月"><span>来月</span></label>
+          <label class="choice"><input type="radio" name="timing" value="来年度（4月）"><span>来年度（4月）</span></label>
+          <label class="choice"><input type="radio" name="timing" value="その他"><span>その他</span></label>
+        </div>
+        <div class="sub-reveal" id="timing-other-wrap" style="display:none;">
+          <label style="font-size:11.5px;color:var(--sub);display:block;margin-bottom:5px;">希望時期</label>
+          <input type="date" id="timing-other">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="num">2</span>採用理由</h2>
+      <p class="desc">当てはまるものをすべて選択してください（複数可）。</p>
+
+      <div class="field">
+        <label class="title">採用理由<span class="req">必須</span></label>
+        <div class="choice-grid" data-group="reason">
+          <label class="choice check"><input type="checkbox" name="reason" value="欠員補充"><span>欠員補充</span></label>
+          <label class="choice check"><input type="checkbox" name="reason" value="増員（新規クラス等）"><span>増員（新規クラス等）</span></label>
+          <label class="choice check"><input type="checkbox" name="reason" value="産休・育休代替"><span>産休・育休代替</span></label>
+          <label class="choice check"><input type="checkbox" name="reason" value="定年退職に伴う補充"><span>定年退職に伴う補充</span></label>
+          <label class="choice check"><input type="checkbox" name="reason" value="その他"><span>その他</span></label>
+        </div>
+        <div class="sub-reveal" id="reason-other-wrap" style="display:none;">
+          <input type="text" id="reason-other" placeholder="例）配置基準の見直しのため">
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="title">詳細理由<span class="req">必須</span></label>
+        <textarea id="reason-detail" placeholder="例）〇〇クラスの担任1名が産休に入るため、代替として1名採用したい。現状の職員配置では他クラスとの兼務が難しく…" required></textarea>
+      </div>
+
+      <div class="field">
+        <label class="title">園の収支状況は把握していますか？<span class="req">必須</span></label>
+        <div class="choice-grid" data-group="financeaware">
+          <label class="choice"><input type="radio" name="financeaware" value="はい" required><span>はい</span></label>
+          <label class="choice"><input type="radio" name="financeaware" value="いいえ"><span>いいえ</span></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="title">想定される懸念<span class="opt">任意</span></label>
+        <div class="choice-grid" data-group="concern">
+          <label class="choice check"><input type="checkbox" name="concern" value="人件費増"><span>人件費増</span></label>
+          <label class="choice check"><input type="checkbox" name="concern" value="急募"><span>急募</span></label>
+          <label class="choice check"><input type="checkbox" name="concern" value="有資格者確保が困難"><span>有資格者確保が困難</span></label>
+          <label class="choice check"><input type="checkbox" name="concern" value="その他"><span>その他</span></label>
+        </div>
+        <div class="sub-reveal" id="concern-other-wrap" style="display:none;">
+          <input type="text" id="concern-other" placeholder="例）近隣園との採用競合">
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <span></span>
+      <button type="button" class="btn btn-primary" onclick="goStep(2)">採用媒体の入力へ ›</button>
+    </div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="step-pane" data-pane="2" style="display:none;">
+    <div class="card">
+      <h2><span class="num">2</span>採用媒体</h2>
+      <p class="desc">求人を掲載する（掲載した）媒体を追加してください。複数媒体を同時に使う場合は「＋媒体を追加」で行を増やせます。</p>
+
+      <div id="media-list"></div>
+
+      <button type="button" class="add-media" id="add-media-btn">＋ 媒体を追加</button>
+
+      <div class="no-media-toggle">
+        <label class="choice check" style="margin:0;">
+          <input type="checkbox" id="no-media-check"><span>媒体を使わない（紹介・縁故等）</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <button type="button" class="btn btn-ghost" onclick="goStep(1)">‹ 戻る</button>
+      <button type="button" class="btn btn-primary" onclick="toConfirm()">内容を確認する ›</button>
+    </div>
+  </section>
+
+  <!-- STEP 3 (申請者情報。確認はモーダルで表示) -->
+  <section class="step-pane" data-pane="3" style="display:none;">
+    <div class="card">
+      <h2><span class="num">3</span>申請者情報</h2>
+      <div class="field">
+        <label class="title">園長氏名<span class="req">必須</span></label>
+        <input type="text" id="applicant-name" placeholder="例）山田 太郎" required>
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <button type="button" class="btn btn-ghost" onclick="goStep(2)">‹ 戻る</button>
+      <button type="button" class="btn btn-primary" onclick="openPreview()">内容を確認する ›</button>
+    </div>
+  </section>
+
+</form>
+
+<div class="toast-screen" id="toast-screen">
+  <div class="ok-icon">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+  </div>
+  <h2>採用申請を送信しました</h2>
+  <p>法人本部が内容を確認します。<br>結果はあらためて本部よりご連絡します。</p>
+  <button type="button" class="btn btn-primary" onclick="location.reload()">続けてもう1件申請する</button>
+</div>
+
+</main>
+
+<!-- 確認プレビュー -->
+<div class="overlay" id="overlay">
+  <div class="doc">
+    <div class="doc-head">
+      <h3>採用申請書（確認）</h3>
+      <button type="button" class="btn-ghost" style="background:transparent;border:none;color:#fff;font-size:20px;cursor:pointer;" onclick="closePreview()">×</button>
+    </div>
+    <div class="doc-body">
+      <div class="doc-title">採用申請書</div>
+      <div class="doc-meta" id="doc-date"></div>
+
+      <table class="doc-table">
+        <tr><th>起案園</th><td>しおどめ保育園○○</td></tr>
+        <tr><th>申請者（園長）</th><td id="doc-applicant"></td></tr>
+        <tr><th>職種</th><td id="doc-jobtype"></td></tr>
+        <tr><th>雇用形態</th><td id="doc-employtype"></td></tr>
+        <tr><th>採用予定人数</th><td id="doc-headcount"></td></tr>
+        <tr><th>採用希望時期</th><td id="doc-timing"></td></tr>
+        <tr><th>採用理由</th><td id="doc-reason"></td></tr>
+        <tr><th>詳細理由</th><td id="doc-reason-detail"></td></tr>
+        <tr><th>園の収支状況の把握</th><td id="doc-financeaware"></td></tr>
+        <tr><th>想定される懸念</th><td id="doc-concern"></td></tr>
+      </table>
+
+      <div class="doc-section-title">採用媒体</div>
+      <ul class="doc-media-list" id="doc-media"></ul>
+
+      <div class="approval-note">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        この内容で法人本部に送信します。承認結果は本部より連絡があります。
+      </div>
+    </div>
+    <div class="doc-foot">
+      <button type="button" class="btn btn-ghost" onclick="closePreview()">修正する</button>
+      <button type="button" class="btn btn-primary" id="submit-btn" onclick="submitForm()">この内容で申請する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== 設定：GASウェブアプリのURLをここに貼り付け ===== */
+const GAS_URL = "https://script.google.com/macros/s/AKfycbye4AZTW9KDq9Ed8-qPxACgrBbJK6RLC5ktIvO5aAQzymzDMJ2W0hO4PeVWVMamy9Gk/exec";
+
+/* ---- ステップ制御 ---- */
+function goStep(n){
+  document.querySelectorAll('.step-pane').forEach(p=>p.style.display='none');
+  document.querySelector(`.step-pane[data-pane="${n}"]`).style.display='block';
+  document.querySelectorAll('.step').forEach(s=>{
+    const sv=+s.dataset.s;
+    s.classList.remove('active','done');
+    if(sv===n) s.classList.add('active');
+    else if(sv<n) s.classList.add('done');
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function toConfirm(){ goStep(3); }
+
+/* ---- その他欄の出し分け ---- */
+function bindOtherReveal(groupName, wrapId, triggerValue='その他'){
+  document.querySelectorAll(`input[name="${groupName}"]`).forEach(inp=>{
+    inp.addEventListener('change',()=>{
+      const checked = document.querySelector(`input[name="${groupName}"]:checked`);
+      const wrap = document.getElementById(wrapId);
+      if(inp.type==='checkbox'){
+        const anyOther = document.querySelector(`input[name="${groupName}"][value="${triggerValue}"]`).checked;
+        wrap.style.display = anyOther ? 'block' : 'none';
+      }else{
+        wrap.style.display = (checked && checked.value===triggerValue) ? 'block':'none';
+      }
+    });
+  });
+}
+bindOtherReveal('jobtype','jobtype-other-wrap');
+bindOtherReveal('timing','timing-other-wrap');
+bindOtherReveal('reason','reason-other-wrap');
+bindOtherReveal('concern','concern-other-wrap');
+
+/* 雇用形態→パート勤務区分の表示切替 */
+document.querySelectorAll('input[name="employtype"]').forEach(inp=>{
+  inp.addEventListener('change',()=>{
+    const isPart = document.querySelector('input[name="employtype"]:checked').value==='パート';
+    document.getElementById('parttype-wrap').style.display = isPart ? 'block':'none';
+    document.querySelectorAll('input[name="parttype"]').forEach(r=>r.required=isPart);
+  });
+});
+
+/* ---- 採用予定人数 ---- */
+let headcount=1;
+document.querySelectorAll('.stepper-num button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    if(btn.dataset.act==='plus') headcount++;
+    else headcount=Math.max(1,headcount-1);
+    document.getElementById('headcount-val').textContent=headcount;
+  });
+});
+
+/* ---- 採用媒体：行の追加/削除 ---- */
+let mediaCount=0;
+const MEDIA_OPTIONS = ["HP直","ハローワーク","ジョブメドレー","その他"];
+
+function addMediaRow(){
+  mediaCount++;
+  const id = mediaCount;
+  const wrap = document.createElement('div');
+  wrap.className='media-row';
+  wrap.dataset.id=id;
+  wrap.innerHTML = `
+    <div class="row-head">
+      <span class="tag">媒体 ${id}</span>
+      <button type="button" class="del" onclick="removeMediaRow(${id})">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+        削除
+      </button>
+    </div>
+    <div class="media-grid">
+      <div class="full">
+        <label>媒体名</label>
+        <select class="m-name">
+          ${MEDIA_OPTIONS.map(o=>`<option value="${o}">${o}</option>`).join('')}
+        </select>
+      </div>
+      <div class="full m-other-wrap" style="display:none;">
+        <label>媒体名（その他）</label>
+        <input type="text" class="m-other" placeholder="例）Indeed">
+      </div>
+      <div class="full">
+        <label>掲載期間</label>
+        <div class="date-range">
+          <input type="date" class="m-start">
+          <span>〜</span>
+          <input type="date" class="m-end">
+        </div>
+      </div>
+      <div class="full">
+        <label>価格（税込・円）</label>
+        <input type="number" class="m-price" min="0" step="1000" placeholder="例）50000">
+      </div>
+    </div>
+  `;
+  document.getElementById('media-list').appendChild(wrap);
+  const sel = wrap.querySelector('.m-name');
+  sel.addEventListener('change',()=>{
+    wrap.querySelector('.m-other-wrap').style.display = sel.value==='その他' ? 'block':'none';
+  });
+}
+function removeMediaRow(id){
+  const el = document.querySelector(`.media-row[data-id="${id}"]`);
+  if(el) el.remove();
+}
+document.getElementById('add-media-btn').addEventListener('click',addMediaRow);
+document.getElementById('no-media-check').addEventListener('change',(e)=>{
+  const on = e.target.checked;
+  document.getElementById('media-list').style.display = on ? 'none':'block';
+  document.getElementById('add-media-btn').style.display = on ? 'none':'flex';
+});
+addMediaRow(); // 初期1行
+
+/* ---- データ収集 ---- */
+function collectData(){
+  const jobtypeEl = document.querySelector('input[name="jobtype"]:checked');
+  const jobtype = jobtypeEl ? jobtypeEl.value : '';
+  const jobtypeOther = document.getElementById('jobtype-other').value;
+
+  const employtypeEl = document.querySelector('input[name="employtype"]:checked');
+  const employtype = employtypeEl ? employtypeEl.value : '';
+  const parttypeEl = document.querySelector('input[name="parttype"]:checked');
+  const parttype = parttypeEl ? parttypeEl.value : '';
+
+  const timingEl = document.querySelector('input[name="timing"]:checked');
+  const timing = timingEl ? timingEl.value : '';
+  const timingOther = document.getElementById('timing-other').value;
+
+  const reasons = Array.from(document.querySelectorAll('input[name="reason"]:checked')).map(x=>x.value);
+  const reasonOther = document.getElementById('reason-other').value;
+  const reasonDetail = document.getElementById('reason-detail').value;
+
+  const financeawareEl = document.querySelector('input[name="financeaware"]:checked');
+  const financeaware = financeawareEl ? financeawareEl.value : '';
+
+  const concerns = Array.from(document.querySelectorAll('input[name="concern"]:checked')).map(x=>x.value);
+  const concernOther = document.getElementById('concern-other').value;
+
+  const noMedia = document.getElementById('no-media-check').checked;
+  const media = [];
+  if(!noMedia){
+    document.querySelectorAll('.media-row').forEach(row=>{
+      const name = row.querySelector('.m-name').value;
+      const other = row.querySelector('.m-other').value;
+      const start = row.querySelector('.m-start').value;
+      const end = row.querySelector('.m-end').value;
+      const price = row.querySelector('.m-price').value;
+      media.push({
+        name: name==='その他' ? (other||'その他') : name,
+        start, end, price
+      });
+    });
+  }
+
+  return {
+    submittedAt: new Date().toISOString(),
+    applicant: document.getElementById('applicant-name').value,
+    jobtype: jobtype==='その他' ? (jobtypeOther||'その他') : jobtype,
+    employtype,
+    parttype: employtype==='パート' ? parttype : '',
+    headcount,
+    timing: timing==='その他' ? (timingOther||'その他') : timing,
+    reasons, reasonOther, reasonDetail,
+    financeaware,
+    concerns, concernOther,
+    media
+  };
+}
+
+function fmtMedia(m){
+  if(!m.length) return ['<li style="color:var(--sub);">媒体を使わない（紹介・縁故等）</li>'];
+  return m.map(x=>{
+    const period = (x.start||x.end) ? `${x.start||'—'} 〜 ${x.end||'—'}` : '期間未設定';
+    const price = x.price ? `¥${Number(x.price).toLocaleString()}` : '価格未設定';
+    return `<li>${x.name}（${period}、${price}）</li>`;
+  });
+}
+
+/* ---- 確認モーダル ---- */
+function openPreview(){
+  if(!document.getElementById('applicant-name').value){
+    alert('園長氏名を入力してください。');
+    return;
+  }
+  const d = collectData();
+  document.getElementById('doc-date').textContent = '提出日：' + new Date().toLocaleDateString('ja-JP');
+  document.getElementById('doc-applicant').textContent = d.applicant;
+  document.getElementById('doc-jobtype').textContent = d.jobtype;
+  document.getElementById('doc-employtype').textContent = d.employtype + (d.parttype ? '（'+d.parttype+'）':'');
+  document.getElementById('doc-headcount').textContent = d.headcount + ' 名';
+  document.getElementById('doc-timing').textContent = d.timing;
+  document.getElementById('doc-reason').textContent = [...d.reasons.filter(r=>r!=='その他'), d.reasonOther].filter(Boolean).join('、') || '—';
+  document.getElementById('doc-reason-detail').textContent = d.reasonDetail;
+  document.getElementById('doc-financeaware').textContent = d.financeaware;
+  document.getElementById('doc-concern').textContent = [...d.concerns.filter(r=>r!=='その他'), d.concernOther].filter(Boolean).join('、') || 'なし';
+  document.getElementById('doc-media').innerHTML = fmtMedia(d.media).join('');
+  document.getElementById('overlay').classList.add('show');
+}
+function closePreview(){
+  document.getElementById('overlay').classList.remove('show');
+}
+
+/* ---- 送信 ---- */
+function submitForm(){
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = '送信中…';
+  const data = collectData();
+
+  fetch(GAS_URL, {
+    method:'POST',
+    mode:'no-cors',
+    headers:{'Content-Type':'text/plain'},
+    body: JSON.stringify(data)
+  }).then(()=>{
+    closePreview();
+    document.querySelector('main form').style.display='none';
+    document.getElementById('toast-screen').classList.add('show');
+  }).catch(()=>{
+    alert('送信に失敗しました。通信環境をご確認のうえ、もう一度お試しください。');
+    btn.disabled=false;
+    btn.textContent='この内容で申請する';
+  });
+}
+</script>
+</body>
+</html>
