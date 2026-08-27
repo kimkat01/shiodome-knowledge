@@ -92,6 +92,48 @@
   .step.active .dot{background:#fff;color:var(--blue);border-color:#fff;}
   .step.done .dot{background:#fff;color:var(--blue);border-color:#fff;}
 
+  .status-link-row{
+    max-width:760px;margin:0 auto;padding-top:10px;
+  }
+  .status-link-btn{
+    background:rgba(255,255,255,.14);
+    border:1px solid rgba(255,255,255,.4);
+    color:#fff;
+    font-size:13px;font-weight:600;
+    padding:8px 14px;border-radius:999px;
+    cursor:pointer;
+    display:inline-flex;align-items:center;gap:6px;
+  }
+  .status-link-btn:hover{background:rgba(255,255,255,.24);}
+  .status-link-btn svg{width:14px;height:14px;flex-shrink:0;}
+
+  .status-list{padding:4px 22px 20px;}
+  .status-empty{
+    text-align:center;color:var(--sub);font-size:14px;padding:40px 10px;
+  }
+  .status-card{
+    border:1.5px solid var(--line);
+    border-radius:12px;
+    padding:14px 16px;
+    margin-bottom:10px;
+  }
+  .status-card .row1{
+    display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px;
+  }
+  .status-card .job{font-size:15px;font-weight:700;}
+  .status-badge{
+    font-size:12.5px;font-weight:700;
+    padding:4px 11px;border-radius:999px;
+    flex-shrink:0;
+  }
+  .status-badge.pending{background:#eef0f3;color:#5b6270;}
+  .status-badge.approved{background:#e6f6ee;color:var(--ok);}
+  .status-badge.rejected{background:#fdeceb;color:var(--danger);}
+  .status-card .meta{font-size:12.5px;color:var(--sub);}
+  .status-card .pdf-link{
+    display:inline-block;margin-top:8px;font-size:12.5px;color:var(--blue);font-weight:700;text-decoration:none;
+  }
+
   main{max-width:760px;margin:26px auto 90px;padding:0 16px;}
 
   .card{
@@ -363,6 +405,12 @@
       <div class="step" data-s="3"><div class="dot">3</div>確認</div>
     </div>
   </div>
+  <div class="status-link-row">
+    <button type="button" class="status-link-btn" onclick="openStatusList()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      これまでの申請状況を確認する
+    </button>
+  </div>
 </header>
 
 <main>
@@ -528,7 +576,7 @@
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
   </div>
   <h2>採用申請を送信しました</h2>
-  <p>法人本部が内容を確認します。<br>結果はあらためて本部よりご連絡します。</p>
+  <p>法人本部が内容を確認します。<br>結果はヘッダーの「これまでの申請状況を確認する」からいつでも確認できます。</p>
   <button type="button" class="btn btn-primary" onclick="location.reload()">続けてもう1件申請する</button>
 </div>
 
@@ -563,7 +611,7 @@
 
       <div class="approval-note">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-        この内容で法人本部に送信します。承認結果は本部より連絡があります。
+        この内容で法人本部に送信します。承認結果はヘッダーの「これまでの申請状況を確認する」から確認できます。
       </div>
     </div>
     <div class="doc-foot">
@@ -573,9 +621,63 @@
   </div>
 </div>
 
+<!-- 申請状況一覧 -->
+<div class="overlay" id="status-overlay">
+  <div class="doc">
+    <div class="doc-head">
+      <h3>これまでの申請状況</h3>
+      <button type="button" style="background:transparent;border:none;color:#fff;font-size:20px;cursor:pointer;" onclick="closeStatusList()">×</button>
+    </div>
+    <div class="status-list" id="status-list">
+      <div class="status-empty">読み込み中…</div>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ===== 設定：GASウェブアプリのURLをここに貼り付け ===== */
 const GAS_URL = "https://script.google.com/macros/s/AKfycbye4AZTW9KDq9Ed8-qPxACgrBbJK6RLC5ktIvO5aAQzymzDMJ2W0hO4PeVWVMamy9Gk/exec";
+
+/* ---- 申請状況一覧 ---- */
+function statusBadgeClass(status){
+  if(status==='承認') return 'approved';
+  if(status==='却下') return 'rejected';
+  return 'pending';
+}
+function openStatusList(){
+  document.getElementById('status-overlay').classList.add('show');
+  document.getElementById('status-list').innerHTML = '<div class="status-empty">読み込み中…</div>';
+  fetch(GAS_URL)
+    .then(r=>r.json())
+    .then(res=>{
+      if(res.result!=='success'){ throw new Error(res.message||'取得に失敗しました'); }
+      const items = res.items||[];
+      if(!items.length){
+        document.getElementById('status-list').innerHTML = '<div class="status-empty">まだ申請はありません。</div>';
+        return;
+      }
+      document.getElementById('status-list').innerHTML = items.map(it=>{
+        const badgeClass = statusBadgeClass(it.status);
+        const job = it.jobtype + (it.employtype ? '（' + it.employtype + (it.parttype?'・'+it.parttype:'') + '）' : '');
+        const pdfLink = it.pdfUrl ? `<a class="pdf-link" href="${it.pdfUrl}" target="_blank" rel="noopener">申請書PDFを見る ›</a>` : '';
+        return `
+          <div class="status-card">
+            <div class="row1">
+              <span class="job">${job}</span>
+              <span class="status-badge ${badgeClass}">${it.status}</span>
+            </div>
+            <div class="meta">提出日時：${it.submittedAt}　申請者：${it.applicant}</div>
+            ${pdfLink}
+          </div>`;
+      }).join('');
+    })
+    .catch(()=>{
+      document.getElementById('status-list').innerHTML = '<div class="status-empty">読み込みに失敗しました。通信環境をご確認のうえ、もう一度お試しください。</div>';
+    });
+}
+function closeStatusList(){
+  document.getElementById('status-overlay').classList.remove('show');
+}
 
 /* ---- ステップ制御 ---- */
 function goStep(n){
