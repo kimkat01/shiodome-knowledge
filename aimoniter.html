@@ -729,7 +729,8 @@ function persistAsr(){
   const p=document.getElementById('asrPrompt')?.value||'';
   try{localStorage.setItem('vm_asr_model',m);localStorage.setItem('vm_asr_prompt',p);}catch(e){}
 }
-async function whisperBlob(blob,name,offset){
+async function whisperBlob(blob,name,offset,scale){
+  scale=scale||1; // 高速再生で抽出した音声は、返ってくるタイムスタンプを再生倍速分だけ引き伸ばして実時間に戻す
   const key=localStorage.getItem('vm_openai_key')||'';
   const model=document.getElementById('asrModel')?.value||'whisper-1';
   const prompt=(document.getElementById('asrPrompt')?.value||'').trim();
@@ -752,7 +753,7 @@ async function whisperBlob(blob,name,offset){
   const isEcho=(t)=>{const tn=norm(t);if(!tn)return true;if(pn&&pn.length>=6&&tn.length>=6&&(pn.includes(tn)||tn.includes(pn)))return true;return false;};
   if(arr.length){
     arr.forEach(s=>{
-      const st=(s.start!=null?s.start:0)+offset;const txt=(s.text||'').trim();
+      const st=(s.start!=null?s.start:0)*scale+offset;const txt=(s.text||'').trim();
       if(isEcho(txt)){addLogEcho(txt);return;}
       // Whisper自身が返す信頼度指標（whisper-1のverbose_jsonのみ）で幻聴の疑いを除外
       const noSpeech=typeof s.no_speech_prob==='number'&&s.no_speech_prob>0.6;
@@ -761,21 +762,31 @@ async function whisperBlob(blob,name,offset){
       if(isKnownHallucinationPhrase(txt)){log('  ⚠ 定型幻聴フレーズを除去: '+txt.slice(0,18),'err');return;}
       // 日本語の保育園録画で日本語を1文字も含まない発言は、モデルを問わずほぼ確実に他言語の幻聴
       if(txt&&!hasJapanese(txt)){log('  ⚠ 日本語を含まない発言を除去（他言語の幻聴の疑い）: '+txt.slice(0,20),'err');return;}
-      segs.push({start:st,end:(s.end!=null?s.end:st)+0,text:txt,speaker:s.speaker!=null?String(s.speaker):null});
+      segs.push({start:st,end:(s.end!=null?s.end*scale:st)+0,text:txt,speaker:s.speaker!=null?String(s.speaker):null});
     });
   }else if(data.text&&data.text.trim()&&!isEcho(data.text)&&!isKnownHallucinationPhrase(data.text.trim())&&hasJapanese(data.text.trim())){segs.push({start:offset,end:offset+1,text:data.text.trim()});}
   return segs;
 }
 function addLogEcho(t){log('  ⚠ プロンプト混入を除去: '+t.slice(0,18),'err');}
+/* ファイル全体をArrayBufferとして一括デコードするのは、巨大ファイル（GB級）だと
+   メモリ不足でdecodeAudioData自体が失敗し、さらにその場合の旧フォールバックが
+   「巨大ファイルをそのままWhisperに送る」→ OpenAI側の25MB上限で確実に失敗、という
+   二重の破綻を起こしていた。この閾値を超えるファイルは最初から一括デコードを試みず
+   動画再生方式（transcribeFileStreaming）に回し、無駄な失敗を避ける。 */
+const HUGE_FILE_BYTES=1000*1024*1024; // 約1GB
 async function transcribeFile(file,onProgress){
   const CH=600;
+  if(file.size>HUGE_FILE_BYTES){
+    log('🎞 ファイルサイズが大きい（'+(file.size/1024/1024/1024).toFixed(2)+'GB）ため、最初から動画再生方式で音声を抽出します','ok');
+    return await transcribeFileStreaming(file,onProgress,CH);
+  }
   const ctx=new (window.AudioContext||window.webkitAudioContext)();
   let ab;
   try{ab=await ctx.decodeAudioData(await file.arrayBuffer());}
   catch(e){
     ctx.close();
-    log('⚠ 音声デコードに失敗したため、コンプレッサー・ノーマライズなしでそのまま送信します','err');
-    stat('🎙 文字起こし中…');const s=await whisperBlob(file,file.name,0);onProgress&&onProgress(s);return s;
+    log('⚠ 音声デコードに失敗したため、動画再生方式に切り替えて音声を抽出します','err');
+    return await transcribeFileStreaming(file,onProgress,CH);
   }
   ctx.close();const dur=ab.duration,n=Math.ceil(dur/CH);let all=[];
   log('🔊 コンプレッサー＋ノーマライズで小さい声を持ち上げます','ok');
@@ -798,6 +809,71 @@ async function transcribeFile(file,onProgress){
     const segs=await whisperBlob(wav,'c'+i+'.wav',st);all=all.concat(segs);onProgress&&onProgress(all);
   }
   return all;
+}
+
+/* 巨大ファイル用フォールバック：ファイル全体を一度にメモリへ載せてデコードするのではなく、
+   <video>要素で早送り再生しながらWebAudioでその場で録音（区間ごとにMediaRecorderで捕捉）することで、
+   一度も「ファイル全体をArrayBuffer化」せずに済む。GB級ファイルでも安定して処理できる。
+   ピッチ保持（preservesPitch）付きでSTREAM_RATE倍速再生することで、音の高さを変えずに時間を短縮する。
+   Whisperが返すタイムスタンプは早送りされた音声上のものなので、scaleで実時間に換算し直す。 */
+const STREAM_RATE=4; // 早送り倍率。上げるほど速いが、音声が不自然になり認識精度が落ちる可能性がある
+async function transcribeFileStreaming(file,onProgress,CH){
+  const url=URL.createObjectURL(file);
+  const video=document.createElement('video');
+  video.src=url;video.playsInline=true;video.preload='auto';video.style.display='none';
+  video.preservesPitch=true;video.mozPreservesPitch=true;video.webkitPreservesPitch=true;
+  document.body.appendChild(video);
+  let actx=null;
+  try{
+    await new Promise((res,rej)=>{
+      video.onloadedmetadata=res;
+      video.onerror=()=>rej(new Error('動画の読み込みに失敗しました（ファイルが壊れている可能性があります）'));
+    });
+    const dur=video.duration;
+    if(!isFinite(dur)||dur<=0)throw new Error('動画の長さを取得できませんでした');
+    if(!window.MediaRecorder)throw new Error('このブラウザはMediaRecorderに対応していません');
+    const n=Math.ceil(dur/CH);
+    log('⏳ '+STREAM_RATE+'倍速の動画再生方式で抽出します（推定 約'+Math.ceil(dur/60/STREAM_RATE)+'分）','ok');
+    actx=new (window.AudioContext||window.webkitAudioContext)();
+    const srcNode=actx.createMediaElementSource(video);
+    const comp=actx.createDynamicsCompressor();
+    comp.threshold.value=-24;comp.knee.value=6;comp.ratio.value=4;comp.attack.value=0.01;comp.release.value=0.25;
+    const boost=actx.createGain();boost.gain.value=3; // ライブ処理のためピーク検出による正規化はできず、控えめな固定ブースト
+    const dest=actx.createMediaStreamDestination();
+    srcNode.connect(comp);comp.connect(boost);boost.connect(dest);
+    // actx.destinationへは接続しない＝画面上は無音のまま処理される
+    const mimeType=['audio/webm;codecs=opus','audio/webm'].find(t=>MediaRecorder.isTypeSupported(t))||'';
+    let all=[];
+    for(let i=0;i<n;i++){
+      const st=i*CH,len=Math.min(CH,dur-st);
+      stat('🎙 文字起こし '+(i+1)+'/'+n+'…（'+STREAM_RATE+'倍速再生で音声取得中）');
+      video.currentTime=st;
+      await new Promise(res=>{video.onseeked=res;});
+      video.playbackRate=STREAM_RATE;
+      const chunks=[];
+      const rec=new MediaRecorder(dest.stream,mimeType?{mimeType}:undefined);
+      rec.ondataavailable=e=>{if(e.data&&e.data.size>0)chunks.push(e.data);};
+      const stopped=new Promise(res=>{rec.onstop=res;});
+      rec.start();
+      try{await video.play();}catch(e){}
+      await new Promise(res=>setTimeout(res,Math.round(len*1000/STREAM_RATE)+300));
+      video.pause();
+      rec.stop();
+      await stopped;
+      const blob=new Blob(chunks,{type:mimeType||'audio/webm'});
+      if(blob.size<2000){log('  🔇 データが小さすぎるためスキップ','ok');continue;}
+      log('  チャンク'+(i+1)+'/'+n+' 抽出完了（'+(blob.size/1024/1024).toFixed(1)+'MB）、送信中…');
+      try{
+        const segs=await whisperBlob(blob,'s'+i+'.webm',st,STREAM_RATE);
+        all=all.concat(segs);onProgress&&onProgress(all);
+      }catch(e){log('  ⚠ チャンク'+(i+1)+'の送信に失敗: '+e.message,'err');}
+    }
+    return all;
+  }finally{
+    if(actx)try{actx.close();}catch(e){}
+    URL.revokeObjectURL(url);
+    video.remove();
+  }
 }
 
 /* ---- detection ---- */
