@@ -756,8 +756,10 @@ async function whisperBlob(blob,name,offset,scale){
       const st=(s.start!=null?s.start:0)*scale+offset;const txt=(s.text||'').trim();
       if(isEcho(txt)){addLogEcho(txt);return;}
       // Whisper自身が返す信頼度指標（whisper-1のverbose_jsonのみ）で幻聴の疑いを除外
-      const noSpeech=typeof s.no_speech_prob==='number'&&s.no_speech_prob>0.6;
-      const highCompression=typeof s.compression_ratio==='number'&&s.compression_ratio>2.4;
+      // 閾値を緩め（no_speech_prob: 0.6→0.85、compression_ratio: 2.4→3.2）、短い発話・断続的な発話が
+      // 誤って「幻聴」判定され削除されてしまう問題（本物の発話まで消えてしまう）を防ぐ
+      const noSpeech=typeof s.no_speech_prob==='number'&&s.no_speech_prob>0.85;
+      const highCompression=typeof s.compression_ratio==='number'&&s.compression_ratio>3.2;
       if(noSpeech||highCompression){log('  ⚠ 幻聴の疑い（信頼度低）を除去: '+txt.slice(0,18),'err');return;}
       if(isKnownHallucinationPhrase(txt)){log('  ⚠ 定型幻聴フレーズを除去: '+txt.slice(0,18),'err');return;}
       // 日本語の保育園録画で日本語を1文字も含まない発言は、モデルを問わずほぼ確実に他言語の幻聴
