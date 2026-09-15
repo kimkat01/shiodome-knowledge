@@ -639,12 +639,12 @@ const PAUSE_SVG='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14
 function setPlayIcon(playing){const el=document.getElementById('playIcon');if(el)el.innerHTML=playing?PAUSE_SVG:PLAY_SVG;}
 function skip(s){if(!videoEl)return;videoEl.currentTime=Math.max(0,Math.min(duration||videoEl.currentTime+s,videoEl.currentTime+s));}
 function togglePlay(){if(!videoEl)return;if(videoEl.paused)videoEl.play().catch(()=>{});else videoEl.pause();}
-const SPEEDS=[0.25,0.5,1,1.5,2];
+const SPEEDS=[0.25,0.5,1,1.5,2,4];
 let speedIdx=2;
 function cycleSpeed(){
   speedIdx=(speedIdx+1)%SPEEDS.length;
   const r=SPEEDS[speedIdx];
-  if(videoEl)videoEl.playbackRate=r;
+  if(videoEl){videoEl.playbackRate=r;videoEl.preservesPitch=true;videoEl.mozPreservesPitch=true;videoEl.webkitPreservesPitch=true;}
   const b=document.getElementById('tSpeed');
   if(b){b.textContent=(r===1?'1×':(r+'×'));b.classList.toggle('slow',r<1);}
 }
@@ -905,6 +905,8 @@ async function analyze(){
   running=true;const btn=document.getElementById('analyzeBtn');btn.disabled=true;btn.textContent='解析中…';
   document.getElementById('feed').innerHTML='';document.getElementById('count').textContent='';
   segments=[];
+  // 見えているプレビューを最初から再生開始（解析自体は裏の隠し動画要素で並行して進む）。速度は現在選択中の倍速（tSpeedボタン）を維持
+  if(videoEl){try{videoEl.currentTime=0;videoEl.playbackRate=SPEEDS[speedIdx];videoEl.preservesPitch=true;videoEl.mozPreservesPitch=true;videoEl.webkitPreservesPitch=true;videoEl.muted=false;videoEl.play().catch(()=>{});}catch(e){}}
   try{
     // 1) transcribe (progressive render)
     await transcribeFile(mediaFile,(segsSoFar)=>{segments=segsSoFar.slice();renderFeed();});
