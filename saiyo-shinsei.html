@@ -6,386 +6,151 @@
 <title>採用申請 | しおどめ保育園○○</title>
 <style>
   :root{
-    --blue:#4169e1;
-    --blue-dark:#2f4fc2;
-    --blue-pale:#eef1fd;
-    --ink:#20242e;
-    --sub:#6b7280;
-    --line:#e2e5ec;
-    --bg:#f4f5f8;
-    --card:#ffffff;
-    --danger:#e0554a;
-    --ok:#2e9e6c;
-    --radius:14px;
+    --blue:#4169e1; --blue-dark:#2f4fc2; --blue-pale:#eef1fd;
+    --ink:#000000; --sub:#4b5563; --line:#e2e5ec; --bg:#f4f5f8;
+    --card:#ffffff; --danger:#e0554a; --ok:#2e9e6c; --radius:14px;
   }
   *{box-sizing:border-box;}
-  body{
-    margin:0;
-    font-family:"Hiragino Kaku Gothic ProN","Noto Sans JP",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-    background:var(--bg);
-    color:var(--ink);
-    -webkit-font-smoothing:antialiased;
-  }
-  header{
-    background:var(--blue);
-    color:#fff;
-    padding:18px 20px;
-  }
-  .head-row{
-    max-width:760px;
-    margin:0 auto;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    flex-wrap:wrap;
-    gap:14px;
-  }
-  .head-title{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    font-size:19px;
-    font-weight:700;
-    letter-spacing:.02em;
-  }
+  body{margin:0;font-family:"Hiragino Kaku Gothic ProN","Noto Sans JP",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink);font-size:16px;-webkit-font-smoothing:antialiased;}
+  header{background:var(--blue);color:#fff;padding:18px 20px;}
+  .head-row{max-width:800px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;}
+  .head-title{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:700;letter-spacing:.02em;}
   .head-title svg{width:22px;height:22px;flex-shrink:0;}
-  .head-sub{
-    font-size:12px;
-    opacity:.85;
-    margin-top:2px;
-    font-weight:400;
-  }
-  .stepper{
-    position:relative;
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    width:min(260px,44vw);
-  }
-  .stepper::before{
-    content:"";
-    position:absolute;
-    top:13px;
-    left:calc(100%/6);
-    right:calc(100%/6);
-    height:2px;
-    background:rgba(255,255,255,.35);
-    z-index:0;
-  }
-  .step{
-    position:relative;
-    z-index:1;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:5px;
-    font-size:10.5px;
-    opacity:.75;
-  }
+  .head-sub{font-size:13.5px;opacity:.9;margin-top:4px;font-weight:400;}
+  .stepper{position:relative;display:grid;grid-template-columns:repeat(6,1fr);width:min(380px,60vw);}
+  .stepper::before{content:"";position:absolute;top:13px;left:calc(100%/12);right:calc(100%/12);height:2px;background:rgba(255,255,255,.35);z-index:0;}
+  .step{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:5px;font-size:9.5px;opacity:.75;font-weight:700;}
   .step.active,.step.done{opacity:1;}
-  .step .dot{
-    width:26px;height:26px;border-radius:50%;
-    background:rgba(255,255,255,.25);
-    display:flex;align-items:center;justify-content:center;
-    font-size:12px;font-weight:700;
-    border:2px solid rgba(255,255,255,.5);
-  }
+  .step .dot{width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border:2px solid rgba(255,255,255,.5);}
   .step.active .dot{background:#fff;color:var(--blue);border-color:#fff;}
   .step.done .dot{background:#fff;color:var(--blue);border-color:#fff;}
-
-  .status-link-row{
-    max-width:760px;margin:0 auto;padding-top:10px;
-  }
-  .status-link-btn{
-    background:rgba(255,255,255,.14);
-    border:1px solid rgba(255,255,255,.4);
-    color:#fff;
-    font-size:13px;font-weight:600;
-    padding:8px 14px;border-radius:999px;
-    cursor:pointer;
-    display:inline-flex;align-items:center;gap:6px;
-  }
+  .status-link-row{max-width:800px;margin:0 auto;padding-top:10px;}
+  .status-link-btn{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:14px;font-weight:600;padding:9px 14px;border-radius:999px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
   .status-link-btn:hover{background:rgba(255,255,255,.24);}
   .status-link-btn svg{width:14px;height:14px;flex-shrink:0;}
-
   .status-list{padding:4px 22px 20px;}
-  .status-empty{
-    text-align:center;color:var(--sub);font-size:14px;padding:40px 10px;
-  }
-  .status-card{
-    border:1.5px solid var(--line);
-    border-radius:12px;
-    padding:14px 16px;
-    margin-bottom:10px;
-  }
-  .status-card .row1{
-    display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px;
-  }
-  .status-card .job{font-size:15px;font-weight:700;}
-  .status-badge{
-    font-size:12.5px;font-weight:700;
-    padding:4px 11px;border-radius:999px;
-    flex-shrink:0;
-  }
+  .status-empty{text-align:center;color:var(--sub);font-size:15px;padding:40px 10px;}
+  .status-card{border:1.5px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px;}
+  .status-card .row1{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap;}
+  .status-card .job{font-size:16px;font-weight:700;}
+  .status-badge{font-size:13px;font-weight:700;padding:4px 11px;border-radius:999px;flex-shrink:0;}
   .status-badge.pending{background:#fdeceb;color:var(--danger);}
-  .status-badge.approved{background:var(--blue-pale);color:var(--blue-dark);}
+  .status-badge.approved{background:#e6f6ee;color:var(--ok);}
   .status-badge.rejected{background:#fdeceb;color:var(--danger);}
-  .status-card .meta{font-size:12.5px;color:var(--sub);}
-  .status-card .pdf-link{
-    display:inline-block;margin-top:8px;font-size:12.5px;color:var(--blue);font-weight:700;text-decoration:none;
-  }
-
-  main{max-width:760px;margin:26px auto 90px;padding:0 16px;}
-
-  .card{
-    background:var(--card);
-    border-radius:var(--radius);
-    border:1px solid var(--line);
-    padding:22px 22px 24px;
-    margin-bottom:18px;
-  }
-  .card h2{
-    font-size:15px;
-    margin:0 0 4px;
-    display:flex;
-    align-items:center;
-    gap:8px;
-  }
-  .card h2 .num{
-    width:22px;height:22px;border-radius:6px;
-    background:var(--blue-pale);color:var(--blue);
-    font-size:12px;font-weight:700;
-    display:flex;align-items:center;justify-content:center;
-  }
-  .card .desc{font-size:12.5px;color:var(--sub);margin:0 0 16px;}
-
+  .status-badge.done{background:var(--blue-pale);color:var(--blue-dark);}
+  .status-card .meta{font-size:13.5px;color:var(--sub);}
+  .status-card .row2{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;}
+  .status-card .mini-btn{font-size:13px;font-weight:700;color:var(--blue);background:var(--blue-pale);border:none;border-radius:8px;padding:8px 12px;cursor:pointer;}
+  main{max-width:800px;margin:26px auto 90px;padding:0 16px;}
+  .card{background:var(--card);border-radius:var(--radius);border:1px solid var(--line);padding:22px;margin-bottom:18px;}
+  .card h2{font-size:19px;margin:0 0 4px;display:flex;align-items:center;gap:8px;}
+  .card h2 .num{width:24px;height:24px;border-radius:6px;background:var(--blue-pale);color:var(--blue);font-size:12.5px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .card .desc{font-size:14.5px;color:var(--sub);margin:0 0 16px;}
   .field{margin-bottom:18px;}
   .field:last-child{margin-bottom:0;}
-  .field > label.title{
-    display:block;font-size:13px;font-weight:700;margin-bottom:9px;
-  }
-  .field > label.title .req{color:var(--danger);font-weight:700;margin-left:3px;font-size:11px;}
-  .field > label.title .opt{color:var(--sub);font-weight:400;margin-left:6px;font-size:11px;}
-
+  .field > label.title{display:block;font-size:16.5px;font-weight:700;margin-bottom:9px;}
+  .field > label.title .req{color:var(--danger);font-weight:700;margin-left:3px;font-size:13px;}
+  .field > label.title .opt{color:var(--sub);font-weight:400;margin-left:6px;font-size:13px;}
   .choice-grid{display:flex;flex-wrap:wrap;gap:8px;}
-  .choice{
-    position:relative;
-  }
+  .choice{position:relative;}
   .choice input{position:absolute;opacity:0;width:0;height:0;}
-  .choice span{
-    display:inline-flex;align-items:center;gap:6px;
-    padding:9px 15px;
-    border:1.5px solid var(--line);
-    border-radius:999px;
-    font-size:13px;
-    cursor:pointer;
-    color:var(--ink);
-    background:#fff;
-    transition:.12s;
-    user-select:none;
-  }
-  .choice input:checked + span{
-    background:var(--blue);
-    border-color:var(--blue);
-    color:#fff;
-    font-weight:700;
-  }
+  .choice span{display:inline-flex;align-items:center;gap:6px;padding:12px 19px;border:1.5px solid var(--line);border-radius:999px;font-size:16.5px;font-weight:600;cursor:pointer;color:var(--ink);background:#fff;transition:.12s;user-select:none;}
+  .choice input:checked + span{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:700;}
   .choice input:focus-visible + span{outline:2px solid var(--blue-dark);outline-offset:2px;}
-
   .choice.check span{border-radius:9px;}
-  .choice.check span::before{
-    content:"";
-    width:15px;height:15px;border-radius:4px;
-    border:1.5px solid #c6cbd6;
-    background:#fff;
-    display:inline-block;
-    flex-shrink:0;
-  }
-  .choice.check input:checked + span::before{
-    background:#fff;
-    border-color:#fff;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234169e1' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
-    background-size:11px;background-repeat:no-repeat;background-position:center;
-  }
+  .choice.check span::before{content:"";width:15px;height:15px;border-radius:4px;border:1.5px solid #c6cbd6;background:#fff;display:inline-block;flex-shrink:0;}
+  .choice.check input:checked + span::before{background:#fff;border-color:#fff;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234169e1' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");background-size:11px;background-repeat:no-repeat;background-position:center;}
   .choice.check input:checked + span{background:var(--blue-pale);border-color:var(--blue);color:var(--blue-dark);}
-
-  .stepper-num{
-    display:inline-flex;align-items:center;
-    border:1.5px solid var(--line);
-    border-radius:10px;
-    overflow:hidden;
-  }
-  .stepper-num button{
-    width:38px;height:38px;
-    border:none;background:var(--blue-pale);color:var(--blue);
-    font-size:18px;font-weight:700;cursor:pointer;
-  }
+  .stepper-num{display:inline-flex;align-items:center;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;}
+  .stepper-num button{width:44px;height:44px;border:none;background:var(--blue-pale);color:var(--blue);font-size:21px;font-weight:700;cursor:pointer;}
   .stepper-num button:active{background:#dde3fb;}
-  .stepper-num .val{
-    width:52px;text-align:center;font-size:15px;font-weight:700;
-  }
-  .stepper-num .unit{font-size:12.5px;color:var(--sub);margin-left:10px;}
-
-  input[type=text],input[type=date],input[type=number],textarea,select{
-    width:100%;
-    border:1.5px solid var(--line);
-    border-radius:9px;
-    padding:11px 12px;
-    font-size:14px;
-    font-family:inherit;
-    color:var(--ink);
-    background:#fff;
-  }
-  input[type=text]:focus,input[type=date]:focus,input[type=number]:focus,textarea:focus,select:focus{
-    outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-pale);
-  }
+  .stepper-num .val{width:52px;text-align:center;font-size:19px;font-weight:700;}
+  .stepper-num .unit{font-size:15.5px;color:var(--sub);margin-left:10px;}
+  input[type=text],input[type=date],input[type=number],input[type=url],textarea,select{width:100%;border:1.5px solid var(--line);border-radius:9px;padding:14px 15px;font-size:17px;font-family:inherit;color:var(--ink);background:#fff;}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-pale);}
   textarea{resize:vertical;min-height:90px;line-height:1.6;}
   input::placeholder,textarea::placeholder{color:#aab0bd;font-style:italic;}
-
-  .sub-reveal{
-    margin-top:12px;padding:14px;border-radius:10px;
-    background:var(--blue-pale);border:1px solid #d9e0fa;
-  }
-
-  .media-row{
-    border:1.5px solid var(--line);
-    border-radius:12px;
-    padding:16px;
-    margin-bottom:12px;
-    position:relative;
-  }
-  .media-row .row-head{
-    display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;
-  }
-  .media-row .row-head .tag{
-    font-size:11.5px;font-weight:700;color:var(--blue);background:var(--blue-pale);
-    padding:3px 9px;border-radius:999px;
-  }
-  .media-row .del{
-    background:none;border:none;color:var(--sub);font-size:12px;cursor:pointer;
-    display:flex;align-items:center;gap:4px;
-  }
+  .sub-reveal{margin-top:12px;padding:14px;border-radius:10px;background:var(--blue-pale);border:1px solid #d9e0fa;}
+  .media-row{border:1.5px solid var(--line);border-radius:12px;padding:16px;margin-bottom:12px;position:relative;}
+  .media-row .row-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+  .media-row .row-head .tag{font-size:13px;font-weight:700;color:var(--blue);background:var(--blue-pale);padding:3px 9px;border-radius:999px;}
+  .media-row .del{background:none;border:none;color:var(--sub);font-size:13px;cursor:pointer;display:flex;align-items:center;gap:4px;}
   .media-row .del:hover{color:var(--danger);}
   .media-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
   .media-grid .full{grid-column:1/-1;}
-  .media-grid label{display:block;font-size:11.5px;color:var(--sub);margin-bottom:5px;}
+  .media-grid label{display:block;font-size:14px;color:var(--sub);margin-bottom:5px;font-weight:600;}
   .date-range{display:flex;align-items:center;gap:8px;}
-  .date-range span{color:var(--sub);font-size:12px;}
-
-  .add-media{
-    width:100%;
-    border:1.5px dashed #c3cbe0;
-    background:#fff;
-    color:var(--blue);
-    font-weight:700;
-    font-size:13.5px;
-    padding:13px;
-    border-radius:10px;
-    cursor:pointer;
-    display:flex;align-items:center;justify-content:center;gap:6px;
-  }
+  .date-range span{color:var(--sub);font-size:13px;}
+  .add-media{width:100%;border:1.5px dashed #c3cbe0;background:#fff;color:var(--blue);font-weight:700;font-size:15.5px;padding:15px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
   .add-media:hover{background:var(--blue-pale);}
-
-  .no-media-toggle{
-    display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--sub);
-    margin-top:10px;
-  }
-
-  .nav-row{
-    display:flex;justify-content:space-between;gap:10px;margin-top:6px;
-  }
-  .btn{
-    padding:13px 22px;border-radius:10px;font-size:14.5px;font-weight:700;
-    border:none;cursor:pointer;
-  }
+  .no-media-toggle{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--sub);margin-top:10px;}
+  .nav-row{display:flex;justify-content:space-between;gap:10px;margin-top:6px;}
+  .btn{padding:15px 24px;border-radius:10px;font-size:16.5px;font-weight:700;border:none;cursor:pointer;}
   .btn-primary{background:var(--blue);color:#fff;}
   .btn-primary:hover{background:var(--blue-dark);}
   .btn-ghost{background:#fff;color:var(--ink);border:1.5px solid var(--line);}
   .btn-ghost:hover{background:#f2f3f6;}
   .btn:disabled{opacity:.5;cursor:not-allowed;}
-
-  /* 確認プレビュー(モーダル) */
-  .overlay{
-    position:fixed;inset:0;background:rgba(20,22,40,.5);
-    display:none;align-items:flex-start;justify-content:center;
-    padding:30px 14px;overflow:auto;z-index:50;
-  }
+  .overlay{position:fixed;inset:0;background:rgba(20,22,40,.5);display:none;align-items:flex-start;justify-content:center;padding:30px 14px;overflow:auto;z-index:50;}
   .overlay.show{display:flex;}
-  .doc{
-    background:#fff;border-radius:10px;width:100%;max-width:700px;
-    padding:0;overflow:hidden;
-  }
-  .doc-head{
-    background:var(--blue);color:#fff;padding:16px 22px;
-    display:flex;justify-content:space-between;align-items:center;
-  }
-  .doc-head h3{margin:0;font-size:15.5px;}
+  .doc{background:#fff;border-radius:10px;width:100%;max-width:720px;padding:0;overflow:hidden;}
+  .doc-head{background:var(--blue);color:#fff;padding:16px 22px;display:flex;justify-content:space-between;align-items:center;}
+  .doc-head h3{margin:0;font-size:16.5px;}
   .doc-body{padding:22px;}
-  .doc-title{
-    text-align:center;font-size:18px;font-weight:700;margin-bottom:4px;
-  }
-  .doc-meta{text-align:center;font-size:11.5px;color:var(--sub);margin-bottom:18px;}
-  .doc-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px;}
-  .doc-table th,.doc-table td{
-    border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top;
-  }
-  .doc-table th{background:#f7f8fb;width:34%;font-weight:700;color:var(--sub);font-size:12px;}
-  .doc-section-title{font-size:12.5px;font-weight:700;color:var(--blue-dark);margin:16px 0 6px;}
-  .doc-media-list li{font-size:13px;margin-bottom:4px;}
-  .approval-note{
-    margin-top:18px;padding:12px 14px;background:#f7f8fb;border-radius:8px;
-    font-size:12px;color:var(--sub);display:flex;align-items:center;gap:8px;
-  }
-  .doc-foot{
-    display:flex;justify-content:flex-end;gap:10px;
-    padding:16px 22px;border-top:1px solid var(--line);
-  }
-
-  .toast-screen{
-    display:none;text-align:center;padding:60px 20px;
-  }
+  .doc-title{text-align:center;font-size:21px;font-weight:700;margin-bottom:4px;}
+  .doc-meta{text-align:center;font-size:13.5px;color:var(--sub);margin-bottom:18px;}
+  .doc-table{width:100%;border-collapse:collapse;font-size:15px;margin-bottom:16px;}
+  .doc-table th,.doc-table td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top;}
+  .doc-table th{background:#f7f8fb;width:36%;font-weight:700;color:var(--sub);font-size:14px;}
+  .doc-section-title{font-size:15px;font-weight:700;color:var(--blue-dark);margin:16px 0 6px;}
+  .doc-media-list li{font-size:15px;margin-bottom:4px;}
+  .approval-note{margin-top:18px;padding:12px 14px;background:#f7f8fb;border-radius:8px;font-size:14px;color:var(--sub);display:flex;align-items:center;gap:8px;}
+  .doc-foot{display:flex;justify-content:flex-end;gap:10px;padding:16px 22px;border-top:1px solid var(--line);}
+  .toast-screen{display:none;text-align:center;padding:60px 20px;}
   .toast-screen.show{display:block;}
-  .toast-screen .ok-icon{
-    width:60px;height:60px;border-radius:50%;background:#e6f6ee;color:var(--ok);
-    display:flex;align-items:center;justify-content:center;margin:0 auto 18px;
-  }
-  .toast-screen h2{margin:0 0 8px;font-size:18px;}
-  .toast-screen p{color:var(--sub);font-size:13.5px;margin:0 0 22px;line-height:1.7;}
+  .toast-screen .ok-icon{width:60px;height:60px;border-radius:50%;background:#e6f6ee;color:var(--ok);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;}
+  .toast-screen h2{margin:0 0 8px;font-size:20px;}
+  .toast-screen p{color:var(--sub);font-size:15.5px;margin:0 0 22px;line-height:1.7;}
+  @media(max-width:520px){.media-grid{grid-template-columns:1fr;}.head-title{font-size:19px;}}
 
-  @media(max-width:520px){
-    .media-grid{grid-template-columns:1fr;}
-    .head-title{font-size:19px;}
-  }
-
-  /* ===== 文字を大きく・濃く（園長は高齢の方が多いため） ===== */
-  :root{--ink:#000000;--sub:#4b5563;}
-  body{font-size:16px;}
-  .head-title{font-size:22px;}
-  .head-sub{font-size:13.5px;}
-  .step{font-size:12.5px;font-weight:700;}
-  .card h2{font-size:19px;}
-  .card .desc{font-size:14.5px;}
-  .field > label.title{font-size:16.5px;}
-  .field > label.title .req{font-size:13px;}
-  .field > label.title .opt{font-size:13px;}
-  .choice span{font-size:16.5px;padding:12px 19px;font-weight:600;}
-  input[type=text],input[type=date],input[type=number],textarea,select{font-size:17px;padding:14px 15px;}
-  .stepper-num .val{font-size:19px;}
-  .stepper-num .unit{font-size:15.5px;}
-  .stepper-num button{width:44px;height:44px;font-size:21px;}
-  .media-row .row-head .tag{font-size:13px;}
-  .media-grid label{font-size:14px;font-weight:600;}
-  .add-media{font-size:15.5px;padding:15px;}
-  .no-media-toggle{font-size:15px;}
-  .btn{font-size:16.5px;padding:15px 24px;}
-  .doc-title{font-size:21px;}
-  .doc-meta{font-size:13.5px;}
-  .doc-table{font-size:15px;}
-  .doc-table th{font-size:14px;}
-  .doc-section-title{font-size:15px;}
-  .doc-media-list li{font-size:15px;}
-  .approval-note{font-size:14px;}
-  .toast-screen h2{font-size:20px;}
-  .toast-screen p{font-size:15.5px;}
+  /* ---- 配置基準・人件費シミュレーション ---- */
+  .grid6{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  @media(max-width:480px){.grid6{grid-template-columns:repeat(2,1fr);}}
+  .agebox{border:1.5px solid var(--line);border-radius:10px;padding:10px;text-align:center;}
+  .agebox label{display:block;font-size:13px;color:var(--sub);margin-bottom:6px;font-weight:600;}
+  .agebox input{width:100%;border:none;text-align:center;font-size:19px;font-weight:700;color:var(--ink);padding:6px;}
+  .agebox input:focus{outline:none;box-shadow:none;}
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line);gap:10px;}
+  .toggle-row:last-child{border-bottom:none;}
+  .toggle-row .lbl{font-size:15.5px;}
+  .toggle-row .note{font-size:12.5px;color:var(--sub);display:block;margin-top:2px;}
+  .switch{position:relative;width:46px;height:27px;flex-shrink:0;}
+  .switch input{position:absolute;opacity:0;width:0;height:0;}
+  .switch .track{position:absolute;inset:0;background:#d1d5db;border-radius:999px;transition:.15s;cursor:pointer;}
+  .switch .track::before{content:"";position:absolute;width:21px;height:21px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.15s;}
+  .switch input:checked + .track{background:var(--blue);}
+  .switch input:checked + .track::before{transform:translateX(19px);}
+  .result{margin-top:14px;border-radius:12px;padding:18px;background:var(--blue-pale);border:1.5px solid #d9e0fa;}
+  .result.short{background:#fdeceb;border-color:#f6c9c4;}
+  .result .headline{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px;}
+  .result .headline .lbl{font-size:15px;font-weight:700;color:var(--sub);}
+  .result .headline .num{font-size:30px;font-weight:800;color:var(--blue-dark);}
+  .result.short .headline .num{color:var(--danger);}
+  .result .headline .num .unit{font-size:15px;font-weight:700;margin-left:2px;}
+  .result-sub{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+  .result-sub .box{background:#fff;border-radius:8px;padding:10px 12px;}
+  .result-sub .box .k{font-size:12px;color:var(--sub);}
+  .result-sub .box .v{font-size:18px;font-weight:700;}
+  .breakdown{font-size:13px;color:var(--sub);line-height:1.9;}
+  .breakdown b{color:var(--ink);}
+  .note-box{margin-top:10px;font-size:13px;color:var(--sub);background:#fff;border-radius:8px;padding:10px 12px;}
+  .cost-result{margin-top:14px;border-radius:12px;padding:18px;background:#f7f8fb;border:1.5px solid var(--line);}
+  .cost-result .headline{font-size:15px;font-weight:700;color:var(--sub);margin-bottom:4px;}
+  .cost-result .amount{font-size:28px;font-weight:800;color:var(--ink);}
+  .cost-result .amount .unit{font-size:15px;font-weight:700;}
+  .cost-result .per{font-size:13px;color:var(--sub);margin-top:4px;}
+  .summary-box{background:#f7f8fb;border-radius:10px;padding:14px 16px;font-size:14.5px;color:var(--sub);line-height:1.9;margin-bottom:16px;}
+  .summary-box b{color:var(--ink);}
 </style>
 </head>
 <body>
@@ -397,18 +162,21 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         採用申請
       </div>
-      <div class="head-sub">しおどめ保育園○○ → 法人本部</div>
+      <div class="head-sub" id="facility-sub">しおどめ保育園○○ → 法人本部</div>
     </div>
     <div class="stepper" id="stepper">
-      <div class="step active" data-s="1"><div class="dot">1</div>基本情報</div>
-      <div class="step" data-s="2"><div class="dot">2</div>採用媒体</div>
-      <div class="step" data-s="3"><div class="dot">3</div>確認</div>
+      <div class="step active" data-s="1"><div class="dot">1</div>配置基準</div>
+      <div class="step" data-s="2"><div class="dot">2</div>職種</div>
+      <div class="step" data-s="3"><div class="dot">3</div>人物像</div>
+      <div class="step" data-s="4"><div class="dot">4</div>人件費</div>
+      <div class="step" data-s="5"><div class="dot">5</div>媒体</div>
+      <div class="step" data-s="6"><div class="dot">6</div>確認</div>
     </div>
   </div>
   <div class="status-link-row">
     <button type="button" class="status-link-btn" onclick="openStatusList()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-      これまでの申請状況を確認する
+      これまでの申請状況を確認する（②応募者決裁もここから）
     </button>
   </div>
 </header>
@@ -417,15 +185,81 @@
 
 <form id="form">
 
-  <!-- STEP 1 -->
+  <!-- STEP 1: 配置基準確認 -->
   <section class="step-pane" data-pane="1">
+    <div class="card">
+      <h2><span class="num">1</span>在籍（予定）園児数</h2>
+      <p class="desc">現時点、または採用を検討している時点での年齢別在籍人数を入力してください。</p>
+      <div class="grid6">
+        <div class="agebox"><label>0歳児</label><input type="number" min="0" value="0" data-age="age0"></div>
+        <div class="agebox"><label>1歳児</label><input type="number" min="0" value="0" data-age="age1"></div>
+        <div class="agebox"><label>2歳児</label><input type="number" min="0" value="0" data-age="age2"></div>
+        <div class="agebox"><label>3歳児</label><input type="number" min="0" value="0" data-age="age3"></div>
+        <div class="agebox"><label>4歳児</label><input type="number" min="0" value="0" data-age="age4"></div>
+        <div class="agebox"><label>5歳児</label><input type="number" min="0" value="0" data-age="age5"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="num">2</span>施設種別・基準の条件</h2>
+      <div class="field">
+        <label class="title">施設種別</label>
+        <select id="facilityType">
+          <option value="ninka">認可保育所</option>
+          <option value="kodomoen">幼保連携型認定こども園</option>
+          <option value="shokibo_a">小規模保育A型</option>
+          <option value="shokibo_b">小規模保育B型</option>
+          <option value="shokibo_c">小規模保育C型</option>
+          <option value="jigyosho">事業所内保育事業</option>
+          <option value="ninka_gai">認可外保育施設</option>
+        </select>
+      </div>
+      <div class="toggle-row">
+        <div><span class="lbl">3歳児 経過措置（20:1）を適用</span><span class="note">令和9年度末まで選択可。未チェックは新基準15:1</span></div>
+        <label class="switch"><input type="checkbox" id="use3saiKeika"><span class="track"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div><span class="lbl">4・5歳児 経過措置（30:1）を適用</span><span class="note">未チェックは新基準25:1</span></div>
+        <label class="switch"><input type="checkbox" id="use45saiKeika"><span class="track"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div><span class="lbl">1歳児配置改善加算（5:1）を適用</span><span class="note">処遇改善等加算I・II・III取得＋ICT要件等を満たす園のみ</span></div>
+        <label class="switch"><input type="checkbox" id="use1saiKaizen"><span class="track"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div><span class="lbl">利用定員90人以下加配</span><span class="note">公定価格上の常勤+1加配</span></div>
+        <label class="switch"><input type="checkbox" id="teiin90ika"><span class="track"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div><span class="lbl">保育標準時間（11h）認定受入加配</span><span class="note">公定価格上の常勤+1加配（両方該当でさらに非常勤+1）</span></div>
+        <label class="switch"><input type="checkbox" id="hyojunJikan"><span class="track"></span></label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="num">3</span>現在の職員配置</h2>
+      <p class="desc">保育士マスタに登録されている常勤換算値の合計を自動取得します（未登録の場合は手入力してください）。</p>
+      <div class="field">
+        <label class="title">現在の常勤換算数（保育士）<span class="opt">FTE合計</span></label>
+        <input type="number" min="0" step="0.1" id="currentFTE" value="0">
+      </div>
+      <div id="calcResult"></div>
+    </div>
+
+    <div class="nav-row">
+      <span></span>
+      <button type="button" class="btn btn-primary" onclick="goStep(2)">職種・採用理由の入力へ ›</button>
+    </div>
+  </section>
+
+  <!-- STEP 2: 職種・雇用形態・採用理由 -->
+  <section class="step-pane" data-pane="2" style="display:none;">
     <div class="card">
       <h2><span class="num">1</span>募集する職種・雇用形態</h2>
       <p class="desc">タップで選択してください。</p>
-
       <div class="field">
         <label class="title">職種<span class="req">必須</span></label>
-        <div class="choice-grid" data-group="jobtype">
+        <div class="choice-grid">
           <label class="choice"><input type="radio" name="jobtype" value="保育士" required><span>保育士</span></label>
           <label class="choice"><input type="radio" name="jobtype" value="栄養士"><span>栄養士</span></label>
           <label class="choice"><input type="radio" name="jobtype" value="調理師"><span>調理師</span></label>
@@ -433,48 +267,43 @@
           <label class="choice"><input type="radio" name="jobtype" value="その他"><span>その他</span></label>
         </div>
         <div class="sub-reveal" id="jobtype-other-wrap" style="display:none;">
-          <input type="text" id="jobtype-other" placeholder="例）看護師">
+          <input type="text" id="jobtype-other" placeholder="例）事務員">
         </div>
       </div>
-
       <div class="field">
         <label class="title">雇用形態<span class="req">必須</span></label>
-        <div class="choice-grid" data-group="employtype">
+        <div class="choice-grid">
           <label class="choice"><input type="radio" name="employtype" value="正規職員" required><span>正規職員</span></label>
           <label class="choice"><input type="radio" name="employtype" value="パート"><span>パート</span></label>
         </div>
-      </div>
-
-      <div class="field" id="parttype-wrap" style="display:none;">
-        <label class="title">勤務区分（パート）<span class="req">必須</span></label>
-        <div class="choice-grid" data-group="parttype">
-          <label class="choice"><input type="radio" name="parttype" value="早番"><span>早番</span></label>
-          <label class="choice"><input type="radio" name="parttype" value="遅番"><span>遅番</span></label>
-          <label class="choice"><input type="radio" name="parttype" value="フル"><span>フル</span></label>
+        <div class="sub-reveal" id="parttype-wrap" style="display:none;">
+          <label class="title" style="font-size:14.5px;margin-bottom:8px;">パート勤務区分</label>
+          <div class="choice-grid">
+            <label class="choice"><input type="radio" name="parttype" value="早番"><span>早番</span></label>
+            <label class="choice"><input type="radio" name="parttype" value="遅番"><span>遅番</span></label>
+            <label class="choice"><input type="radio" name="parttype" value="フル"><span>フル</span></label>
+          </div>
         </div>
       </div>
-
       <div class="field">
         <label class="title">採用予定人数<span class="req">必須</span></label>
         <div class="stepper-num">
           <button type="button" data-act="minus">−</button>
-          <div class="val" id="headcount-val">1</div>
+          <span class="val" id="headcount-val">1</span>
           <button type="button" data-act="plus">＋</button>
         </div>
         <span class="unit">名</span>
       </div>
-
       <div class="field">
         <label class="title">採用希望時期<span class="req">必須</span></label>
-        <div class="choice-grid" data-group="timing">
+        <div class="choice-grid">
           <label class="choice"><input type="radio" name="timing" value="即日" required><span>即日</span></label>
           <label class="choice"><input type="radio" name="timing" value="来月"><span>来月</span></label>
-          <label class="choice"><input type="radio" name="timing" value="来年度（4月）"><span>来年度（4月）</span></label>
+          <label class="choice"><input type="radio" name="timing" value="来年度"><span>来年度</span></label>
           <label class="choice"><input type="radio" name="timing" value="その他"><span>その他</span></label>
         </div>
         <div class="sub-reveal" id="timing-other-wrap" style="display:none;">
-          <label style="font-size:11.5px;color:var(--sub);display:block;margin-bottom:5px;">希望時期</label>
-          <input type="date" id="timing-other">
+          <input type="text" id="timing-other" placeholder="例）2026年12月〜">
         </div>
       </div>
     </div>
@@ -482,10 +311,9 @@
     <div class="card">
       <h2><span class="num">2</span>採用理由</h2>
       <p class="desc">当てはまるものをすべて選択してください（複数可）。</p>
-
       <div class="field">
         <label class="title">採用理由<span class="req">必須</span></label>
-        <div class="choice-grid" data-group="reason">
+        <div class="choice-grid">
           <label class="choice check"><input type="checkbox" name="reason" value="欠員補充"><span>欠員補充</span></label>
           <label class="choice check"><input type="checkbox" name="reason" value="増員（新規クラス等）"><span>増員（新規クラス等）</span></label>
           <label class="choice check"><input type="checkbox" name="reason" value="産休・育休代替"><span>産休・育休代替</span></label>
@@ -496,23 +324,20 @@
           <input type="text" id="reason-other" placeholder="例）配置基準の見直しのため">
         </div>
       </div>
-
       <div class="field">
         <label class="title">詳細理由<span class="req">必須</span></label>
-        <textarea id="reason-detail" placeholder="例）〇〇クラスの担任1名が産休に入るため、代替として1名採用したい。現状の職員配置では他クラスとの兼務が難しく…" required></textarea>
+        <textarea id="reason-detail" placeholder="例）〇〇クラスの担任1名が産休に入るため、代替として1名採用したい。" required></textarea>
       </div>
-
       <div class="field">
         <label class="title">園の収支状況は把握していますか？<span class="req">必須</span></label>
-        <div class="choice-grid" data-group="financeaware">
+        <div class="choice-grid">
           <label class="choice"><input type="radio" name="financeaware" value="はい" required><span>はい</span></label>
           <label class="choice"><input type="radio" name="financeaware" value="いいえ"><span>いいえ</span></label>
         </div>
       </div>
-
       <div class="field">
         <label class="title">想定される懸念<span class="opt">任意</span></label>
-        <div class="choice-grid" data-group="concern">
+        <div class="choice-grid">
           <label class="choice check"><input type="checkbox" name="concern" value="人件費増"><span>人件費増</span></label>
           <label class="choice check"><input type="checkbox" name="concern" value="急募"><span>急募</span></label>
           <label class="choice check"><input type="checkbox" name="concern" value="有資格者確保が困難"><span>有資格者確保が困難</span></label>
@@ -525,46 +350,110 @@
     </div>
 
     <div class="nav-row">
-      <span></span>
-      <button type="button" class="btn btn-primary" onclick="goStep(2)">採用媒体の入力へ ›</button>
+      <button type="button" class="btn btn-ghost" onclick="goStep(1)">‹ 戻る</button>
+      <button type="button" class="btn btn-primary" onclick="goStep(3)">求める人物像の入力へ ›</button>
     </div>
   </section>
 
-  <!-- STEP 2 -->
-  <section class="step-pane" data-pane="2" style="display:none;">
+  <!-- STEP 3: 求める保育士像・募集要項・紹介会社/派遣 -->
+  <section class="step-pane" data-pane="3" style="display:none;">
     <div class="card">
-      <h2><span class="num">2</span>採用媒体</h2>
+      <h2><span class="num">3</span>求める保育士像・募集要項</h2>
+      <p class="desc">採用サイトの更新や求人媒体の掲載文にそのまま使えるよう、具体的に記入してください。</p>
+      <div class="field">
+        <label class="title">求める経歴・人物像<span class="req">必須</span></label>
+        <textarea id="ideal-profile" placeholder="例）保育士経験3年以上、乳児クラス担当経験があると尚可。明るく積極的にコミュニケーションが取れる方。" required></textarea>
+      </div>
+      <div class="field">
+        <label class="title">募集要項の概要<span class="opt">任意</span></label>
+        <textarea id="job-summary" placeholder="例）勤務地：しおどめ保育園○○／勤務時間：7:00-19:00のシフト制／給与：月給21万円〜（経験による）"></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="num">4</span>紹介会社・派遣の利用</h2>
+      <div class="field">
+        <label class="title">紹介会社・派遣を使いますか？<span class="req">必須</span></label>
+        <div class="choice-grid">
+          <label class="choice"><input type="radio" name="useAgency" value="使う" required><span>使う</span></label>
+          <label class="choice"><input type="radio" name="useAgency" value="使わない"><span>使わない</span></label>
+          <label class="choice"><input type="radio" name="useAgency" value="検討中"><span>検討中</span></label>
+        </div>
+      </div>
+      <div class="field">
+        <label class="title">補足<span class="opt">任意</span></label>
+        <input type="text" id="agency-memo" placeholder="例）〇〇紹介会社に相談予定">
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <button type="button" class="btn btn-ghost" onclick="goStep(2)">‹ 戻る</button>
+      <button type="button" class="btn btn-primary" onclick="goStep(4)">人件費シミュレーションへ ›</button>
+    </div>
+  </section>
+
+  <!-- STEP 4: 人件費シミュレーション -->
+  <section class="step-pane" data-pane="4" style="display:none;">
+    <div class="card">
+      <h2><span class="num">5</span>採用予定の人件費シミュレーション</h2>
+      <p class="desc">概算です。実際の給与体系・社会保険加入状況により変動します。</p>
+      <div class="field">
+        <label class="title">想定月給（円）</label>
+        <input type="number" min="0" step="1000" id="monthlySalary" value="220000">
+      </div>
+      <div class="field">
+        <label class="title">想定賞与（月数）</label>
+        <input type="number" min="0" step="0.1" id="bonusMonths" value="2.0">
+      </div>
+      <div class="field" id="parttimeFields" style="display:none;">
+        <label class="title">想定時給（円）</label>
+        <input type="number" min="0" step="10" id="hourlyWage" value="1100">
+        <label class="title" style="margin-top:14px;">月間想定勤務時間（h）</label>
+        <input type="number" min="0" step="1" id="monthlyHours" value="120">
+      </div>
+      <div class="field">
+        <label class="title">法定福利費等 率<span class="opt">社会保険料・労働保険料の概算（%）</span></label>
+        <input type="number" min="0" step="0.5" id="welfareRate" value="15">
+      </div>
+      <div id="costResult"></div>
+    </div>
+
+    <div class="nav-row">
+      <button type="button" class="btn btn-ghost" onclick="goStep(3)">‹ 戻る</button>
+      <button type="button" class="btn btn-primary" onclick="goStep(5)">採用媒体の入力へ ›</button>
+    </div>
+  </section>
+
+  <!-- STEP 5: 採用媒体 -->
+  <section class="step-pane" data-pane="5" style="display:none;">
+    <div class="card">
+      <h2><span class="num">6</span>採用媒体</h2>
       <p class="desc">求人を掲載する（掲載した）媒体を追加してください。複数媒体を同時に使う場合は「＋媒体を追加」で行を増やせます。</p>
-
       <div id="media-list"></div>
-
       <button type="button" class="add-media" id="add-media-btn">＋ 媒体を追加</button>
-
       <div class="no-media-toggle">
         <label class="choice check" style="margin:0;">
           <input type="checkbox" id="no-media-check"><span>媒体を使わない（紹介・縁故等）</span>
         </label>
       </div>
     </div>
-
     <div class="nav-row">
-      <button type="button" class="btn btn-ghost" onclick="goStep(1)">‹ 戻る</button>
-      <button type="button" class="btn btn-primary" onclick="toConfirm()">内容を確認する ›</button>
+      <button type="button" class="btn btn-ghost" onclick="goStep(4)">‹ 戻る</button>
+      <button type="button" class="btn btn-primary" onclick="goStep(6)">内容を確認する ›</button>
     </div>
   </section>
 
-  <!-- STEP 3 (申請者情報。確認はモーダルで表示) -->
-  <section class="step-pane" data-pane="3" style="display:none;">
+  <!-- STEP 6: 申請者情報・確認 -->
+  <section class="step-pane" data-pane="6" style="display:none;">
     <div class="card">
-      <h2><span class="num">3</span>申請者情報</h2>
+      <h2><span class="num">7</span>申請者情報</h2>
       <div class="field">
         <label class="title">園長氏名<span class="req">必須</span></label>
         <input type="text" id="applicant-name" placeholder="例）山田 太郎" required>
       </div>
     </div>
-
     <div class="nav-row">
-      <button type="button" class="btn btn-ghost" onclick="goStep(2)">‹ 戻る</button>
+      <button type="button" class="btn btn-ghost" onclick="goStep(5)">‹ 戻る</button>
       <button type="button" class="btn btn-primary" onclick="openPreview()">内容を確認する ›</button>
     </div>
   </section>
@@ -575,53 +464,56 @@
   <div class="ok-icon">
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
   </div>
-  <h2>採用申請を送信しました</h2>
-  <p>法人本部が内容を確認します。<br>結果はヘッダーの「これまでの申請状況を確認する」からいつでも確認できます。</p>
+  <h2>①採用前申請を送信しました</h2>
+  <p>法人本部が内容を確認し、可否を判断します。<br>承認されたら、ヘッダーの「これまでの申請状況を確認する」から②応募者決裁に進めます。</p>
   <button type="button" class="btn btn-primary" onclick="location.reload()">続けてもう1件申請する</button>
 </div>
 
 </main>
 
-<!-- 確認プレビュー -->
+<!-- ①確認プレビュー -->
 <div class="overlay" id="overlay">
   <div class="doc">
     <div class="doc-head">
-      <h3>採用申請書（確認）</h3>
-      <button type="button" class="btn-ghost" style="background:transparent;border:none;color:#fff;font-size:20px;cursor:pointer;" onclick="closePreview()">×</button>
+      <h3>①採用前申請書（確認）</h3>
+      <button type="button" style="background:transparent;border:none;color:#fff;font-size:20px;cursor:pointer;" onclick="closePreview()">×</button>
     </div>
     <div class="doc-body">
-      <div class="doc-title">採用申請書</div>
+      <div class="doc-title">採用前申請書</div>
       <div class="doc-meta" id="doc-date"></div>
-
       <table class="doc-table">
-        <tr><th>起案園</th><td>しおどめ保育園○○</td></tr>
+        <tr><th>起案園</th><td id="doc-facility"></td></tr>
         <tr><th>申請者（園長）</th><td id="doc-applicant"></td></tr>
+        <tr><th>配置基準 必要数</th><td id="doc-required"></td></tr>
+        <tr><th>現在の常勤換算数</th><td id="doc-fte"></td></tr>
+        <tr><th>不足数</th><td id="doc-shortage"></td></tr>
         <tr><th>職種</th><td id="doc-jobtype"></td></tr>
         <tr><th>雇用形態</th><td id="doc-employtype"></td></tr>
         <tr><th>採用予定人数</th><td id="doc-headcount"></td></tr>
         <tr><th>採用希望時期</th><td id="doc-timing"></td></tr>
         <tr><th>採用理由</th><td id="doc-reason"></td></tr>
         <tr><th>詳細理由</th><td id="doc-reason-detail"></td></tr>
+        <tr><th>求める保育士像</th><td id="doc-profile"></td></tr>
+        <tr><th>紹介会社・派遣</th><td id="doc-agency"></td></tr>
+        <tr><th>想定年間人件費</th><td id="doc-cost"></td></tr>
         <tr><th>園の収支状況の把握</th><td id="doc-financeaware"></td></tr>
         <tr><th>想定される懸念</th><td id="doc-concern"></td></tr>
       </table>
-
       <div class="doc-section-title">採用媒体</div>
       <ul class="doc-media-list" id="doc-media"></ul>
-
       <div class="approval-note">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-        この内容で法人本部に送信します。承認結果はヘッダーの「これまでの申請状況を確認する」から確認できます。
+        この内容で法人本部に送信します。承認されたら②応募者決裁に進めます。
       </div>
     </div>
     <div class="doc-foot">
       <button type="button" class="btn btn-ghost" onclick="closePreview()">修正する</button>
-      <button type="button" class="btn btn-primary" id="submit-btn" onclick="submitForm()">この内容で申請する</button>
+      <button type="button" class="btn btn-primary" id="submit-btn" onclick="submitForm()">この内容で①申請する</button>
     </div>
   </div>
 </div>
 
-<!-- 申請状況一覧 -->
+<!-- 申請状況一覧（②応募者決裁の入口も兼ねる） -->
 <div class="overlay" id="status-overlay">
   <div class="doc">
     <div class="doc-head">
@@ -634,53 +526,213 @@
   </div>
 </div>
 
-<script>
-/* ===== 設定：GASウェブアプリのURLをここに貼り付け ===== */
-const GAS_URL = "https://script.google.com/macros/s/AKfycbye4AZTW9KDq9Ed8-qPxACgrBbJK6RLC5ktIvO5aAQzymzDMJ2W0hO4PeVWVMamy9Gk/exec";
+<!-- ②応募者決裁フォーム -->
+<div class="overlay" id="stage2-overlay">
+  <div class="doc">
+    <div class="doc-head">
+      <h3>②応募者決裁</h3>
+      <button type="button" style="background:transparent;border:none;color:#fff;font-size:20px;cursor:pointer;" onclick="closeStage2()">×</button>
+    </div>
+    <div class="doc-body">
+      <div class="summary-box" id="stage2-summary"></div>
+      <div class="field">
+        <label class="title">①との相違はありますか？<span class="req">必須</span></label>
+        <div class="choice-grid">
+          <label class="choice"><input type="radio" name="hasDiff" value="なし" required><span>なし</span></label>
+          <label class="choice"><input type="radio" name="hasDiff" value="あり"><span>あり</span></label>
+        </div>
+        <div class="sub-reveal" id="diff-detail-wrap" style="display:none;">
+          <textarea id="diff-detail" placeholder="例）採用予定人数を1名→2名に変更"></textarea>
+        </div>
+      </div>
+      <div class="field">
+        <label class="title">応募者氏名<span class="req">必須</span></label>
+        <input type="text" id="applicant-full-name" placeholder="例）鈴木 花子" required>
+      </div>
+      <div class="field">
+        <label class="title">履歴書URL<span class="opt">Googleドライブ等の共有リンク</span></label>
+        <input type="url" id="resume-url" placeholder="https://drive.google.com/...">
+      </div>
+      <div class="field">
+        <label class="title">面接日<span class="opt">任意</span></label>
+        <input type="date" id="interview-date">
+      </div>
+      <div class="field">
+        <label class="title">確定雇用形態<span class="req">必須</span></label>
+        <div class="choice-grid">
+          <label class="choice"><input type="radio" name="finalEmploytype" value="正規職員" required><span>正規職員</span></label>
+          <label class="choice"><input type="radio" name="finalEmploytype" value="パート"><span>パート</span></label>
+        </div>
+      </div>
+      <div class="field">
+        <label class="title">確定給与条件<span class="req">必須</span></label>
+        <input type="text" id="final-condition" placeholder="例）月給22万円、賞与年2.0ヶ月" required>
+      </div>
+      <div class="field">
+        <label class="title">実際に決まった採用媒体<span class="opt">任意</span></label>
+        <input type="text" id="final-media" placeholder="例）ジョブメドレー経由">
+      </div>
+      <div class="approval-note">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        送信すると法人本部が最終確認し、採用決定となります。
+      </div>
+    </div>
+    <div class="doc-foot">
+      <button type="button" class="btn btn-ghost" onclick="closeStage2()">閉じる</button>
+      <button type="button" class="btn btn-primary" id="stage2-submit-btn" onclick="submitStage2()">②応募者決裁を送信する</button>
+    </div>
+  </div>
+</div>
 
-/* ---- 申請状況一覧 ---- */
-function statusBadgeClass(status){
-  if(status==='承認') return 'approved';
-  if(status==='却下') return 'rejected';
-  return 'pending';
+<script>
+/* ===== 施設ごとの設定：この2行を施設ごとに書き換えてデプロイする ===== */
+const FACILITY_CODE = "S09";
+const FACILITY_NAME = "ふれあいしおどめ保育園";
+document.getElementById('facility-sub').textContent = FACILITY_NAME + " → 法人本部";
+document.title = "採用申請 | " + FACILITY_NAME;
+
+/* ===== GASウェブアプリのURL ===== */
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzccLc5Pb4u_SoH4QAjSZyWZBmpmoGSMowK8HShbxkdP6_9NjztdNqYT0pMb4XK6Z9cKA/exec";
+
+/* ===================================================================
+ * 配置基準 計算エンジン
+ * =================================================================== */
+const BASE_RATIO = { age0:3, age1:6, age1_kaizen:5, age2:6, age3:15, age3_keika:20, age4:25, age4_keika:30, age5:25, age5_keika:30 };
+const AGE_LABEL = {age0:'0歳児',age1:'1歳児',age2:'2歳児',age3:'3歳児',age4:'4歳児',age5:'5歳児'};
+
+function calcHoikushiHaichi(children, opt){
+  const ratio = {
+    age0: BASE_RATIO.age0,
+    age1: opt.use1saiKaizen ? BASE_RATIO.age1_kaizen : BASE_RATIO.age1,
+    age2: BASE_RATIO.age2,
+    age3: opt.use3saiKeika ? BASE_RATIO.age3_keika : BASE_RATIO.age3,
+    age4: opt.use45saiKeika ? BASE_RATIO.age4_keika : BASE_RATIO.age4,
+    age5: opt.use45saiKeika ? BASE_RATIO.age5_keika : BASE_RATIO.age5,
+  };
+  const detail = {}; let ageTotal = 0;
+  for (const age of ['age0','age1','age2','age3','age4','age5']){
+    const n = children[age] || 0;
+    const need = n > 0 ? Math.ceil(n / ratio[age]) : 0;
+    detail[age] = { count:n, ratio:ratio[age], need };
+    ageTotal += need;
+  }
+  let facilityAddOn = 0, facilityNote = '';
+  switch(opt.facilityType){
+    case 'shokibo_a': facilityAddOn=1; facilityNote='小規模保育A型：認可基準+1名加配（全員保育士資格必須）'; break;
+    case 'shokibo_b': facilityAddOn=1; facilityNote='小規模保育B型：認可基準+1名加配（半数以上が保育士資格必須）'; break;
+    case 'shokibo_c': facilityNote='小規模保育C型：家庭的保育者1人:3人（補助者ありで5人）が基本。年齢別基準は目安値'; break;
+    case 'jigyosho': facilityNote='事業所内保育事業：定員19人以下は小規模A/B型相当、20人以上は認可保育所基準'; break;
+    case 'ninka_gai': facilityNote='認可外保育施設：11時間超は常時2名以上、職員の1/3以上が保育士資格必須'; break;
+    case 'kodomoen': facilityNote='幼保連携型認定こども園：教育時間（3〜5歳）は学級編成・専任保育教諭1名必須（別途確認）'; break;
+    default: facilityNote='認可保育所：国の最低基準をそのまま適用';
+  }
+  let kouteiAddOn = 0; const kouteiDetail = [];
+  if (opt.teiin90ika){ kouteiAddOn+=1; kouteiDetail.push('利用定員90人以下加配（常勤+1）'); }
+  if (opt.hyojunJikan){ kouteiAddOn+=1; kouteiDetail.push('保育標準時間認定受入加配（常勤+1）'); }
+  if (opt.teiin90ika && opt.hyojunJikan){ kouteiAddOn+=1; kouteiDetail.push('非常勤保育士加配（+1）'); }
+  const minStaff = 2;
+  const required = Math.max(ageTotal + facilityAddOn + kouteiAddOn, minStaff);
+  return { detail, ageTotal, facilityAddOn, facilityNote, kouteiAddOn, kouteiDetail, minStaff, required };
 }
-function openStatusList(){
-  document.getElementById('status-overlay').classList.add('show');
-  document.getElementById('status-list').innerHTML = '<div class="status-empty">読み込み中…</div>';
-  fetch(GAS_URL)
-    .then(r=>r.json())
-    .then(res=>{
-      if(res.result!=='success'){ throw new Error(res.message||'取得に失敗しました'); }
-      const items = res.items||[];
-      if(!items.length){
-        document.getElementById('status-list').innerHTML = '<div class="status-empty">まだ申請はありません。</div>';
-        return;
-      }
-      document.getElementById('status-list').innerHTML = items.map(it=>{
-        const badgeClass = statusBadgeClass(it.status);
-        const job = it.jobtype + (it.employtype ? '（' + it.employtype + (it.parttype?'・'+it.parttype:'') + '）' : '');
-        const pdfLink = it.pdfUrl ? `<a class="pdf-link" href="${it.pdfUrl}" target="_blank" rel="noopener">申請書PDFを見る ›</a>` : '';
-        return `
-          <div class="status-card">
-            <div class="row1">
-              <span class="job">${job}</span>
-              <span class="status-badge ${badgeClass}">${it.status}</span>
-            </div>
-            <div class="meta">提出日時：${it.submittedAt}　申請者：${it.applicant}</div>
-            ${pdfLink}
-          </div>`;
-      }).join('');
-    })
-    .catch(()=>{
-      document.getElementById('status-list').innerHTML = '<div class="status-empty">読み込みに失敗しました。通信環境をご確認のうえ、もう一度お試しください。</div>';
-    });
+
+function getChildren(){
+  const c = {};
+  document.querySelectorAll('[data-age]').forEach(el=>{ c[el.dataset.age] = Number(el.value)||0; });
+  return c;
 }
-function closeStatusList(){
-  document.getElementById('status-overlay').classList.remove('show');
+function getHaichiOptions(){
+  return {
+    facilityType: document.getElementById('facilityType').value,
+    use3saiKeika: document.getElementById('use3saiKeika').checked,
+    use45saiKeika: document.getElementById('use45saiKeika').checked,
+    use1saiKaizen: document.getElementById('use1saiKaizen').checked,
+    teiin90ika: document.getElementById('teiin90ika').checked,
+    hyojunJikan: document.getElementById('hyojunJikan').checked,
+  };
 }
+let lastCalc = null;
+function renderCalc(){
+  const r = calcHoikushiHaichi(getChildren(), getHaichiOptions());
+  const currentFTE = Number(document.getElementById('currentFTE').value)||0;
+  const diff = r.required - currentFTE;
+  const short = diff > 0;
+  lastCalc = { r, currentFTE, diff, short };
+  const breakdown = ['age0','age1','age2','age3','age4','age5'].filter(a=>r.detail[a].count>0)
+    .map(a=>`${AGE_LABEL[a]} ${r.detail[a].count}人 ÷ ${r.detail[a].ratio}:1 → <b>${r.detail[a].need}人</b>`).join(' / ');
+  document.getElementById('calcResult').innerHTML = `
+    <div class="result ${short?'short':''}">
+      <div class="headline">
+        <span class="lbl">${short? '不足数':'配置基準上の必要保育士数'}</span>
+        <span class="num">${short? diff.toFixed(1) : r.required}<span class="unit">${short?'人 不足':'人（常勤換算）'}</span></span>
+      </div>
+      <div class="result-sub">
+        <div class="box"><div class="k">配置基準上の必要数</div><div class="v">${r.required}人</div></div>
+        <div class="box"><div class="k">現在の常勤換算数</div><div class="v">${currentFTE}人</div></div>
+      </div>
+      <div class="breakdown">
+        年齢別内訳：${breakdown || '—'}<br>
+        施設種別加配：${r.facilityAddOn}人（${r.facilityNote}）<br>
+        公定価格加配：${r.kouteiAddOn}人 ${r.kouteiDetail.length? '（'+r.kouteiDetail.join('、')+'）':''}<br>
+        常時2名以上ルール適用後の最終値：${r.required}人
+      </div>
+      <div class="note-box">
+        ${short ? '配置基準上、現在の職員数では不足しています。採用の妥当性が数値で確認できます。' : '配置基準上は充足しています。増員の場合は「採用理由」欄で目的を具体的にご記入ください。'}
+        自治体独自の上乗せ基準がある場合は別途ご確認ください。
+      </div>
+    </div>`;
+}
+document.querySelectorAll('[data-age], #facilityType, #use3saiKeika, #use45saiKeika, #use1saiKaizen, #teiin90ika, #hyojunJikan, #currentFTE')
+  .forEach(el=>{ el.addEventListener('input', renderCalc); el.addEventListener('change', renderCalc); });
+
+// 保育士マスタから常勤換算の合計を自動取得
+fetch(`${GAS_URL}?action=staffFTE&facility=${FACILITY_CODE}`)
+  .then(r=>r.json())
+  .then(res=>{
+    if(res.result==='success' && res.items && res.items.totalFTE!==undefined){
+      document.getElementById('currentFTE').value = res.items.totalFTE;
+      renderCalc();
+    }
+  })
+  .catch(()=>{ /* マスタ未登録・取得失敗時は手入力のまま */ });
+
+renderCalc();
+
+/* ===================================================================
+ * 人件費シミュレーション
+ * =================================================================== */
+function renderCost(){
+  const count = headcount;
+  const isFull = (document.querySelector('input[name="employtype"]:checked')||{}).value !== 'パート';
+  const welfare = (Number(document.getElementById('welfareRate').value)||0)/100;
+  let annualPerPerson = 0;
+  if(isFull){
+    const salary = Number(document.getElementById('monthlySalary').value)||0;
+    const bonusMonths = Number(document.getElementById('bonusMonths').value)||0;
+    annualPerPerson = Math.round((salary*12 + salary*bonusMonths) * (1+welfare));
+  }else{
+    const wage = Number(document.getElementById('hourlyWage').value)||0;
+    const hours = Number(document.getElementById('monthlyHours').value)||0;
+    annualPerPerson = Math.round(wage*hours*12 * (1+welfare));
+  }
+  const total = annualPerPerson*count;
+  document.getElementById('costResult').innerHTML = `
+    <div class="cost-result">
+      <div class="headline">想定年間人件費（概算・法定福利費等込み）</div>
+      <div class="amount">¥${total.toLocaleString()}<span class="unit"> / 年</span></div>
+      <div class="per">1人あたり ¥${annualPerPerson.toLocaleString()} / 年 × ${count}人</div>
+    </div>`;
+  return { annualPerPerson, total };
+}
+document.querySelectorAll('#monthlySalary, #bonusMonths, #hourlyWage, #monthlyHours, #welfareRate')
+  .forEach(el=> el.addEventListener('input', renderCost));
 
 /* ---- ステップ制御 ---- */
 function goStep(n){
+  if(n===4){
+    const isPart = (document.querySelector('input[name="employtype"]:checked')||{}).value==='パート';
+    document.getElementById('parttimeFields').style.display = isPart?'block':'none';
+    renderCost();
+  }
   document.querySelectorAll('.step-pane').forEach(p=>p.style.display='none');
   document.querySelector(`.step-pane[data-pane="${n}"]`).style.display='block';
   document.querySelectorAll('.step').forEach(s=>{
@@ -691,7 +743,6 @@ function goStep(n){
   });
   window.scrollTo({top:0,behavior:'smooth'});
 }
-function toConfirm(){ goStep(3); }
 
 /* ---- その他欄の出し分け ---- */
 function bindOtherReveal(groupName, wrapId, triggerValue='その他'){
@@ -713,12 +764,17 @@ bindOtherReveal('timing','timing-other-wrap');
 bindOtherReveal('reason','reason-other-wrap');
 bindOtherReveal('concern','concern-other-wrap');
 
-/* 雇用形態→パート勤務区分の表示切替 */
 document.querySelectorAll('input[name="employtype"]').forEach(inp=>{
   inp.addEventListener('change',()=>{
     const isPart = document.querySelector('input[name="employtype"]:checked').value==='パート';
     document.getElementById('parttype-wrap').style.display = isPart ? 'block':'none';
     document.querySelectorAll('input[name="parttype"]').forEach(r=>r.required=isPart);
+  });
+});
+
+document.querySelectorAll('input[name="hasDiff"]').forEach(inp=>{
+  inp.addEventListener('change',()=>{
+    document.getElementById('diff-detail-wrap').style.display = inp.value==='あり' && inp.checked ? 'block':'none';
   });
 });
 
@@ -735,7 +791,6 @@ document.querySelectorAll('.stepper-num button').forEach(btn=>{
 /* ---- 採用媒体：行の追加/削除 ---- */
 let mediaCount=0;
 const MEDIA_OPTIONS = ["HP直","ハローワーク","ジョブメドレー","その他"];
-
 function addMediaRow(){
   mediaCount++;
   const id = mediaCount;
@@ -745,17 +800,12 @@ function addMediaRow(){
   wrap.innerHTML = `
     <div class="row-head">
       <span class="tag">媒体 ${id}</span>
-      <button type="button" class="del" onclick="removeMediaRow(${id})">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-        削除
-      </button>
+      <button type="button" class="del" onclick="removeMediaRow(${id})">削除</button>
     </div>
     <div class="media-grid">
       <div class="full">
         <label>媒体名</label>
-        <select class="m-name">
-          ${MEDIA_OPTIONS.map(o=>`<option value="${o}">${o}</option>`).join('')}
-        </select>
+        <select class="m-name">${MEDIA_OPTIONS.map(o=>`<option value="${o}">${o}</option>`).join('')}</select>
       </div>
       <div class="full m-other-wrap" style="display:none;">
         <label>媒体名（その他）</label>
@@ -763,60 +813,47 @@ function addMediaRow(){
       </div>
       <div class="full">
         <label>掲載期間</label>
-        <div class="date-range">
-          <input type="date" class="m-start">
-          <span>〜</span>
-          <input type="date" class="m-end">
-        </div>
+        <div class="date-range"><input type="date" class="m-start"><span>〜</span><input type="date" class="m-end"></div>
       </div>
       <div class="full">
         <label>価格（税込・円）</label>
         <input type="number" class="m-price" min="0" step="1000" placeholder="例）50000">
       </div>
-    </div>
-  `;
+    </div>`;
   document.getElementById('media-list').appendChild(wrap);
   const sel = wrap.querySelector('.m-name');
-  sel.addEventListener('change',()=>{
-    wrap.querySelector('.m-other-wrap').style.display = sel.value==='その他' ? 'block':'none';
-  });
+  sel.addEventListener('change',()=>{ wrap.querySelector('.m-other-wrap').style.display = sel.value==='その他' ? 'block':'none'; });
 }
-function removeMediaRow(id){
-  const el = document.querySelector(`.media-row[data-id="${id}"]`);
-  if(el) el.remove();
-}
+function removeMediaRow(id){ const el = document.querySelector(`.media-row[data-id="${id}"]`); if(el) el.remove(); }
 document.getElementById('add-media-btn').addEventListener('click',addMediaRow);
 document.getElementById('no-media-check').addEventListener('change',(e)=>{
   const on = e.target.checked;
   document.getElementById('media-list').style.display = on ? 'none':'block';
   document.getElementById('add-media-btn').style.display = on ? 'none':'flex';
 });
-addMediaRow(); // 初期1行
+addMediaRow();
 
-/* ---- データ収集 ---- */
+/* ---- ①データ収集 ---- */
 function collectData(){
   const jobtypeEl = document.querySelector('input[name="jobtype"]:checked');
   const jobtype = jobtypeEl ? jobtypeEl.value : '';
   const jobtypeOther = document.getElementById('jobtype-other').value;
-
   const employtypeEl = document.querySelector('input[name="employtype"]:checked');
   const employtype = employtypeEl ? employtypeEl.value : '';
   const parttypeEl = document.querySelector('input[name="parttype"]:checked');
   const parttype = parttypeEl ? parttypeEl.value : '';
-
   const timingEl = document.querySelector('input[name="timing"]:checked');
   const timing = timingEl ? timingEl.value : '';
   const timingOther = document.getElementById('timing-other').value;
-
   const reasons = Array.from(document.querySelectorAll('input[name="reason"]:checked')).map(x=>x.value);
   const reasonOther = document.getElementById('reason-other').value;
   const reasonDetail = document.getElementById('reason-detail').value;
-
   const financeawareEl = document.querySelector('input[name="financeaware"]:checked');
   const financeaware = financeawareEl ? financeawareEl.value : '';
-
   const concerns = Array.from(document.querySelectorAll('input[name="concern"]:checked')).map(x=>x.value);
   const concernOther = document.getElementById('concern-other').value;
+  const useAgencyEl = document.querySelector('input[name="useAgency"]:checked');
+  const useAgency = useAgencyEl ? useAgencyEl.value : '';
 
   const noMedia = document.getElementById('no-media-check').checked;
   const media = [];
@@ -827,24 +864,34 @@ function collectData(){
       const start = row.querySelector('.m-start').value;
       const end = row.querySelector('.m-end').value;
       const price = row.querySelector('.m-price').value;
-      media.push({
-        name: name==='その他' ? (other||'その他') : name,
-        start, end, price
-      });
+      media.push({ name: name==='その他' ? (other||'その他') : name, start, end, price });
     });
   }
 
+  const cost = renderCost();
+
   return {
-    submittedAt: new Date().toISOString(),
+    facilityCode: FACILITY_CODE, facilityName: FACILITY_NAME,
     applicant: document.getElementById('applicant-name').value,
+    ...getChildren(),
+    facilityType: document.getElementById('facilityType').value,
+    use3saiKeika: document.getElementById('use3saiKeika').checked,
+    use45saiKeika: document.getElementById('use45saiKeika').checked,
+    use1saiKaizen: document.getElementById('use1saiKaizen').checked,
+    teiin90ika: document.getElementById('teiin90ika').checked,
+    hyojunJikan: document.getElementById('hyojunJikan').checked,
+    requiredCount: lastCalc ? lastCalc.r.required : '',
+    currentFTE: lastCalc ? lastCalc.currentFTE : Number(document.getElementById('currentFTE').value)||0,
+    shortage: lastCalc && lastCalc.short ? lastCalc.diff.toFixed(1) : 0,
     jobtype: jobtype==='その他' ? (jobtypeOther||'その他') : jobtype,
-    employtype,
-    parttype: employtype==='パート' ? parttype : '',
-    headcount,
-    timing: timing==='その他' ? (timingOther||'その他') : timing,
-    reasons, reasonOther, reasonDetail,
-    financeaware,
-    concerns, concernOther,
+    employtype, parttype: employtype==='パート' ? parttype : '',
+    headcount, timing: timing==='その他' ? (timingOther||'その他') : timing,
+    reasons, reasonOther, reasonDetail, financeaware, concerns, concernOther,
+    idealProfile: document.getElementById('ideal-profile').value,
+    jobSummary: document.getElementById('job-summary').value,
+    useAgency, agencyMemo: document.getElementById('agency-memo').value,
+    annualCost: cost.total,
+    costBreakdown: `1人あたり¥${cost.annualPerPerson.toLocaleString()} × ${headcount}人`,
     media
   };
 }
@@ -858,50 +905,149 @@ function fmtMedia(m){
   });
 }
 
-/* ---- 確認モーダル ---- */
+/* ---- ①確認モーダル ---- */
 function openPreview(){
-  if(!document.getElementById('applicant-name').value){
-    alert('園長氏名を入力してください。');
-    return;
-  }
+  if(!document.getElementById('applicant-name').value){ alert('園長氏名を入力してください。'); return; }
   const d = collectData();
   document.getElementById('doc-date').textContent = '提出日：' + new Date().toLocaleDateString('ja-JP');
+  document.getElementById('doc-facility').textContent = FACILITY_NAME;
   document.getElementById('doc-applicant').textContent = d.applicant;
+  document.getElementById('doc-required').textContent = d.requiredCount + ' 人';
+  document.getElementById('doc-fte').textContent = d.currentFTE + ' 人';
+  document.getElementById('doc-shortage').textContent = d.shortage>0 ? (d.shortage+' 人') : '不足なし';
   document.getElementById('doc-jobtype').textContent = d.jobtype;
   document.getElementById('doc-employtype').textContent = d.employtype + (d.parttype ? '（'+d.parttype+'）':'');
   document.getElementById('doc-headcount').textContent = d.headcount + ' 名';
   document.getElementById('doc-timing').textContent = d.timing;
   document.getElementById('doc-reason').textContent = [...d.reasons.filter(r=>r!=='その他'), d.reasonOther].filter(Boolean).join('、') || '—';
   document.getElementById('doc-reason-detail').textContent = d.reasonDetail;
+  document.getElementById('doc-profile').textContent = d.idealProfile;
+  document.getElementById('doc-agency').textContent = d.useAgency + (d.agencyMemo?'（'+d.agencyMemo+'）':'');
+  document.getElementById('doc-cost').textContent = '¥' + Number(d.annualCost).toLocaleString() + ' / 年';
   document.getElementById('doc-financeaware').textContent = d.financeaware;
   document.getElementById('doc-concern').textContent = [...d.concerns.filter(r=>r!=='その他'), d.concernOther].filter(Boolean).join('、') || 'なし';
   document.getElementById('doc-media').innerHTML = fmtMedia(d.media).join('');
   document.getElementById('overlay').classList.add('show');
 }
-function closePreview(){
-  document.getElementById('overlay').classList.remove('show');
-}
+function closePreview(){ document.getElementById('overlay').classList.remove('show'); }
 
-/* ---- 送信 ---- */
+/* ---- ①送信 ---- */
 function submitForm(){
   const btn = document.getElementById('submit-btn');
-  btn.disabled = true;
-  btn.textContent = '送信中…';
+  btn.disabled = true; btn.textContent = '送信中…';
   const data = collectData();
-
   fetch(GAS_URL, {
-    method:'POST',
-    mode:'no-cors',
-    headers:{'Content-Type':'text/plain'},
-    body: JSON.stringify(data)
+    method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'},
+    body: JSON.stringify({ action:'submitStage1', data })
   }).then(()=>{
     closePreview();
     document.querySelector('main form').style.display='none';
     document.getElementById('toast-screen').classList.add('show');
   }).catch(()=>{
     alert('送信に失敗しました。通信環境をご確認のうえ、もう一度お試しください。');
-    btn.disabled=false;
-    btn.textContent='この内容で申請する';
+    btn.disabled=false; btn.textContent='この内容で①申請する';
+  });
+}
+
+/* ===================================================================
+ * 申請状況一覧（① / ②）
+ * =================================================================== */
+function statusBadgeClass(status){
+  if(status==='承認') return 'approved';
+  if(status==='却下') return 'rejected';
+  if(status==='決定') return 'done';
+  return 'pending';
+}
+function openStatusList(){
+  document.getElementById('status-overlay').classList.add('show');
+  document.getElementById('status-list').innerHTML = '<div class="status-empty">読み込み中…</div>';
+  fetch(`${GAS_URL}?action=listStage1&facility=${FACILITY_CODE}`)
+    .then(r=>r.json())
+    .then(res=>{
+      if(res.result!=='success'){ throw new Error(res.message||'取得に失敗しました'); }
+      const items = (res.items||[]).sort((a,b)=> new Date(b['提出日時']) - new Date(a['提出日時']));
+      if(!items.length){
+        document.getElementById('status-list').innerHTML = '<div class="status-empty">まだ申請はありません。</div>';
+        return;
+      }
+      document.getElementById('status-list').innerHTML = items.map(it=>{
+        const badgeClass = statusBadgeClass(it['ステータス']);
+        const job = it['職種'] + (it['雇用形態'] ? '（' + it['雇用形態'] + '）' : '');
+        const canStage2 = it['ステータス']==='承認';
+        return `
+          <div class="status-card">
+            <div class="row1">
+              <span class="job">${job}</span>
+              <span class="status-badge ${badgeClass}">${it['ステータス']}</span>
+            </div>
+            <div class="meta">提出日時：${new Date(it['提出日時']).toLocaleString('ja-JP')}　申請者：${it['申請者（園長）']}</div>
+            ${canStage2 ? `<div class="row2"><button type="button" class="mini-btn" onclick='openStage2("${it['申請ID']}")'>②応募者決裁を入力する ›</button></div>` : ''}
+          </div>`;
+      }).join('');
+    })
+    .catch(()=>{
+      document.getElementById('status-list').innerHTML = '<div class="status-empty">読み込みに失敗しました。通信環境をご確認のうえ、もう一度お試しください。</div>';
+    });
+}
+function closeStatusList(){ document.getElementById('status-overlay').classList.remove('show'); }
+
+/* ===================================================================
+ * ②応募者決裁
+ * =================================================================== */
+let currentStage1 = null;
+function openStage2(stage1Id){
+  fetch(`${GAS_URL}?action=listStage1&facility=${FACILITY_CODE}`)
+    .then(r=>r.json())
+    .then(res=>{
+      const item = (res.items||[]).find(x=>x['申請ID']===stage1Id);
+      if(!item){ alert('申請内容の取得に失敗しました。'); return; }
+      currentStage1 = item;
+      document.getElementById('stage2-summary').innerHTML = `
+        <b>①の申請内容（要確認）</b><br>
+        職種：${item['職種']}（${item['雇用形態']}）／採用予定人数：${item['採用予定人数']}名<br>
+        配置基準必要数：${item['配置基準必要数']}人／現在FTE：${item['現在FTE']}人／不足数：${item['不足数']}人<br>
+        求める保育士像：${item['求める保育士像']||'—'}
+      `;
+      closeStatusList();
+      document.getElementById('stage2-overlay').classList.add('show');
+    });
+}
+function closeStage2(){ document.getElementById('stage2-overlay').classList.remove('show'); }
+
+function submitStage2(){
+  if(!currentStage1){ return; }
+  const hasDiffEl = document.querySelector('input[name="hasDiff"]:checked');
+  const finalEmploytypeEl = document.querySelector('input[name="finalEmploytype"]:checked');
+  const applicantFullName = document.getElementById('applicant-full-name').value;
+  const finalCondition = document.getElementById('final-condition').value;
+  if(!hasDiffEl || !finalEmploytypeEl || !applicantFullName || !finalCondition){
+    alert('必須項目を入力してください。');
+    return;
+  }
+  const data = {
+    stage1Id: currentStage1['申請ID'],
+    facilityCode: FACILITY_CODE, facilityName: FACILITY_NAME,
+    applicantName: applicantFullName,
+    resumeUrl: document.getElementById('resume-url').value,
+    interviewDate: document.getElementById('interview-date').value,
+    hasDiff: hasDiffEl.value,
+    diffDetail: document.getElementById('diff-detail').value,
+    finalEmploytype: finalEmploytypeEl.value,
+    finalCondition,
+    media: document.getElementById('final-media').value,
+  };
+  const btn = document.getElementById('stage2-submit-btn');
+  btn.disabled = true; btn.textContent = '送信中…';
+  fetch(GAS_URL, {
+    method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'},
+    body: JSON.stringify({ action:'submitStage2', data })
+  }).then(()=>{
+    closeStage2();
+    alert('②応募者決裁を送信しました。法人本部の最終確認をお待ちください。');
+  }).catch(()=>{
+    alert('送信に失敗しました。通信環境をご確認のうえ、もう一度お試しください。');
+  }).finally(()=>{
+    btn.disabled=false; btn.textContent='②応募者決裁を送信する';
   });
 }
 </script>
