@@ -397,11 +397,11 @@
     <div class="card">
       <h2><span class="num">5</span>採用予定の人件費シミュレーション</h2>
       <p class="desc">概算です。実際の給与体系・社会保険加入状況により変動します。</p>
-      <div class="field">
+      <div class="field" id="fulltimeFields">
         <label class="title">想定月給（円）</label>
         <input type="number" min="0" step="1000" id="monthlySalary" value="220000">
       </div>
-      <div class="field">
+      <div class="field" id="bonusField">
         <label class="title">想定賞与（月数）</label>
         <input type="number" min="0" step="0.1" id="bonusMonths" value="2.0">
       </div>
@@ -731,6 +731,8 @@ function goStep(n){
   if(n===4){
     const isPart = (document.querySelector('input[name="employtype"]:checked')||{}).value==='パート';
     document.getElementById('parttimeFields').style.display = isPart?'block':'none';
+    document.getElementById('fulltimeFields').style.display = isPart?'none':'block';
+    document.getElementById('bonusField').style.display = isPart?'none':'block';
     renderCost();
   }
   document.querySelectorAll('.step-pane').forEach(p=>p.style.display='none');
