@@ -347,8 +347,10 @@ const PARKS=[
   // 2〜14: データなし（園名のみ）
   {id:'g02', label:'認定こども園 しおどめの森',    sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:165,
    staffTotal:35, staffDesc:'正規19・非正規15',age0:0,age1:20,age2:20,age3:40,age4:39,age5:41,hasData:true},
-  {id:'g11', label:'しおどめ保育園つくば',         sub:'茨城県つくば市・5級地（+10%）', mult:1.10, capacity:90,
-   staffTotal:26, staffDesc:'正規17・非正規9',age0:0,age1:15,age2:18,age3:20,age4:20,age5:17,hasData:true},
+  {id:'g11', label:'しおどめ保育園つくば',         sub:'茨城県つくば市・16/100地域', mult:1.10, capacity:90,
+   staffTotal:26, staffDesc:'正規17・非正規9',age0:0,age1:14,age2:18,age3:20,age4:20,age5:17,hasData:true,
+   hasInvoice:true, invoiceIncome:10545140, invoiceMonth:'2026年09月', invoiceUrl:'',
+   invoiceRows:{amt0:0, amt12:5786914, amt35:4758226}},
   {id:'g03', label:'しおどめ保育園 八潮駅北',      sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:null,
    staffTotal:0,staffDesc:'',age0:0,age1:0,age2:0,age3:0,age4:0,age5:0,hasData:false},
   {id:'g04', label:'しおどめ保育園 京急蒲田駅前',  sub:'東京都大田区・1級地（+20%）', mult:1.20, capacity:null,
@@ -424,10 +426,14 @@ function buildCards(){
       </div>
       <div class="park-card-body">
         <div class="park-stat-row">
-          <div><div class="park-stat-val" id="${p.id}-income">—</div><div class="park-stat-lbl">推計月次収入</div></div>
+          <div><div class="park-stat-val" id="${p.id}-income">—</div><div class="park-stat-lbl" id="${p.id}-income-lbl">${p.hasInvoice?'月次収入（実績）':'推計月次収入'}</div></div>
           <div><div class="park-stat-val" id="${p.id}-labor">—</div><div class="park-stat-lbl">推計人件費</div></div>
           <div><div class="park-stat-val" id="${p.id}-surplus">—</div><div class="park-stat-lbl">推計収支差</div></div>
         </div>
+        ${p.hasInvoice?`<div style="font-size:10px;color:var(--accent);margin:-.4rem 0 .5rem;display:flex;align-items:center;gap:4px">
+          <span style="background:var(--accent-light);color:var(--accent);border-radius:4px;padding:1px 6px;font-weight:500">実績</span>
+          <span style="color:var(--text-muted)">請求書ベース（${p.invoiceMonth}分）</span>
+        </div>`:''}
         <div class="capacity-bar">
           <div class="capacity-bar-label"><span>在籍状況</span><span id="${p.id}-cap-label">—</span></div>
           <div class="capacity-bar-bg"><div class="capacity-bar-fill" id="${p.id}-cap-bar" style="width:0%"></div></div>
@@ -574,7 +580,8 @@ function update(){
     const u0 =r0*p.mult, u12=r12*p.mult, u35=r35*p.mult;
     const total=p.age0+p.age1+p.age2+p.age3+p.age4+p.age5;
     const age12=p.age1+p.age2, age35=p.age3+p.age4+p.age5;
-    const inc=p.age0*u0+age12*u12+age35*u35;
+    // 請求書の実績データがある園はそれを正として使用。ない園は単価×人数の推計。
+    const inc=(p.hasInvoice && p.invoiceIncome) ? p.invoiceIncome : (p.age0*u0+age12*u12+age35*u35);
     const lab=inc*lRate, oth=inc*oRate, sur=inc-lab-oth;
 
     totInc+=inc; totLab+=lab; totOth+=oth; totCh+=total;
@@ -595,12 +602,27 @@ function update(){
       document.getElementById(p.id+'-cap-bar').style.width='60%';
     }
 
-    // 年齢テーブル
-    [{rowId:p.id+'-r0', u:u0, n:p.age0},
-     {rowId:p.id+'-r12',u:u12,n:age12},
-     {rowId:p.id+'-r35',u:u35,n:age35}].forEach(r=>{
+    // 年齢テーブル（実績請求書がある園は、請求書の加算内訳を年齢帯ごとに按分した実績単価・小計を表示）
+    let rowVals;
+    if(p.hasInvoice && p.invoiceRows){
+      const ir=p.invoiceRows;
+      rowVals=[
+        {u:p.age0>0?Math.round(ir.amt0/p.age0):0, amt:ir.amt0},
+        {u:age12>0?Math.round(ir.amt12/age12):0, amt:ir.amt12},
+        {u:age35>0?Math.round(ir.amt35/age35):0, amt:ir.amt35},
+      ];
+    } else {
+      rowVals=[
+        {u:u0, amt:u0*p.age0},
+        {u:u12, amt:u12*age12},
+        {u:u35, amt:u35*age35},
+      ];
+    }
+    [{rowId:p.id+'-r0', v:rowVals[0]},
+     {rowId:p.id+'-r12',v:rowVals[1]},
+     {rowId:p.id+'-r35',v:rowVals[2]}].forEach(r=>{
       const row=document.getElementById(r.rowId);
-      if(row){row.cells[2].textContent=fmtN(r.u);row.cells[3].textContent=fmtM(r.u*r.n);}
+      if(row){ row.cells[2].textContent=fmtN(r.v.u); row.cells[3].textContent=fmtM(r.v.amt); }
     });
     document.getElementById(p.id+'-total-n').textContent=total+'名';
     document.getElementById(p.id+'-total-val').textContent=fmtM(inc);
