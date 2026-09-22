@@ -290,7 +290,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:
       <button class="rpbtn" onclick="saveAnalysis()" title="この解析を保存（検証ビューに読み込めます）">💾 保存</button>
       <button class="rpbtn" onclick="document.getElementById('loadAnalysisFile').click()" title="保存した解析を開く">📂 読込</button>
     </div>
-    <div class="keys" style="display:none;">
+    <div class="keys">
       <span class="kdot" id="kdot">キー未設定</span>
       <button class="gear" onclick="toggleKeys()">⚙ 設定</button>
     </div>
@@ -777,7 +777,12 @@ function addLogEcho(t){log('  ⚠ プロンプト混入を除去: '+t.slice(0,18
    動画再生方式（transcribeFileStreaming）に回し、無駄な失敗を避ける。 */
 const HUGE_FILE_BYTES=1000*1024*1024; // 約1GB
 async function transcribeFile(file,onProgress){
-  const CH=600;
+  // チャンク長は「ノーマライズの窓の大きさ」でもある：renderChunkWavはチャンク内の
+  // ピーク音量を基準に増幅率を決めるため、窓が広い（旧:600秒=10分）と、窓のどこか1箇所に
+  // 大きい物音（ドア・椅子の音など）があるだけで、その窓全体（=会話部分すべて）の増幅率が
+  // その1回の音に合わせて低く抑えられてしまい、肝心の小さい声がほとんど持ち上がらなかった。
+  // 窓を90秒に縮めることで、遠くにある1回の大きい音が他の区間の増幅を道連れにしにくくなる。
+  const CH=90;
   if(file.size>HUGE_FILE_BYTES){
     log('🎞 ファイルサイズが大きい（'+(file.size/1024/1024/1024).toFixed(2)+'GB）ため、最初から動画再生方式で音声を抽出します','ok');
     return await transcribeFileStreaming(file,onProgress,CH);
@@ -914,29 +919,51 @@ async function analyze(){
     let clean=segments.length?cleanTranscript(segments):{segs:[],halluc:false,englishHalluc:false};
     segments=clean.segs;
     renderFeed();
-    // 発話が全滅した場合（文字起こし直後／幻聴除去後のどちらでも）、もう一方のモデルへ自動切替して1回だけ再挑戦
+    // 発話が全滅した場合、または「動画の長さに対して拾えた発話の合計時間が極端に少ない」場合
+    // （＝一見成功しているが実際は大半を取りこぼしている「部分的な失敗」）に、
+    // もう一方のモデルへ自動切替して1回だけ再挑戦する。
+    // 以前は「0件」の場合のみ再挑戦しており、今回のように「数件だけ拾えて残りが丸ごと欠落」
+    // というケース（Whisper自身が長い区間を無音と誤判定）を見逃していた。
     let autoRetried=false;
     const asrSel=document.getElementById('asrModel');
-    if(!segments.length&&asrSel){
+    const MIN_COVERAGE_RATIO=0.10; // 発話の合計時間が動画の長さの10%未満なら「怪しい」とみなす
+    function coverageRatio(segs){
+      if(!duration)return segs.length?1:0;
+      let span=0;segs.forEach(s=>{span+=Math.max(0,(s.end!=null?s.end:s.start)-s.start);});
+      return Math.min(1,span/duration);
+    }
+    const firstClean=clean,firstSegs=segments;
+    const firstCov=coverageRatio(clean.segs);
+    // 短い動画（1分以下）はもともと発話が少なくて自然なので、この追加チェックの対象外にする
+    const looksIncomplete=!segments.length||(duration>60&&firstCov<MIN_COVERAGE_RATIO);
+    if(looksIncomplete&&asrSel){
       const altModel=asrSel.value==='gpt-4o-transcribe-diarize'?'whisper-1':'gpt-4o-transcribe-diarize';
       const reason=clean.halluc?('「'+String(clean.dominant).slice(0,10)+'」が'+clean.dominantCount+'/'+clean.origCount+'回の連呼')
                   :clean.englishHalluc?'文字起こしが他言語化'
-                  :'有効な発話が検出されず';
-      log('⚠ 発話が全滅（'+reason+'）。'+altModel+'へ自動切替して再文字起こしします','err');
+                  :!segments.length?'有効な発話が検出されず'
+                  :'拾えた発話が動画の長さの'+Math.round(firstCov*100)+'%分しかない（取りこぼしの疑い）';
+      log('⚠ 文字起こしが不十分な可能性（'+reason+'）。'+altModel+'へ自動切替して再文字起こしします','err');
       stat('🔁 モデルを切り替えて再文字起こし中…','var(--yellow)');
       asrSel.value=altModel;persistAsr();
       autoRetried=true;
       segments=[];renderFeed();
-      await transcribeFile(mediaFile,(segsSoFar)=>{segments=segsSoFar.slice();renderFeed();});
+      const retryRaw=await transcribeFile(mediaFile,(segsSoFar)=>{segments=segsSoFar.slice();renderFeed();});
+      const retryClean=retryRaw.length?cleanTranscript(retryRaw):{segs:[],halluc:false,englishHalluc:false};
+      const retryCov=coverageRatio(retryClean.segs);
+      // 再挑戦の方が拾えた量が多ければ採用。そうでなければ元の結果に戻す（改悪を防ぐ）
+      if(retryClean.segs.length>firstClean.segs.length||retryCov>firstCov){
+        clean=retryClean;segments=clean.segs;
+        log('✅ '+altModel+'の方が多く拾えたため採用（'+Math.round(retryCov*100)+'% vs 元の'+Math.round(firstCov*100)+'%）','ok');
+      }else{
+        asrSel.value=asrSel.value==='gpt-4o-transcribe-diarize'?'whisper-1':'gpt-4o-transcribe-diarize';persistAsr();
+        clean=firstClean;segments=firstSegs;
+        log(firstSegs.length?'（'+altModel+'でも改善しなかったため、元の結果を採用）':'（モデル切替後の再挑戦でも文字起こし結果が空でした）','err');
+      }
+      renderFeed();
       if(!segments.length){
-        log('（モデル切替後の再挑戦でも文字起こし結果が空でした）','err');
         stat('⚠ 有効な発話が検出できませんでした','var(--red)');
         document.getElementById('reBtn').disabled=false;running=false;btn.disabled=false;btn.textContent='▶ 解析開始';return;
       }
-      clean=cleanTranscript(segments);
-      segments=clean.segs;
-      renderFeed();
-      if(segments.length)log('✅ '+altModel+'で再文字起こしに成功しました','ok');
     }
     if(clean.halluc){
       log('⚠ 幻聴ループを検出（「'+String(clean.dominant).slice(0,10)+'」が'+clean.dominantCount+'/'+clean.origCount+'回）。この区間は発話が不明瞭な可能性','err');
