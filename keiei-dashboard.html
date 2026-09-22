@@ -184,7 +184,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
     <strong>園児一覧・職員一覧（CSV／XLS）をドラッグ＆ドロップ</strong><br>
     複数ファイルをまとめて読み込めます
   </div>
-  <div class="drop-status" id="drop-status">稲城・しおどめの森・三郷中央：データ取込済み</div>
+  <div class="drop-status" id="drop-status">稲城・しおどめの森・つくば・久喜・三郷中央：データ取込済み</div>
 </div>
 <input type="file" id="csv-file-input" accept=".csv,.xls,.xlsx" multiple>
 
@@ -347,6 +347,8 @@ const PARKS=[
   // 2〜14: データなし（園名のみ）
   {id:'g02', label:'認定こども園 しおどめの森',    sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:165,
    staffTotal:35, staffDesc:'正規19・非正規15',age0:0,age1:20,age2:20,age3:40,age4:39,age5:41,hasData:true},
+  {id:'g11', label:'しおどめ保育園つくば',         sub:'茨城県つくば市・5級地（+10%）', mult:1.10, capacity:90,
+   staffTotal:26, staffDesc:'正規17・非正規9',age0:0,age1:15,age2:18,age3:20,age4:20,age5:17,hasData:true},
   {id:'g03', label:'しおどめ保育園 八潮駅北',      sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:null,
    staffTotal:0,staffDesc:'',age0:0,age1:0,age2:0,age3:0,age4:0,age5:0,hasData:false},
   {id:'g04', label:'しおどめ保育園 京急蒲田駅前',  sub:'東京都大田区・1級地（+20%）', mult:1.20, capacity:null,
@@ -362,8 +364,6 @@ const PARKS=[
   {id:'g09', label:'しおどめ保育園 八潮茜町',      sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:null,
    staffTotal:0,staffDesc:'',age0:0,age1:0,age2:0,age3:0,age4:0,age5:0,hasData:false},
   {id:'g10', label:'ふれあいしおどめ保育園',       sub:'茨城県守谷市・5級地（+10%）', mult:1.10, capacity:null,
-   staffTotal:0,staffDesc:'',age0:0,age1:0,age2:0,age3:0,age4:0,age5:0,hasData:false},
-  {id:'g11', label:'しおどめ保育園つくば',         sub:'茨城県つくば市・5級地（+10%）', mult:1.10, capacity:null,
    staffTotal:0,staffDesc:'',age0:0,age1:0,age2:0,age3:0,age4:0,age5:0,hasData:false},
   {id:'g12', label:'しおどめ保育園久喜',           sub:'埼玉県久喜市・その他（+0%）', mult:1.00, capacity:19,
    staffTotal:12, staffDesc:'正規7・非正規5',age0:2,age1:8,age2:9,age3:0,age4:0,age5:0,hasData:true},
