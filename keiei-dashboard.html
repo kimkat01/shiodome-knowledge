@@ -49,8 +49,8 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .progress-track{flex:1;height:3px;background:var(--border);border-radius:2px;position:relative;overflow:hidden}
 .progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s ease}
 .slide-btn-group{display:flex;gap:10px;flex-shrink:0}
-.slide-btn-circle{background:transparent;color:var(--accent);border:1.5px solid var(--accent);border-radius:50%;width:38px;height:38px;cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s,background .15s}
-.slide-btn-circle:hover:not(:disabled){background:var(--accent-light)}
+.slide-btn-circle{background:var(--accent);color:#fff;border:1.5px solid var(--accent);border-radius:50%;width:38px;height:38px;cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s,filter .15s}
+.slide-btn-circle:hover:not(:disabled){filter:brightness(1.1)}
 .slide-btn-circle:disabled{opacity:.3;cursor:default}
 .cards-viewport{overflow:hidden;border-radius:12px}
 .cards-track{display:flex;transition:transform .35s ease;will-change:transform}
@@ -323,6 +323,10 @@ const PARKS=[
    staffTotal:26, staffDesc:'正規17・非正規9',age0:0,age1:14,age2:18,age3:20,age4:20,age5:17,hasData:true,
    hasInvoice:true, invoiceIncome:10545140, invoiceMonth:'2026年09月', invoiceUrl:'https://drive.google.com/file/d/1qwo654V_NcHF1bm9GnUomDwfZ3LWHncp/view',
    invoiceRows:{amt0:0, amt12:5786914, amt35:4758226}},
+  {id:'g10', label:'ふれあいしおどめ保育園',       sub:'茨城県守谷市・15/100地域', mult:1.15, capacity:90,
+   staffTotal:32, staffDesc:'正規13・非正規19',age0:3,age1:15,age2:16,age3:18,age4:18,age5:18,hasData:true,
+   hasInvoice:true, invoiceIncome:10142940, invoiceMonth:'2026年09月', invoiceUrl:'https://drive.google.com/file/d/1VPn8cI5yfZOKKXC8puT9D0cBCGey3msh/view',
+   invoiceRows:{amt0:814300, amt12:4949150, amt35:4379490}},
   {id:'g03', label:'しおどめ保育園 八潮駅北',      sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:null,
    staffTotal:0,staffDesc:'',age0:0,age1:0,age2:0,age3:0,age4:0,age5:0,hasData:false},
   {id:'g04', label:'しおどめ保育園 京急蒲田駅前',  sub:'東京都大田区・1級地（+20%）', mult:1.20, capacity:null,
@@ -337,10 +341,6 @@ const PARKS=[
    staffTotal:0,staffDesc:'',age0:0,age1:0,age2:0,age3:0,age4:0,age5:0,hasData:false},
   {id:'g09', label:'しおどめ保育園 八潮茜町',      sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:null,
    staffTotal:0,staffDesc:'',age0:0,age1:0,age2:0,age3:0,age4:0,age5:0,hasData:false},
-  {id:'g10', label:'ふれあいしおどめ保育園',       sub:'茨城県守谷市・15/100地域', mult:1.15, capacity:90,
-   staffTotal:32, staffDesc:'正規13・非正規19',age0:3,age1:15,age2:16,age3:18,age4:18,age5:18,hasData:true,
-   hasInvoice:true, invoiceIncome:10142940, invoiceMonth:'2026年09月', invoiceUrl:null,
-   invoiceRows:{amt0:814300, amt12:4949150, amt35:4379490}},
   {id:'g12', label:'しおどめ保育園久喜',           sub:'埼玉県久喜市・その他（+0%）', mult:1.00, capacity:19,
    staffTotal:12, staffDesc:'正規7・非正規5',age0:2,age1:8,age2:9,age3:0,age4:0,age5:0,hasData:true},
   {id:'g13', label:'しおどめ保育園三郷中央',       sub:'埼玉県三郷市・5級地（+10%）', mult:1.10, capacity:19,
@@ -395,7 +395,7 @@ function buildCards(){
           <span style="background:var(--accent-light);color:var(--accent);border-radius:4px;padding:1px 6px;font-weight:500">実績</span>
           <span style="color:var(--text-muted)">請求書ベース（${p.invoiceMonth}分）</span>
           ${isHonbuUnlocked() ? (p.invoiceUrl
-            ? `<a href="${p.invoiceUrl}" target="_blank" rel="noopener" style="margin-left:auto;font-size:10px;color:var(--accent);text-decoration:none;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;white-space:nowrap">📄 請求書を開く</a>`
+            ? `<a href="${p.invoiceUrl}" target="_blank" rel="noopener" style="margin-left:auto;font-size:10px;color:#fff;text-decoration:none;background:var(--accent);border:1px solid var(--accent);border-radius:20px;padding:2px 10px;white-space:nowrap">📄 請求書を開く</a>`
             : `<span style="margin-left:auto;font-size:10px;color:var(--text-muted);border:1px solid var(--border);border-radius:20px;padding:2px 10px;white-space:nowrap">📄 請求書未アップロード</span>`) : ''}
         </div>`:''}
         <div class="capacity-bar">
