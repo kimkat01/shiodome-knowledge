@@ -3,9 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>柴学園 経営ダッシュボード</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<style>
+<title>柴学園 経営ダッシュボード</title><style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap');
 :root {
   --bg:#f0f2f8; --surface:#fff; --surface2:#eef0f8; --border:#d0d6ea;
@@ -32,17 +30,6 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .main{max-width:1200px;margin:0 auto;padding:.75rem 1.5rem 3rem}
 .section-label{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin:1rem 0 .5rem}
 
-/* CSV読込 */
-.drop-area{border:1.5px dashed var(--border);border-radius:10px;padding:1rem 1.5rem;display:flex;align-items:center;gap:1rem;background:var(--surface);cursor:pointer;transition:border-color .2s,background .2s;margin-bottom:1.5rem}
-.drop-area.drag-over{border-color:var(--accent);background:var(--accent-light)}
-.drop-icon{width:36px;height:36px;background:var(--accent-light);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.drop-icon svg{width:18px;height:18px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.drop-text{font-size:13px;color:var(--text-secondary)}
-.drop-text strong{color:var(--text-primary);font-weight:500}
-.drop-status{margin-left:auto;font-size:12px;font-family:var(--mono);color:var(--text-muted);white-space:nowrap}
-.drop-loaded{color:var(--accent);font-weight:500}
-#csv-file-input{display:none}
-
 /* サマリー */
 .summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.5rem}
 .metric-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.125rem}
@@ -58,14 +45,13 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 
 /* 園スライダーエリア */
 .slider-outer{position:relative;margin-bottom:1.5rem}
-.slider-nav{display:flex;align-items:center;gap:8px;margin-bottom:.5rem}
-.slide-btn{background:var(--accent);color:#fff;border:none;border-radius:6px;width:32px;height:32px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s}
-.slide-btn:disabled{opacity:.3;cursor:default}
-.dot-row{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--border);cursor:pointer;transition:background .15s,transform .15s;flex-shrink:0}
-.dot.active{background:var(--accent);transform:scale(1.3)}
-.dot.has-data{background:var(--accent);opacity:.6}
-.slide-counter{font-size:11px;font-family:var(--mono);color:var(--text-muted);margin-left:auto}
+.slider-nav{display:flex;align-items:center;gap:20px;margin-bottom:1rem}
+.progress-track{flex:1;height:3px;background:var(--border);border-radius:2px;position:relative;overflow:hidden}
+.progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s ease}
+.slide-btn-group{display:flex;gap:10px;flex-shrink:0}
+.slide-btn-circle{background:transparent;color:var(--accent);border:1.5px solid var(--accent);border-radius:50%;width:38px;height:38px;cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s,background .15s}
+.slide-btn-circle:hover:not(:disabled){background:var(--accent-light)}
+.slide-btn-circle:disabled{opacity:.3;cursor:default}
 .cards-viewport{overflow:hidden;border-radius:12px}
 .cards-track{display:flex;transition:transform .35s ease;will-change:transform}
 
@@ -174,21 +160,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 
 <main class="main">
 
-<!-- CSV / XLS読込 -->
-<div class="section-label">データ読込</div>
-<div class="drop-area" id="drop-area" onclick="document.getElementById('csv-file-input').click()">
-  <div class="drop-icon">
-    <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-  </div>
-  <div class="drop-text">
-    <strong>園児一覧・職員一覧（CSV／XLS）をドラッグ＆ドロップ</strong><br>
-    複数ファイルをまとめて読み込めます
-  </div>
-  <div class="drop-status" id="drop-status">稲城・しおどめの森・つくば・久喜・三郷中央：データ取込済み</div>
-</div>
-<input type="file" id="csv-file-input" accept=".csv,.xls,.xlsx" multiple>
-
-
 <!-- サマリー -->
 <div class="section-label">法人全体サマリー</div>
 <div class="summary-grid">
@@ -228,10 +199,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 
 <div class="slider-outer">
   <div class="slider-nav">
-    <button class="slide-btn" id="btn-prev" onclick="slide(-1)">&#8249;</button>
-    <div class="dot-row" id="dot-row"></div>
-    <span class="slide-counter" id="slide-counter">1 / 5ページ</span>
-    <button class="slide-btn" id="btn-next" onclick="slide(1)">&#8250;</button>
+    <div class="progress-track" id="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="slide-btn-group">
+      <button class="slide-btn-circle" id="btn-prev" onclick="slide(-1)">&#8249;</button>
+      <button class="slide-btn-circle" id="btn-next" onclick="slide(1)">&#8250;</button>
+    </div>
   </div>
   <div class="cards-viewport" id="viewport">
     <div class="cards-track" id="cards-track"></div>
@@ -323,7 +295,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 <div class="footer-note">
   ※ 施設型給付費の基本分単価のみによる概算です。処遇改善等加算・賃借料加算等は含まれていません。<br>
   ※ 職員配置の「最低必要数」は国の配置基準（0歳3:1、1-2歳6:1、4-5歳30:1、3歳は上部セレクトで切替）による算出です。<br>
-  ※ データがない園（白カード）はデータ読込後に自動反映されます。
+  ※ データがない園（白カード）は、データが揃い次第このダッシュボードに反映します。
 </div>
 </main>
 
@@ -349,7 +321,7 @@ const PARKS=[
    staffTotal:35, staffDesc:'正規19・非正規15',age0:0,age1:20,age2:20,age3:40,age4:39,age5:41,hasData:true},
   {id:'g11', label:'しおどめ保育園つくば',         sub:'茨城県つくば市・16/100地域', mult:1.10, capacity:90,
    staffTotal:26, staffDesc:'正規17・非正規9',age0:0,age1:14,age2:18,age3:20,age4:20,age5:17,hasData:true,
-   hasInvoice:true, invoiceIncome:10545140, invoiceMonth:'2026年09月', invoiceUrl:'',
+   hasInvoice:true, invoiceIncome:10545140, invoiceMonth:'2026年09月', invoiceUrl:'https://drive.google.com/file/d/1qwo654V_NcHF1bm9GnUomDwfZ3LWHncp/view',
    invoiceRows:{amt0:0, amt12:5786914, amt35:4758226}},
   {id:'g03', label:'しおどめ保育園 八潮駅北',      sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:null,
    staffTotal:0,staffDesc:'',age0:0,age1:0,age2:0,age3:0,age4:0,age5:0,hasData:false},
@@ -386,27 +358,13 @@ function calcReq(p, r3){
 }
 
 // ===== カード生成 =====
-const PER_VIEW=3;
+const PER_VIEW=1;
 
 function buildCards(){
   const track=document.getElementById('cards-track');
-  const dotRow=document.getElementById('dot-row');
-  track.innerHTML=''; dotRow.innerHTML='';
+  track.innerHTML='';
 
   PARKS.forEach((p,i)=>{
-  // ドット（ページ単位）
-  const pages=Math.ceil(PARKS.length/PER_VIEW);
-  for(let pg=0;pg<pages;pg++){
-    const dot=document.createElement('div');
-    dot.className='dot'+(pg===0?' active':'');
-    // そのページに1つでもデータあり園があれば色付き
-    const hasAny=PARKS.slice(pg*PER_VIEW,(pg+1)*PER_VIEW).some(p=>p.hasData);
-    if(hasAny)dot.classList.add('has-data');
-    dot.title=(pg*PER_VIEW+1)+'〜'+(Math.min((pg+1)*PER_VIEW,PARKS.length))+'園目';
-    dot.onclick=(()=>{const p=pg;return()=>goTo(p)})();
-    dotRow.appendChild(dot);
-  }
-
     // カード
     const card=document.createElement('div');
     card.className='park-card'+(p.hasData?'':' empty');
@@ -430,9 +388,12 @@ function buildCards(){
           <div><div class="park-stat-val" id="${p.id}-labor">—</div><div class="park-stat-lbl">推計人件費</div></div>
           <div><div class="park-stat-val" id="${p.id}-surplus">—</div><div class="park-stat-lbl">推計収支差</div></div>
         </div>
-        ${p.hasInvoice?`<div style="font-size:10px;color:var(--accent);margin:-.4rem 0 .5rem;display:flex;align-items:center;gap:4px">
+        ${p.hasInvoice?`<div style="font-size:10px;color:var(--accent);margin:-.4rem 0 .5rem;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
           <span style="background:var(--accent-light);color:var(--accent);border-radius:4px;padding:1px 6px;font-weight:500">実績</span>
           <span style="color:var(--text-muted)">請求書ベース（${p.invoiceMonth}分）</span>
+          ${p.invoiceUrl
+            ? `<a href="${p.invoiceUrl}" target="_blank" rel="noopener" style="margin-left:auto;font-size:10px;color:var(--accent);text-decoration:none;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;white-space:nowrap">📄 請求書を開く</a>`
+            : `<span style="margin-left:auto;font-size:10px;color:var(--text-muted);border:1px solid var(--border);border-radius:20px;padding:2px 10px;white-space:nowrap">📄 請求書未アップロード</span>`}
         </div>`:''}
         <div class="capacity-bar">
           <div class="capacity-bar-label"><span>在籍状況</span><span id="${p.id}-cap-label">—</span></div>
@@ -536,9 +497,9 @@ function goTo(i, animate=true){
   // PER_VIEW枚単位でスライド
   track.style.transform=`translateX(-${curIdx*(cardW+gap)*PER_VIEW}px)`;
 
-  // ドット更新（ページ単位）
-  document.querySelectorAll('.dot').forEach((d,j)=>d.classList.toggle('active',j===curIdx));
-  document.getElementById('slide-counter').textContent=(curIdx+1)+' / '+totalPages()+'ページ';
+  // 進捗バー更新
+  const pct=maxPage>0?(curIdx/maxPage*100):0;
+  document.getElementById('progress-fill').style.width=pct+'%';
   document.getElementById('btn-prev').disabled=curIdx===0;
   document.getElementById('btn-next').disabled=curIdx===maxPage;
 }
@@ -677,484 +638,6 @@ function update(){
   surBar.style.width=Math.min(surPct,100)+'%';
   surBar.className='balance-bar-fill '+(totSur>=0?'bar-surplus-pos':'bar-surplus-neg');
 }
-
-// ===== CSV / XLS 読込 =====
-
-// --- 共通: 2次元配列(rows of arrays)からヘッダー＋データ行に変換 ---
-function rowsToTable(aoa){
-  // 先頭の完全空行をスキップ
-  let start=0;
-  while(start<aoa.length && aoa[start].every(c=>c===undefined||c===null||String(c).trim()==='')) start++;
-  if(start>=aoa.length) return null;
-  const headers=aoa[start].map(h=>String(h===undefined||h===null?'':h).trim());
-  const rows=aoa.slice(start+1)
-    .filter(r=>r.some(c=>c!==undefined&&c!==null&&String(c).trim()!==''))
-    .map(r=>headers.map((_,i)=>{
-      const v=r[i];
-      return v===undefined||v===null?'':String(v).trim();
-    }));
-  return{headers,rows};
-}
-
-// --- CSVテキスト -> table ---
-function parseCSVText(text){
-  const lines=text.split(/\r?\n/).filter(l=>l.trim());
-  if(lines.length<2)return null;
-  const aoa=lines.map(line=>{
-    const cells=[];let cur='',inQ=false;
-    for(const ch of line){
-      if(ch==='"'){inQ=!inQ;}
-      else if(ch===','&&!inQ){cells.push(cur.trim());cur='';}
-      else cur+=ch;
-    }
-    cells.push(cur.trim());
-    return cells;
-  });
-  return rowsToTable(aoa);
-}
-
-// --- XLS/XLSX ArrayBuffer -> { sheetName: table, ... } ---
-function parseWorkbook(arrayBuffer){
-  if(typeof XLSX==='undefined') throw new Error('XLSXライブラリが読み込まれていません');
-  const wb=XLSX.read(arrayBuffer,{type:'array',cellDates:true});
-  const sheets={};
-  wb.SheetNames.forEach(name=>{
-    const aoa=XLSX.utils.sheet_to_json(wb.Sheets[name],{header:1,raw:false,defval:''});
-    const t=rowsToTable(aoa);
-    if(t) sheets[name]=t;
-  });
-  return sheets;
-}
-
-// --- クラス名から年齢グループを判定 ("1歳"/"1歳児"/"ひよこ(1歳)"など部分一致) ---
-function classNameToAge(name){
-  if(!name) return null;
-  const s=String(name);
-  if(s.includes('0歳')) return 0;
-  if(s.includes('1歳')) return 1;
-  if(s.includes('2歳')) return 2;
-  if(s.includes('3歳')) return 3;
-  if(s.includes('4歳')) return 4;
-  if(s.includes('5歳')) return 5;
-  return null;
-}
-
-// --- 誕生日文字列/Dateから4/1基準の満年齢を計算 ---
-function birthdateToAge(bVal){
-  const b=(bVal instanceof Date)?bVal:new Date(bVal);
-  if(isNaN(b)) return null;
-  const today=new Date();
-  const ry=today>=new Date(today.getFullYear(),3,1)?today.getFullYear():today.getFullYear()-1;
-  let age=ry-b.getFullYear();
-  if(b>=new Date(b.getFullYear()+ (b.getMonth()>=3?0:0),3,1) && (b.getMonth()>3 || (b.getMonth()===3&&b.getDate()>=1))){
-    // 誕生日が4/1以降なら、その学年では1つ下扱い（教育上の学年区分）
-  }
-  const aprilFirstOfBirthYear=new Date(b.getFullYear(),3,1);
-  if(b>=aprilFirstOfBirthYear) age--;
-  return age;
-}
-
-// --- 削除/退園済み行か判定（複数の見た目に対応） ---
-function isDeletedRow(headers, row){
-  const delIdx=headers.indexOf('削除フラグ');
-  if(delIdx>=0 && (row[delIdx]==='1'||row[delIdx]==='TRUE')) return true;
-  return false;
-}
-
-// --- ファイル名・所属欄から対象の園(PARK)を特定 ---
-const PARK_FILENAME_KEYWORDS={
-  'inagi':['稲城','いなぎ'],
-  'g02':['こども園','しおどめの森','八潮森'],
-  'g03':['八潮駅北'],
-  'g04':['京急蒲田','蒲田'],
-  'g05':['小規模'],
-  'g06':['江戸川'],
-  'g07':['春日部'],
-  'g08':['越谷'],
-  'g09':['八潮茜'],
-  'g10':['ふれあい守谷','守谷'],
-  'g11':['つくば'],
-  'g12':['久喜'],
-  'g13':['三郷','みさと'],
-  'g14':['ふれあい八潮'],
-};
-
-function matchParkByFilename(filename){
-  const n=filename.replace(/\s/g,'');
-  for(const p of PARKS){
-    const kws=PARK_FILENAME_KEYWORDS[p.id]||[];
-    if(kws.some(k=>n.includes(k))) return p;
-  }
-  return null;
-}
-
-function matchParkByBelong(rows, headers){
-  const idxs=[];
-  headers.forEach((h,i)=>{if(h.startsWith('所属'))idxs.push(i);});
-  if(idxs.length===0)return null;
-  for(const row of rows){
-    for(const bi of idxs){
-      const v=(row[bi]||'').replace(/\s/g,'');
-      for(const p of PARKS){
-        const kws=PARK_FILENAME_KEYWORDS[p.id]||[];
-        if(kws.some(k=>v.includes(k)))return p;
-      }
-    }
-  }
-  return null;
-}
-
-function pickTargetPark(filename, rows, headers){
-  return matchParkByFilename(filename) || matchParkByBelong(rows, headers) || null;
-}
-
-// --- 職員一覧テーブルを処理 ---
-function processStaffTable(table, filename){
-  const {headers, rows}=table;
-  const empIdx=headers.indexOf('雇用区分');
-  if(empIdx<0) return null; // 職員データではない
-  const validRows=rows.filter(r=>!isDeletedRow(headers,r));
-  const total=validRows.length;
-  if(total===0) return null;
-  const reg=validRows.filter(r=>r[empIdx]==='正規').length;
-  const nonreg=validRows.filter(r=>r[empIdx]==='非正規').length;
-
-  const matched=pickTargetPark(filename, validRows, headers);
-  if(!matched){
-    return {pending:true, kind:'staff', filename, apply:(park)=>{
-      park.staffTotal=total;
-      park.staffDesc='正規'+reg+'・非正規'+(total-reg);
-      park.hasData=true;
-    }, summary:`職員 ${total}名（正規${reg}・非正規${nonreg}）`};
-  }
-
-  matched.staffTotal=total;
-  matched.staffDesc='正規'+reg+'・非正規'+(total-reg);
-  matched.hasData=true;
-  return {type:'staff', label:matched.label, total};
-}
-
-// --- 園児一覧テーブル（誕生日方式）を処理 ---
-function processChildrenByBirthdate(table, filename){
-  const {headers, rows}=table;
-  const bdIdx=headers.indexOf('誕生日');
-  if(bdIdx<0) return null;
-  const ages=[0,0,0,0,0,0];
-  rows.forEach(r=>{
-    if(isDeletedRow(headers,r))return;
-    const age=birthdateToAge(r[bdIdx]);
-    if(age!==null && age>=0 && age<=5) ages[age]++;
-  });
-  const total=ages.reduce((a,b)=>a+b,0);
-  if(total===0) return {error:'園児データを認識できませんでした（誕生日列の形式をご確認ください）'};
-
-  const matched=pickTargetPark(filename, rows, headers);
-  if(!matched){
-    return {pending:true, kind:'children', filename, ages, apply:(park)=>{
-      park.age0=ages[0];park.age1=ages[1];park.age2=ages[2];
-      park.age3=ages[3];park.age4=ages[4];park.age5=ages[5];
-      park.hasData=true;
-    }, summary:`園児 ${total}名`};
-  }
-
-  matched.age0=ages[0];matched.age1=ages[1];matched.age2=ages[2];
-  matched.age3=ages[3];matched.age4=ages[4];matched.age5=ages[5];
-  matched.hasData=true;
-  return {type:'children', label:matched.label, total};
-}
-
-// --- 園児一覧テーブル（クラス名方式：先頭列に"1歳"などが間欠的に入る）を処理 ---
-function processChildrenByClassColumn(table, filename, capacityFromOtherSheet){
-  const {headers, rows}=table;
-  // 先頭列、または「クラス」という名の列を探す
-  let classIdx=headers.indexOf('クラス');
-  if(classIdx<0) classIdx=0; // 三郷パターン：先頭の無名列にクラス名が間欠的に入る
-
-  const ages=[0,0,0,0,0,0];
-  let cur=null;
-  let any=false;
-  rows.forEach(r=>{
-    const cv=r[classIdx];
-    if(cv && classNameToAge(cv)!==null){ cur=classNameToAge(cv); }
-    if(cur!==null){ ages[cur]++; any=true; }
-  });
-  const total=ages.reduce((a,b)=>a+b,0);
-  if(!any || total===0) return null;
-
-  const matched=pickTargetPark(filename, rows, headers);
-  if(!matched){
-    return {pending:true, kind:'children', filename, ages, capacityFromOtherSheet, apply:(park)=>{
-      park.age0=ages[0];park.age1=ages[1];park.age2=ages[2];
-      park.age3=ages[3];park.age4=ages[4];park.age5=ages[5];
-      park.hasData=true;
-      if(capacityFromOtherSheet) park.capacity=capacityFromOtherSheet;
-    }, summary:`園児 ${total}名`};
-  }
-
-  matched.age0=ages[0];matched.age1=ages[1];matched.age2=ages[2];
-  matched.age3=ages[3];matched.age4=ages[4];matched.age5=ages[5];
-  matched.hasData=true;
-
-  // 定員シートがあれば反映
-  if(capacityFromOtherSheet) matched.capacity=capacityFromOtherSheet;
-
-  return {type:'children', label:matched.label, total};
-}
-
-// --- 全角数字を半角に変換 ---
-function toHalfWidth(s){
-  return String(s).replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0));
-}
-
-// --- 「定員数」のようなシートから 定員合計／年齢別在籍数 を抽出 ---
-// 想定パターン：1行目=ラベル＋年齢列（0歳,1歳…）＋合計列、以降の行に「定員」「在籍数/実数」等
-// 「3歳（右側1号）」のように、同じ年齢が複数列（無名の隣接列含む）に分かれる場合は合算する
-function extractCapacitySheet(table){
-  const {headers, rows}=table;
-  const totalColIdx=headers.indexOf('合計');
-
-  // 年齢列のインデックスを特定（ヘッダー文字列に "歳" を含む列）。同年齢は配列で複数保持。
-  const ageColMap={}; // age(0-5) -> [colIdx, ...]
-  let lastAge=null;
-  headers.forEach((h,i)=>{
-    if(i===totalColIdx) { lastAge=null; return; }
-    const hw=toHalfWidth(h);
-    let found=null;
-    for(let a=0;a<=5;a++){ if(hw.includes(a+'歳')){ found=a; break; } }
-    if(found!==null){
-      if(!ageColMap[found]) ageColMap[found]=[];
-      ageColMap[found].push(i);
-      lastAge=found;
-    } else if(hw.trim()==='' && lastAge!==null){
-      // 無名の隣接列は直前の年齢列の続き（1号/2号などの分割列）とみなす
-      ageColMap[lastAge].push(i);
-    } else {
-      lastAge=null;
-    }
-  });
-
-  let capacity=null;
-  let ages=null; // [a0,a1,a2,a3,a4,a5] 在籍実数
-  let actualTotal=null;
-
-  rows.forEach(r=>{
-    const label=String(r[0]||'');
-    const readTotal=()=>{
-      if(totalColIdx>=0 && r[totalColIdx]){
-        const v=parseInt(toHalfWidth(r[totalColIdx]).replace(/[^\d]/g,''),10);
-        if(!isNaN(v)) return v;
-      }
-      const sum=r.slice(1).reduce((s,c)=>{
-        const v=parseInt(toHalfWidth(String(c)).replace(/[^\d]/g,''),10);
-        return s+(isNaN(v)?0:v);
-      },0);
-      return sum>0?sum:null;
-    };
-    if(label.includes('定員')){
-      const v=readTotal(); if(v) capacity=v;
-    } else if(label.includes('実数')||label.includes('在籍')){
-      const v=readTotal(); if(v) actualTotal=v;
-      if(Object.keys(ageColMap).length){
-        ages=[0,0,0,0,0,0];
-        for(let a=0;a<=5;a++){
-          const cols=ageColMap[a];
-          if(cols && cols.length){
-            ages[a]=cols.reduce((s,ci)=>{
-              const v2=parseInt(toHalfWidth(String(r[ci]||'0')).replace(/[^\d]/g,''),10);
-              return s+(isNaN(v2)?0:v2);
-            },0);
-          }
-        }
-      }
-    }
-  });
-  return {capacity, ages, actualTotal};
-}
-
-// --- 1ファイル分（複数シート対応）を処理し、結果配列を返す ---
-function processWorkbookSheets(sheets, filename){
-  const results=[];
-  // 「定員」を含むシート名から定員・年齢別実数を先に抽出しておく（最優先データ）
-  let capInfo={capacity:null, ages:null, actualTotal:null};
-  Object.keys(sheets).forEach(name=>{
-    if(name.includes('定員')){
-      const info=extractCapacitySheet(sheets[name]);
-      if(info.capacity) capInfo.capacity=info.capacity;
-      if(info.ages) capInfo.ages=info.ages;
-      if(info.actualTotal) capInfo.actualTotal=info.actualTotal;
-    }
-  });
-
-  let childrenResult=null;
-
-  Object.keys(sheets).forEach(name=>{
-    if(name.includes('定員')) return; // 定員シート自体はスキップ（上で処理済み）
-    const table=sheets[name];
-    if(!table || !table.rows.length) return;
-
-    // 1) 職員データか？
-    let res=processStaffTable(table, filename);
-    if(res){ results.push(res); return; }
-
-    // 2) 誕生日方式の園児データか？
-    res=processChildrenByBirthdate(table, filename);
-    if(res){ childrenResult=res; results.push(res); return; }
-
-    // 3) クラス名方式の園児データか？
-    res=processChildrenByClassColumn(table, filename, capInfo.capacity);
-    if(res){ childrenResult=res; results.push(res); return; }
-  });
-
-  // 定員シートに年齢別実数があれば、それを正とみなして上書き（手集計の方が信頼度が高いため）
-  if(childrenResult && !childrenResult.error && capInfo.ages){
-    if(childrenResult.pending){
-      const origApply=childrenResult.apply;
-      childrenResult.apply=(park)=>{
-        origApply(park);
-        park.age0=capInfo.ages[0];park.age1=capInfo.ages[1];park.age2=capInfo.ages[2];
-        park.age3=capInfo.ages[3];park.age4=capInfo.ages[4];park.age5=capInfo.ages[5];
-        if(capInfo.capacity) park.capacity=capInfo.capacity;
-      };
-      childrenResult.summary=`園児 ${capInfo.ages.reduce((a,b)=>a+b,0)}名`;
-    } else {
-      const matched=PARKS.find(p=>p.label===childrenResult.label);
-      if(matched){
-        matched.age0=capInfo.ages[0];matched.age1=capInfo.ages[1];matched.age2=capInfo.ages[2];
-        matched.age3=capInfo.ages[3];matched.age4=capInfo.ages[4];matched.age5=capInfo.ages[5];
-        childrenResult.total=capInfo.ages.reduce((a,b)=>a+b,0);
-      }
-    }
-  }
-  if(childrenResult && !childrenResult.error && capInfo.capacity && !childrenResult.pending){
-    const matched=PARKS.find(p=>p.label===childrenResult.label);
-    if(matched) matched.capacity=capInfo.capacity;
-  }
-
-  return results;
-}
-
-function rebuildCard(){
-  buildCards();
-  update();
-}
-
-// ===== ファイル入力ハンドリング =====
-const dropArea=document.getElementById('drop-area');
-const fileInput=document.getElementById('csv-file-input');
-const statusEl=document.getElementById('drop-status');
-
-let pendingQueue=[]; // {kind, filename, summary, apply}
-
-function reportResults(filename, results){
-  if(!results || results.length===0){
-    statusEl.innerHTML=`<span style="color:var(--accent2)">⚠ ${filename}：データ形式を認識できませんでした</span>`;
-    return;
-  }
-  const msgs=[];
-  results.forEach(r=>{
-    if(r.pending){
-      pendingQueue.push(r);
-      return; // 後でまとめて選択UIを描画
-    }
-    if(r.error){ msgs.push(`<span style="color:var(--accent2)">⚠ ${filename}：${r.error}</span>`); return; }
-    const kind=r.type==='staff'?'職員':'園児';
-    msgs.push(`<span class="drop-loaded">✓ ${r.label}（${kind} ${r.total}名）を読込</span>`);
-  });
-  statusEl.innerHTML=msgs.join('　');
-  renderPendingUI();
-  rebuildCard();
-}
-
-function renderPendingUI(){
-  let box=document.getElementById('pending-box');
-  if(pendingQueue.length===0){
-    if(box) box.remove();
-    return;
-  }
-  if(!box){
-    box=document.createElement('div');
-    box.id='pending-box';
-    box.style.marginTop='10px';
-    box.style.padding='10px 14px';
-    box.style.background='#fdf7e8';
-    box.style.border='1px solid #e8d9a0';
-    box.style.borderRadius='8px';
-    dropArea.insertAdjacentElement('afterend', box);
-  }
-  box.innerHTML = pendingQueue.map((p,i)=>{
-    const opts=PARKS.map(park=>`<option value="${park.id}">${park.label}</option>`).join('');
-    return `<div style="display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:6px;color:var(--text-secondary)">
-      <span>⚠ ${p.filename}（${p.summary}）→ 園を選択：</span>
-      <select class="select-inline" data-pending-idx="${i}" onchange="resolvePending(${i}, this.value)">
-        <option value="">-- 選択してください --</option>
-        ${opts}
-      </select>
-    </div>`;
-  }).join('');
-}
-
-function resolvePending(idx, parkId){
-  const item=pendingQueue[idx];
-  if(!item || !parkId) return;
-  const park=PARKS.find(p=>p.id===parkId);
-  if(!park) return;
-  item.apply(park);
-  pendingQueue.splice(idx,1);
-  statusEl.innerHTML=`<span class="drop-loaded">✓ ${park.label}（${item.summary}）を読込</span>`;
-  renderPendingUI();
-  rebuildCard();
-}
-window.resolvePending=resolvePending;
-
-
-function handleFiles(files){
-  Array.from(files).forEach(file=>{
-    const name=file.name;
-    const ext=name.toLowerCase().split('.').pop();
-    const r=new FileReader();
-
-    r.onerror=()=>{
-      statusEl.innerHTML=`<span style="color:var(--accent2)">⚠ ${name}：ファイルの読込に失敗しました</span>`;
-    };
-
-    if(ext==='csv'){
-      r.onload=e=>{
-        try{
-          const dec=new TextDecoder('shift-jis');
-          const text=dec.decode(e.target.result);
-          const table=parseCSVText(text);
-          if(!table){ statusEl.innerHTML=`<span style="color:var(--accent2)">⚠ ${name}：データが見つかりません</span>`; return; }
-          const results=processWorkbookSheets({'CSV':table}, name);
-          reportResults(name, results);
-        }catch(err){
-          console.error(err);
-          statusEl.innerHTML=`<span style="color:var(--accent2)">⚠ ${name}：読込エラー（${err.message}）</span>`;
-        }
-      };
-      r.readAsArrayBuffer(file);
-    } else if(ext==='xls'||ext==='xlsx'){
-      r.onload=e=>{
-        try{
-          const sheets=parseWorkbook(e.target.result);
-          if(Object.keys(sheets).length===0){ statusEl.innerHTML=`<span style="color:var(--accent2)">⚠ ${name}：シートが見つかりません</span>`; return; }
-          const results=processWorkbookSheets(sheets, name);
-          reportResults(name, results);
-        }catch(err){
-          console.error(err);
-          statusEl.innerHTML=`<span style="color:var(--accent2)">⚠ ${name}：読込エラー（${err.message}）</span>`;
-        }
-      };
-      r.readAsArrayBuffer(file);
-    } else {
-      statusEl.innerHTML=`<span style="color:var(--accent2)">⚠ ${name}：対応していない形式です（.csv / .xls / .xlsx のみ）</span>`;
-    }
-  });
-}
-
-dropArea.addEventListener('dragover',e=>{e.preventDefault();dropArea.classList.add('drag-over');});
-dropArea.addEventListener('dragleave',()=>dropArea.classList.remove('drag-over'));
-dropArea.addEventListener('drop',e=>{e.preventDefault();dropArea.classList.remove('drag-over');handleFiles(e.dataTransfer.files);});
-fileInput.addEventListener('change',e=>handleFiles(e.target.files));
 
 // ===== 初期化 =====
 window.addEventListener('resize',resizeViewport);
