@@ -230,6 +230,11 @@ body{font-family:'Noto Sans JP',sans-serif;background:
 .ln.mid mark{background:rgba(224,125,47,.18);color:#9a5416;}
 .ln.lo mark{background:rgba(214,154,30,.18);color:#8a6410;}
 .ln .cat{display:inline-block;font-size:9.5px;font-weight:700;margin-left:7px;padding:1px 7px;border-radius:20px;vertical-align:middle;}
+.ln .vtag{display:inline-block;font-size:9.5px;font-weight:700;margin-right:6px;padding:1px 7px;border-radius:20px;vertical-align:middle;}
+.vt-adult{color:#0b6e4f;background:rgba(18,160,110,.14);}
+.vt-child{color:#8a8f98;background:rgba(138,143,152,.14);}
+.vt-loud{color:#b4232a;background:rgba(229,72,77,.14);}
+.vt-focus{color:#5b3fd6;background:rgba(124,92,240,.12);}
 .ln .spk{display:inline-block;font-size:9.5px;font-weight:600;margin-right:8px;padding:1px 7px;border-radius:20px;vertical-align:middle;color:var(--g2);background:rgba(18,165,201,.12);}
 .ln .edit{opacity:0;margin-left:8px;background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:13px;flex-shrink:0;transition:.12s;padding:2px 4px;border-radius:6px;}
 .ln .flag{opacity:0;margin-left:4px;background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:13px;flex-shrink:0;transition:.12s;padding:2px 4px;border-radius:6px;}
@@ -585,7 +590,7 @@ stage.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)onFile(f)
 
 function onFile(f){
   if(!f)return;
-  mediaFile=f; segments=[];
+  mediaFile=f; segments=[]; vaReset();
   if(mediaURL)URL.revokeObjectURL(mediaURL);
   mediaURL=URL.createObjectURL(f);
   const dz=document.getElementById('dz'); if(dz)dz.remove();
@@ -795,7 +800,7 @@ async function transcribeFile(file,onProgress){
     log('⚠ 音声デコードに失敗したため、動画再生方式に切り替えて音声を抽出します','err');
     return await transcribeFileStreaming(file,onProgress,CH);
   }
-  ctx.close();const dur=ab.duration,n=Math.ceil(dur/CH);let all=[];
+  ctx.close();await vaPrepare(ab);const dur=ab.duration,n=Math.ceil(dur/CH);let all=[];
   log('🔊 コンプレッサー＋ノーマライズで小さい声を持ち上げます','ok');
   if(n<=1){
     stat('🎙 文字起こし中…');
@@ -840,6 +845,7 @@ async function transcribeFileStreaming(file,onProgress,CH){
     if(!isFinite(dur)||dur<=0)throw new Error('動画の長さを取得できませんでした');
     if(!window.MediaRecorder)throw new Error('このブラウザはMediaRecorderに対応していません');
     const n=Math.ceil(dur/CH);
+    if(!acoustic)log('（この方式では声の高さの解析（強い声の検出・大人/子どもの印）は行いません）','');
     log('⏳ '+STREAM_RATE+'倍速の動画再生方式で抽出します（推定 約'+Math.ceil(dur/60/STREAM_RATE)+'分）','ok');
     actx=new (window.AudioContext||window.webkitAudioContext)();
     const srcNode=actx.createMediaElementSource(video);
@@ -883,17 +889,170 @@ async function transcribeFileStreaming(file,onProgress,CH){
   }
 }
 
+/* ===== 声の高さ・音量の解析（騒がしい保育室で「大人の強い声」を探す） =====
+   文字起こしに頼らず、音そのものから
+   ・声の高さ（基本周波数）… 大人の女性・男性はおおむね140〜320Hz、幼児は300Hz以上
+   ・音量（周囲の普段の音量との差）
+   を20ミリ秒ごとに測り、「大人の声の高さで、周りより急に大きくなった瞬間」を候補として拾う。
+   NVRのマイク音声は8kHz（上限4kHz）のため、8kHzに揃えてから測る（処理も軽くなる）。 */
+const VA={SR:8000,HOP:160,WIN:320,FMIN:70,FMAX:600,YIN_TH:0.12,ADULT_LO:140,ADULT_HI:320,LOUD_DB:6,MERGE_GAP:1.0,MIN_FRAMES:3,MAX_FOCUS:20,MAX_VISUAL:8};
+async function vaMeasure(x,onTick){
+  const hop=VA.HOP,win=VA.WIN,sr=VA.SR;
+  const tauMin=Math.floor(sr/VA.FMAX),tauMax=Math.ceil(sr/VA.FMIN);
+  const n=Math.max(0,Math.floor((x.length-win-tauMax)/hop));
+  const db=new Float32Array(n),f0=new Float32Array(n),conf=new Float32Array(n);
+  const d=new Float32Array(tauMax+1);
+  for(let k=0;k<n;k++){
+    const o=k*hop;
+    let e=0;for(let j=0;j<win;j++){const v=x[o+j];e+=v*v;}
+    db[k]=10*Math.log10(e/win+1e-10);
+    if(db[k]<-60)continue; // ほぼ無音のフレームは高さを測らない（処理の短縮）
+    // YIN法（累積平均で正規化した差分関数）で声の高さを推定
+    let run=0;d[0]=1;
+    for(let tau=1;tau<=tauMax;tau++){
+      let s=0;for(let j=0;j<win;j++){const df=x[o+j]-x[o+j+tau];s+=df*df;}
+      run+=s;d[tau]=run>0?s*tau/run:1;
+    }
+    let tau=-1;
+    for(let t=tauMin;t<=tauMax;t++){if(d[t]<VA.YIN_TH){while(t+1<=tauMax&&d[t+1]<d[t])t++;tau=t;break;}}
+    if(tau>0){
+      let bt=tau;
+      if(tau>1&&tau<tauMax){const a=d[tau-1],b=d[tau],c=d[tau+1],den=a+c-2*b;if(den>0)bt=tau+(a-c)/(2*den);}
+      f0[k]=sr/bt;conf[k]=1-d[tau];
+    }
+    if(onTick&&(k%1500===0))await onTick(k/n);
+  }
+  const sorted=Array.from(db).sort((a,b)=>a-b);
+  const base=sorted.length?sorted[Math.floor(sorted.length/2)]:-40;
+  return {hop:hop/sr,db,f0,conf,base,n};
+}
+function vaIsAdult(ac,k){const f=ac.f0[k];return f>=VA.ADULT_LO&&f<VA.ADULT_HI;}
+function vaEvents(ac){
+  const ev=[];
+  for(let k=0;k<ac.n;k++){
+    if(!vaIsAdult(ac,k)||ac.db[k]<ac.base+VA.LOUD_DB)continue;
+    const t=k*ac.hop,rise=ac.db[k]-ac.base;
+    const last=ev[ev.length-1];
+    if(last&&t-last.end<=VA.MERGE_GAP){last.end=t+ac.hop;last.frames++;if(rise>last.peak){last.peak=rise;last.f0=ac.f0[k];}}
+    else ev.push({start:t,end:t+ac.hop,frames:1,peak:rise,f0:ac.f0[k]});
+  }
+  return ev.filter(e=>e.frames>=VA.MIN_FRAMES);
+}
+/* 区間[st,en]の声を「大人らしい/子どもらしい/不明」に分類 */
+function vaVoiceType(ac,st,en){
+  if(!ac)return null;
+  const k0=Math.max(0,Math.floor(st/ac.hop)),k1=Math.min(ac.n,Math.ceil(Math.max(en,st+0.5)/ac.hop));
+  let voiced=0,adult=0,child=0;const fs=[],fa=[];
+  for(let k=k0;k<k1;k++){const f=ac.f0[k];if(!f)continue;voiced++;fs.push(f);if(f>=VA.ADULT_LO&&f<VA.ADULT_HI){adult++;fa.push(f);}else if(f>=VA.ADULT_HI)child++;}
+  // 騒がしい室内では大人が話している間も子どもの声が重なるため、「大人の高さの声が一定量（0.08秒以上）かつ3割以上」で大人らしいと判定
+  let type='unk';
+  if(adult>=4&&adult/Math.max(1,voiced)>=0.3)type='adult';
+  else if(voiced>=5&&adult/voiced<0.15)type='child';
+  const med=a=>{if(!a.length)return 0;a.sort((x,y)=>x-y);return Math.round(a[Math.floor(a.length/2)]);};
+  return {type,voiced,adult,child,f0:type==='adult'?med(fa):med(fs)};
+}
+
+let acoustic=null;     // 声の高さ・音量の測定結果（ファイルごと）
+let voiceEvents=[];    // 大人の声の高さで急に大きくなった候補 {start,end,frames,peak,f0,heard}
+let vaAB=null;         // 候補の前後を再文字起こしするための音声（解析中だけ保持）
+function vaReset(){acoustic=null;voiceEvents=[];vaAB=null;}
+/* 音声をデコードした直後に呼ぶ：8kHzに揃えて声の高さ・音量を測り、候補を抽出 */
+async function vaPrepare(ab){
+  vaAB=ab;
+  if(acoustic)return; // 同じファイルの再文字起こし（モデル切替）では測り直さない
+  try{
+    stat('🔊 声の高さ・音量を解析中…');
+    const oc=new OfflineAudioContext(1,Math.ceil(ab.duration*VA.SR),VA.SR);
+    const src=oc.createBufferSource();src.buffer=ab;
+    const hp=oc.createBiquadFilter();hp.type='highpass';hp.frequency.value=60; // 空調などの低いうなりを除く
+    src.connect(hp);hp.connect(oc.destination);src.start(0);
+    const r=await oc.startRendering();
+    acoustic=await vaMeasure(r.getChannelData(0),async p=>{stat('🔊 声の高さ・音量を解析中… '+Math.round(p*100)+'%');await new Promise(res=>setTimeout(res,0));});
+    voiceEvents=vaEvents(acoustic);
+    log('🔊 大人の声の高さで急に大きくなった箇所：'+voiceEvents.length+'件（強い声の候補）',voiceEvents.length?'ok':'');
+  }catch(e){acoustic=null;voiceEvents=[];log('⚠ 声の高さの解析に失敗（通常の文字起こしのみで続行）: '+e.message,'err');}
+}
+function vaFocusMax(){const d=duration||(vaAB?vaAB.duration:0);return Math.min(60,Math.max(VA.MAX_FOCUS,Math.ceil(d/60)*4));}
+function vaNorm(t){return (t||'').replace(/[\s、。「」！？!?,.　・…ー〜]/g,'');}
+/* 文字起こしの後に呼ぶ：①強い声の候補の前後だけを短く切ってWhisperに再送 ②各発言に大人/子どもの印を付ける */
+async function vaBoost(){
+  if(acoustic&&vaAB&&voiceEvents.length){
+    // 大きい順に上位だけ。近い候補は1つの切り出しにまとめる
+    const top=voiceEvents.slice().sort((a,b)=>b.peak-a.peak).slice(0,vaFocusMax());
+    const wins=top.map(e=>({st:Math.max(0,e.start-2),en:Math.min(vaAB.duration,e.end+3)})).sort((a,b)=>a.st-b.st);
+    const merged=[];wins.forEach(w=>{const l=merged[merged.length-1];if(l&&w.st<=l.en+0.5)l.en=Math.max(l.en,w.en);else merged.push({...w});});
+    log('🔍 強い声の候補'+top.length+'件の前後（'+merged.length+'区間）を短く切って再文字起こしします','');
+    let added=0;
+    for(let i=0;i<merged.length;i++){
+      const w=merged[i];
+      stat('🔍 強い声の前後を再文字起こし '+(i+1)+'/'+merged.length+'…');
+      try{
+        const {blob,rms}=await renderChunkWav(vaAB,w.st,w.en-w.st,16000);
+        if(rms<SILENCE_RMS_THRESHOLD)continue;
+        const segs=await whisperBlob(blob,'f'+i+'.wav',w.st);
+        segs.forEach(ns=>{
+          const nn=vaNorm(ns.text);if(!nn)return;
+          // すでに同じ時間帯に同じ内容の発言があれば追加しない
+          const dup=segments.some(s=>{const ov=Math.min(s.end,ns.end)-Math.max(s.start,ns.start)>-0.5;if(!ov)return false;const sn=vaNorm(s.text);return sn&&(sn.includes(nn)||nn.includes(sn));});
+          if(dup)return;
+          ns.focus=true;segments.push(ns);added++;
+        });
+      }catch(e){log('  ⚠ '+fmt(w.st)+' の再文字起こしに失敗: '+e.message,'err');}
+    }
+    segments.sort((a,b)=>a.start-b.start);
+    if(added)log('✅ 強い声の前後から、新たに'+added+'件の発言を拾いました（🔍印）','ok');
+    else log('（強い声の前後の再文字起こしでは、新しい発言は増えませんでした）','');
+  }
+  vaTag();
+  vaAB=null; // メモリ解放
+  renderFeed();
+}
+/* 各発言に「大人らしい/子どもらしい」「強い声」の印を付ける */
+function vaTag(){
+  if(!acoustic)return;
+  voiceEvents.forEach(e=>e.heard=false);
+  segments.forEach(s=>{
+    const v=vaVoiceType(acoustic,s.start,s.end);
+    s.voice=v?v.type:null;s.f0=v?v.f0:0;
+    const ev=voiceEvents.find(e=>e.end>=s.start-0.3&&e.start<=Math.max(s.end,s.start+0.5)+0.3);
+    s.loud=!!ev;if(ev)ev.heard=true;
+  });
+  const a=segments.filter(s=>s.voice==='adult').length,c=segments.filter(s=>s.voice==='child').length,l=segments.filter(s=>s.loud).length;
+  log('🏷 発言の印：大人らしい'+a+'件／子どもらしい'+c+'件／強い声'+l+'件','ok');
+}
+function vaLinePrefix(s){
+  const tags=[];
+  if(s.voice==='adult')tags.push('大人の声らしい');else if(s.voice==='child')tags.push('子どもの声らしい');
+  if(s.loud)tags.push('周囲より急に大きい声');
+  return tags.length?'〔'+tags.join('・')+'〕':'';
+}
+function vaBadges(s){
+  let h='';
+  if(s.voice==='adult')h+='<span class="vtag vt-adult" title="声の高さ（約'+(s.f0||'?')+'Hz）から大人の声と推定">大人?</span>';
+  else if(s.voice==='child')h+='<span class="vtag vt-child" title="声の高さ（約'+(s.f0||'?')+'Hz）から子どもの声と推定">子ども?</span>';
+  if(s.loud)h+='<span class="vtag vt-loud" title="大人の声の高さで、周りより急に大きくなった箇所">強い声</span>';
+  if(s.focus)h+='<span class="vtag vt-focus" title="強い声の前後を短く切って再文字起こしして拾えた発言">🔍</span>';
+  return h;
+}
+/* Claudeの判定に渡す「言葉は聞き取れなかった強い声」の時刻 */
+function vaUnheardHint(){
+  const un=voiceEvents.filter(e=>!e.heard).sort((a,b)=>b.peak-a.peak).slice(0,30).sort((a,b)=>a.start-b.start);
+  if(!un.length)return '';
+  return '\n\n参考：言葉は聞き取れなかったが「大人の声の高さで周囲より急に大きな声」が出た時刻：'+un.map(e=>fmt(e.start)).join('、')+'\n（この時刻だけを根拠に検知しないこと。近くの断片的な発言を読むときの手がかりにする）';
+}
+
 /* ---- detection ---- */
 function sensText(s){if(s==='high')return '判断に迷う・グレーなものも幅広く拾う（撮り逃し厳禁）。';if(s==='low')return '明確に不適切なものだけ。';return 'バランス良く。';}
 async function detectAll(sens){
   const key=localStorage.getItem('vm_apikey')||'';
   const cats=['強い口調','突き放し','脅し','無視','侮辱'];
-  const lines=segments.map((s,i)=>'['+fmt(s.start)+'] '+s.text);
+  const lines=segments.map((s,i)=>'['+fmt(s.start)+'] '+vaLinePrefix(s)+s.text);
+  const hint=vaUnheardHint();
   const CH=120;let events=[];
   for(let i=0;i<lines.length;i+=CH){
     const chunk=lines.slice(i,i+CH).join('\n');
     stat('🔍 危険語を検知中…');
-    const prompt=`あなたは保育の「不適切保育」検知エンジンです。以下は保育室録画の文字起こしログ（各行「[時刻] 発言」）。保育士→子どもの発言のうち次に該当するものを検知します。\n\n《A. 言葉の暴力》\n${cats.map(c=>'・'+c).join('\n')}\n\n《B. 不快にさせる性的言動（こども性暴力防止法の観点）》\n${SEXCATS.map(c=>'・'+c).join('\n')}\n（例：容姿や身体への性的な言及、不必要な身体接触に触れる発言、性的な冗談・からかい、「二人だけの秘密」など子どもを懐柔・孤立させる言動）\n\n判定の心得：あなたは人を裁くのではなく「後で人が映像で確認すべき発話」を拾うだけです。意図や事実は断定せず、迷ったら拾って人に回してください（特にBは撮り逃し厳禁）。\n感度: ${sensText(sens)}\n重要: 子どもの発言や問題ない声かけは検知しない。根拠の発言を必ず引用。categoryは上記いずれかの語をそのまま使う。重大度は高/中/低。時刻はログ行の時刻を使う。${lawKBPromptBlock()}\nログ:\n${chunk}\n\nJSON配列のみ返す（説明なし）。該当なしは[]:\n[{"time":"HH:MM:SS","category":"種別","severity":"高|中|低","quote":"引用","reason":"理由30字以内"}]`;
+    const prompt=`あなたは保育の「不適切保育」検知エンジンです。以下は保育室録画の文字起こしログ（各行「[時刻] 発言」）。保育士→子どもの発言のうち次に該当するものを検知します。\n\n《A. 言葉の暴力》\n${cats.map(c=>'・'+c).join('\n')}\n\n《B. 不快にさせる性的言動（こども性暴力防止法の観点）》\n${SEXCATS.map(c=>'・'+c).join('\n')}\n（例：容姿や身体への性的な言及、不必要な身体接触に触れる発言、性的な冗談・からかい、「二人だけの秘密」など子どもを懐柔・孤立させる言動）\n\n判定の心得：あなたは人を裁くのではなく「後で人が映像で確認すべき発話」を拾うだけです。意図や事実は断定せず、迷ったら拾って人に回してください（特にBは撮り逃し厳禁）。\n感度: ${sensText(sens)}\n録音の条件：天井の防犯カメラのマイク（電話並みの音質）で、大勢の子どもの声が重なった騒がしい保育室の録音。文字起こしは断片的で、聞き間違い・欠落が多い。そのため、文として整っていなくても、保育者が子どもに向けた命令・叱責・否定・脅しの断片（例：「だめ」「やめなさい」「早くして」「何回言ったらわかるの」「もう知らない」「置いていくよ」、名前の呼び捨て＋強い命令など）が読み取れれば拾うこと。聞き間違いの可能性がある場合は、reasonに「聞き取り不確か」と書き、重大度を一段下げる。\n行頭の〔〕は声の高さと音量から機械的に推定した参考情報：〔大人の声らしい〕は保育者の発言の可能性が高い、〔子どもの声らしい〕は子どもの発言の可能性が高い、〔周囲より急に大きい声〕は強い口調の可能性がある。推定なので誤りもある。〔子どもの声らしい〕行は、内容が明らかに保育者の言葉でない限り検知しない。${hint}\n重要: 子どもの発言や問題ない声かけは検知しない。根拠の発言を必ず引用。categoryは上記いずれかの語をそのまま使う。重大度は高/中/低。時刻はログ行の時刻を使う。${lawKBPromptBlock()}\nログ:\n${chunk}\n\nJSON配列のみ返す（説明なし）。該当なしは[]:\n[{"time":"HH:MM:SS","category":"種別","severity":"高|中|低","quote":"引用","reason":"理由30字以内"}]`;
     const res=await fetch(PROXY+'/claude',{method:'POST',headers:{'Content-Type':'application/json','X-Anthropic-Key':key},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1500,messages:[{role:'user',content:prompt}]})});
     if(!res.ok){const t=await res.text();throw new Error('Claude '+res.status+' '+t.slice(0,100));}
     const data=await res.json();const raw=data.content?.[0]?.text||'[]';const m=raw.match(/\[[\s\S]*\]/);
@@ -960,11 +1119,9 @@ async function analyze(){
         log(firstSegs.length?'（'+altModel+'でも改善しなかったため、元の結果を採用）':'（モデル切替後の再挑戦でも文字起こし結果が空でした）','err');
       }
       renderFeed();
-      if(!segments.length){
-        stat('⚠ 有効な発話が検出できませんでした','var(--red)');
-        document.getElementById('reBtn').disabled=false;running=false;btn.disabled=false;btn.textContent='▶ 解析開始';return;
-      }
     }
+    // 強い声の候補の前後を再文字起こし＋大人/子どもの印付け（文字起こしが空でも、候補から拾える場合がある）
+    await vaBoost();
     if(clean.halluc){
       log('⚠ 幻聴ループを検出（「'+String(clean.dominant).slice(0,10)+'」が'+clean.dominantCount+'/'+clean.origCount+'回）。この区間は発話が不明瞭な可能性','err');
       if(!autoRetried){
@@ -1091,7 +1248,7 @@ function renderFull(){
     const d=s.danger;const cls=d?('danger '+(isSexCat(d.category)?'sexrow':(SEVCLASS[d.severity]||'lo'))):'';
     const body=d?highlight(s.text,d.quote):esc(s.text);
     const cat=d?'<span class="cat '+(isSexCat(d.category)?'sex':(SEVCLASS[d.severity]||'lo'))+'">'+esc(d.category)+'</span>':'';
-    const spk=s.speaker!=null?'<span class="spk">話者'+esc(s.speaker)+'</span>':'';
+    const spk=(s.speaker!=null?'<span class="spk">話者'+esc(s.speaker)+'</span>':'')+vaBadges(s);
     let vb='';
     if(d&&s.visualBacking){
       const v=s.visualBacking.verdict;const r=esc(s.visualBacking.reason||'');
@@ -1134,7 +1291,8 @@ function buildAnalysis(){
     tool:'AImoniter AnalyzeView',version:'v2',savedAt:new Date().toISOString(),
     media:{name:mediaFile?mediaFile.name:'',durationSec:Math.round(duration)},
     asrModel:document.getElementById('asrModel')?.value||'whisper-1',
-    segments:segments.map(s=>({start:s.start,end:s.end,text:s.text,speaker:s.speaker||null,danger:s.danger||null,visualBacking:s.visualBacking||null,review:s.review||null})),
+    segments:segments.map(s=>({start:s.start,end:s.end,text:s.text,speaker:s.speaker||null,danger:s.danger||null,visualBacking:s.visualBacking||null,review:s.review||null,voice:s.voice||null,f0:s.f0||0,loud:!!s.loud,focus:!!s.focus})),
+    voiceEvents:(voiceEvents||[]).map(e=>({start:e.start,end:e.end,peak:Math.round(e.peak*10)/10,f0:Math.round(e.f0),heard:!!e.heard})),
     detections:dets,
     visualEvents:(typeof visualEvents!=='undefined'?visualEvents:[]),
     reviewQueue:(typeof buildReviewQueue==='function'?buildReviewQueue().map(it=>({time:fmt(it.t),src:it.src,label:it.label,detail:it.sub,verdict:it.verdict||'未確認'})):[])
@@ -1154,7 +1312,8 @@ function saveAnalysis(){
   toast('解析を保存しました');
 }
 function restoreAnalysis(data){
-  segments=(data.segments||[]).map(s=>({start:s.start,end:s.end,text:s.text,speaker:s.speaker||null,danger:s.danger||null,visualBacking:s.visualBacking||null,review:s.review||''}));
+  segments=(data.segments||[]).map(s=>({start:s.start,end:s.end,text:s.text,speaker:s.speaker||null,danger:s.danger||null,visualBacking:s.visualBacking||null,review:s.review||'',voice:s.voice||null,f0:s.f0||0,loud:!!s.loud,focus:!!s.focus}));
+  voiceEvents=Array.isArray(data.voiceEvents)?data.voiceEvents:[];acoustic=null;
   if(typeof visualEvents!=='undefined'){visualEvents=Array.isArray(data.visualEvents)?data.visualEvents:[];renderVisual();updateVisualSummary();}
   if(typeof renderQueue==='function')renderQueue();
   duration=(data.media&&data.media.durationSec)||duration||(segments.length?segments[segments.length-1].end:0);
@@ -1418,6 +1577,9 @@ async function buildFrameTimes(){
     motion=await detectMotionSpikes(dur,10);
     if(motion.length)log('🔎 動きの急な箇所を'+motion.length+'件、追加候補として検出','ok');
   }catch(e){log('⚠ 動き検出スキャン失敗（粗スキャンのみで続行）: '+e.message,'err');}
+  // 強い声の候補：言葉が聞き取れなかったものを優先して、その瞬間の映像も確認する
+  const vtimes=(voiceEvents||[]).slice().sort((a,b)=>(a.heard===b.heard?b.peak-a.peak:(a.heard?1:-1))).slice(0,VA.MAX_VISUAL).map(e=>Math.round(e.start));
+  if(vtimes.length){log('🔊 強い声の候補'+vtimes.length+'件の瞬間も映像で確認します','ok');motion=motion.concat(vtimes.filter(t=>!motion.some(m=>Math.abs(m-t)<3)));}
   const motionSet=new Set(motion.map(t=>Math.round(t)));
   const out=[];
   periodic.forEach(t=>{if(!motionSet.has(t))out.push({t,motion:false});});
