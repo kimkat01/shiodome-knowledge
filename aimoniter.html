@@ -435,7 +435,92 @@ body{font-family:'Noto Sans JP',sans-serif;background:
 <div class="toast" id="toast"></div>
 
 <script>
-const PROXY='https://voiceminutes-proxy.cryk0289.workers.dev';
+/* ===== API通信（ブラウザから直接 OpenAI / Anthropic へ。中継サーバーは使わない） =====
+   APIキーは「⚙ 設定」で入力したものをこのブラウザ内（localStorage）から読み、送信先は公式APIのみ。
+   ・OpenAI  : https://api.openai.com/v1/audio/transcriptions（ブラウザからの直接通信に対応）
+   ・Anthropic: https://api.anthropic.com/v1/messages（ヘッダ anthropic-dangerous-direct-browser-access が必要）
+   失敗時は「Failed to fetch」だけで終わらせず、HTTPステータス・エラー種別・APIのメッセージを #log に出す。 */
+const OPENAI_TRANSCRIBE_URL='https://api.openai.com/v1/audio/transcriptions';
+const ANTHROPIC_MESSAGES_URL='https://api.anthropic.com/v1/messages';
+const ANTHROPIC_VERSION='2023-06-01';
+const CLAUDE_MODEL='claude-sonnet-4-6';
+const WHISPER_MAX_BYTES=25*1024*1024;      // OpenAIの上限（25MB）
+const WHISPER_SAFE_BYTES=24*1024*1024;     // 余裕を持たせた送信上限
+const API_RETRIES=2;                        // 429・5xx・通信断のときの再試行回数
+class ApiError extends Error{
+  constructor(msg,info){super(msg);this.name='ApiError';Object.assign(this,info||{});}
+}
+function _sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+function _mb(b){return (b/1024/1024).toFixed(2)+'MB';}
+/* HTTPステータスごとの日本語ヒント */
+function _statusHint(api,status,type){
+  if(status===400)return api==='OpenAI'?'送信した音声データか設定の形式が受け付けられませんでした':'リクエスト内容（画像サイズ・モデル名など）が受け付けられませんでした';
+  if(status===401)return 'APIキーが無効です。「⚙ 設定」のキーを確認してください';
+  if(status===403)return 'このAPIキーでは利用できません（権限・地域・組織設定を確認）';
+  if(status===404)return 'モデル名またはURLが見つかりません（モデル名を確認）';
+  if(status===413)return 'データが大きすぎます（'+api+'の上限超過）';
+  if(status===429)return (type==='insufficient_quota'||/quota|billing|credit/i.test(type||''))?'利用枠（残高）が不足しています。請求設定を確認してください':'短時間に送りすぎています（レート制限）。少し待って再実行してください';
+  if(status===529||type==='overloaded_error')return 'APIが混雑しています。少し待って再実行してください';
+  if(status>=500)return api+'側の一時的な障害です。少し待って再実行してください';
+  return '';
+}
+/* fetch自体が失敗（TypeError: Failed to fetch）したときの原因の目安 */
+function _networkHint(api){
+  if(!navigator.onLine)return 'インターネットに接続されていません';
+  return 'サーバーに届きませんでした。考えられる原因：①ネット接続の不安定 ②社内ネットワーク／セキュリティソフト／広告ブロッカーが '+(api==='OpenAI'?'api.openai.com':'api.anthropic.com')+' を遮断 ③ページを file:// で開いている場合の制限（https のページで開く）';
+}
+/* 共通の送信関数：詳細なエラーを作り、#log に記録し、一時的なエラーは自動で再試行する */
+async function apiFetch(api,url,opts,label){
+  let lastErr=null;
+  for(let attempt=0;attempt<=API_RETRIES;attempt++){
+    if(attempt>0){const w=1500*Math.pow(2,attempt-1);log('  ↻ '+label+' を再試行します（'+attempt+'/'+API_RETRIES+'、'+(w/1000)+'秒後）','');await _sleep(w);}
+    let res;
+    try{res=await fetch(url,opts);}
+    catch(e){
+      lastErr=new ApiError(api+' 通信エラー（'+label+'）: '+(e&&e.message||e)+' ／ '+_networkHint(api),{api,status:0,retryable:true,network:true});
+      log('⚠ '+lastErr.message,'err');
+      continue;
+    }
+    if(res.ok)return res;
+    // エラー本文を読み取って詳細を出す
+    let bodyText='';try{bodyText=await res.text();}catch(e){}
+    let j=null;try{j=JSON.parse(bodyText);}catch(e){}
+    const errObj=j&&(j.error||j)||{};
+    const type=errObj.type||errObj.code||'';
+    const apiMsg=errObj.message||(bodyText?bodyText.slice(0,300):'')||res.statusText||'';
+    const reqId=res.headers.get('x-request-id')||res.headers.get('request-id')||'';
+    const hint=_statusHint(api,res.status,type);
+    const retryable=res.status===429&&type!=='insufficient_quota'||res.status>=500||res.status===529;
+    lastErr=new ApiError(api+' HTTP '+res.status+(type?' ['+type+']':'')+'（'+label+'）: '+apiMsg+(hint?' ／ '+hint:''),{api,status:res.status,type,apiMessage:apiMsg,requestId:reqId,retryable});
+    log('⚠ '+lastErr.message,'err');
+    if(reqId)log('    request-id: '+reqId,'err');
+    if(!retryable)break;
+    const ra=parseFloat(res.headers.get('retry-after')||'');
+    if(ra>0&&ra<=30&&attempt<API_RETRIES){await _sleep(ra*1000);}
+  }
+  lastErr.logged=true;
+  throw lastErr;
+}
+/* OpenAI 文字起こし（/v1/audio/transcriptions に直接送信） */
+async function openaiTranscribe(fd,label,bytes){
+  const key=(localStorage.getItem('vm_openai_key')||'').trim();
+  if(!key)throw new ApiError('OpenAIのAPIキーが未設定です（「⚙ 設定」で入力して保存してください）',{api:'OpenAI',status:0,fatal:true});
+  if(bytes>=WHISPER_MAX_BYTES)throw new ApiError('音声データが'+_mb(bytes)+'あり、OpenAIの上限25MBを超えています（'+label+'）',{api:'OpenAI',status:413});
+  const res=await apiFetch('OpenAI',OPENAI_TRANSCRIBE_URL,{method:'POST',headers:{'Authorization':'Bearer '+key},body:fd},label);
+  try{return await res.json();}catch(e){throw new ApiError('OpenAIの応答を読み取れませんでした（'+label+'）: '+e.message,{api:'OpenAI',status:res.status});}
+}
+/* Anthropic Claude（/v1/messages に直接送信） */
+async function callClaude(body,label){
+  const key=(localStorage.getItem('vm_apikey')||'').trim();
+  if(!key)throw new ApiError('AnthropicのAPIキーが未設定です（「⚙ 設定」で入力して保存してください）',{api:'Anthropic',status:0,fatal:true});
+  const res=await apiFetch('Anthropic',ANTHROPIC_MESSAGES_URL,{method:'POST',headers:{
+    'Content-Type':'application/json','x-api-key':key,'anthropic-version':ANTHROPIC_VERSION,
+    'anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)},label||'Claude');
+  let data;try{data=await res.json();}catch(e){throw new ApiError('Claudeの応答を読み取れませんでした: '+e.message,{api:'Anthropic',status:res.status});}
+  if(data&&data.stop_reason==='max_tokens')log('  ⚠ Claudeの回答が長さ上限で途中までになりました（'+(label||'Claude')+'）','err');
+  return data;
+}
+function isFatalApiError(e){return !!(e&&(e.fatal||e.status===401||e.status===403||(e.status===429&&/quota/i.test(e.type||''))));}
 const DEFAULT_ASR_PROMPT='';
 const CATCLASS={'強い口調':'hi','脅し':'hi','突き放し':'hi','侮辱':'mid','無視':'lo'};
 const SEVCLASS={'高':'hi','中':'mid','低':'lo'};
@@ -736,9 +821,9 @@ function persistAsr(){
 }
 async function whisperBlob(blob,name,offset,scale){
   scale=scale||1; // 高速再生で抽出した音声は、返ってくるタイムスタンプを再生倍速分だけ引き伸ばして実時間に戻す
-  const key=localStorage.getItem('vm_openai_key')||'';
   const model=document.getElementById('asrModel')?.value||'whisper-1';
   const prompt=(document.getElementById('asrPrompt')?.value||'').trim();
+  if(blob.size>=WHISPER_SAFE_BYTES)throw new ApiError('音声データ（'+name+'）が'+_mb(blob.size)+'あり、送信上限（24MB）を超えるため送信しません',{api:'OpenAI',status:413});
   const fd=new FormData();fd.append('file',blob,name);fd.append('model',model);fd.append('language','ja');
   if(model==='gpt-4o-transcribe-diarize'){
     fd.append('response_format','diarized_json');
@@ -749,9 +834,7 @@ async function whisperBlob(blob,name,offset,scale){
     fd.append('temperature','0');
     if(prompt)fd.append('prompt',prompt);
   }
-  const res=await fetch(PROXY+'/whisper',{method:'POST',headers:{'Authorization':'Bearer '+key,'X-OpenAI-Key':key},body:fd});
-  if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error?.message||'Whisper HTTP '+res.status);}
-  const data=await res.json();const segs=[];
+  const data=await openaiTranscribe(fd,'文字起こし '+name+'（'+_mb(blob.size)+'・'+model+'）',blob.size);const segs=[];
   const arr=data.segments||data.output||[];
   const norm=x=>(x||'').replace(/[\s、。「」！？!?,.\u3000]/g,'');
   const pn=norm(prompt);
@@ -787,7 +870,8 @@ async function transcribeFile(file,onProgress){
   // 大きい物音（ドア・椅子の音など）があるだけで、その窓全体（=会話部分すべて）の増幅率が
   // その1回の音に合わせて低く抑えられてしまい、肝心の小さい声がほとんど持ち上がらなかった。
   // 窓を90秒に縮めることで、遠くにある1回の大きい音が他の区間の増幅を道連れにしにくくなる。
-  const CH=90;
+  const CH=90; // 16kHz・16bit・モノラルWAVで 90秒 ≒ 2.9MB（25MB上限に対し十分小さい）
+  log('🎞 音声を抽出します（元ファイル '+_mb(file.size)+'）。動画はそのまま送らず、16kHzモノラルWAVに変換・分割してから送信します','ok');
   if(file.size>HUGE_FILE_BYTES){
     log('🎞 ファイルサイズが大きい（'+(file.size/1024/1024/1024).toFixed(2)+'GB）ため、最初から動画再生方式で音声を抽出します','ok');
     return await transcribeFileStreaming(file,onProgress,CH);
@@ -807,19 +891,31 @@ async function transcribeFile(file,onProgress){
     const {blob:wav,gain,rms}=await renderChunkWav(ab,0,dur,16000);
     if(rms<SILENCE_RMS_THRESHOLD){log('🔇 ほぼ無音のためスキップ（音量:'+rms.toFixed(4)+'）','ok');onProgress&&onProgress([]);return [];}
     if(gain>1.05)log('  音量を約'+gain.toFixed(1)+'倍に','ok');
+    log('  音声抽出完了：'+_mb(file.size)+' → '+_mb(wav.size)+'（WAV 16kHz）');
     const segs=await whisperBlob(wav,'c0.wav',0);
     onProgress&&onProgress(segs);
     return segs;
   }
-  log('⚙ 長尺のため16kHzに圧縮して分割');
+  log('⚙ 長尺のため16kHzに圧縮して'+n+'分割（1区間 約'+_mb(CH*16000*2)+'）');
+  let failed=0,attempted=0,netStreak=0;
   for(let i=0;i<n;i++){
     const st=i*CH,len=Math.min(CH,dur-st);
     stat('🎙 文字起こし '+(i+1)+'/'+n+'…');log('  チャンク'+(i+1)+'/'+n+' 変換中');
     const {blob:wav,gain,rms}=await renderChunkWav(ab,st,len,16000);
     if(rms<SILENCE_RMS_THRESHOLD){log('  🔇 ほぼ無音のためスキップ（音量:'+rms.toFixed(4)+'）','ok');continue;}
     if(gain>1.05)log('  音量を約'+gain.toFixed(1)+'倍に','ok');
-    const segs=await whisperBlob(wav,'c'+i+'.wav',st);all=all.concat(segs);onProgress&&onProgress(all);
+    attempted++;
+    try{
+      const segs=await whisperBlob(wav,'c'+i+'.wav',st);all=all.concat(segs);onProgress&&onProgress(all);netStreak=0;
+    }catch(e){
+      // キー無効・残高不足などは全チャンク共通で失敗するため中断。それ以外はこの区間だけ飛ばして続行
+      if(isFatalApiError(e))throw e;
+      failed++;log('  ⚠ チャンク'+(i+1)+'/'+n+'（'+fmt(st)+'〜）の文字起こしに失敗したため飛ばします','err');
+      if(e.network){netStreak++;if(netStreak>=2){const x=new ApiError('OpenAIへの通信が続けて失敗したため中断しました。'+_networkHint('OpenAI'),{api:'OpenAI',status:0,fatal:true});throw x;}}
+    }
   }
+  if(failed)log('⚠ 文字起こしに失敗した区間が'+failed+'/'+attempted+'あります（上のログを確認）','err');
+  if(failed&&failed===attempted){const x=new Error('すべての区間で文字起こしに失敗しました（上のログに原因を表示しています）');x.logged=true;throw x;}
   return all;
 }
 
@@ -879,7 +975,7 @@ async function transcribeFileStreaming(file,onProgress,CH){
       try{
         const segs=await whisperBlob(blob,'s'+i+'.webm',st,STREAM_RATE);
         all=all.concat(segs);onProgress&&onProgress(all);
-      }catch(e){log('  ⚠ チャンク'+(i+1)+'の送信に失敗: '+e.message,'err');}
+      }catch(e){if(isFatalApiError(e))throw e;log('  ⚠ チャンク'+(i+1)+'の送信に失敗: '+e.message,'err');}
     }
     return all;
   }finally{
@@ -997,7 +1093,7 @@ async function vaBoost(){
           if(dup)return;
           ns.focus=true;segments.push(ns);added++;
         });
-      }catch(e){log('  ⚠ '+fmt(w.st)+' の再文字起こしに失敗: '+e.message,'err');}
+      }catch(e){if(isFatalApiError(e))throw e;log('  ⚠ '+fmt(w.st)+' の再文字起こしに失敗（詳細は上）','err');if(e.network){log('  通信が不安定なため、強い声の前後の再文字起こしを打ち切ります','err');break;}}
     }
     segments.sort((a,b)=>a.start-b.start);
     if(added)log('✅ 強い声の前後から、新たに'+added+'件の発言を拾いました（🔍印）','ok');
@@ -1044,7 +1140,6 @@ function vaUnheardHint(){
 /* ---- detection ---- */
 function sensText(s){if(s==='high')return '判断に迷う・グレーなものも幅広く拾う（撮り逃し厳禁）。';if(s==='low')return '明確に不適切なものだけ。';return 'バランス良く。';}
 async function detectAll(sens){
-  const key=localStorage.getItem('vm_apikey')||'';
   const cats=['強い口調','突き放し','脅し','無視','侮辱'];
   const lines=segments.map((s,i)=>'['+fmt(s.start)+'] '+vaLinePrefix(s)+s.text);
   const hint=vaUnheardHint();
@@ -1053,9 +1148,8 @@ async function detectAll(sens){
     const chunk=lines.slice(i,i+CH).join('\n');
     stat('🔍 危険語を検知中…');
     const prompt=`あなたは保育の「不適切保育」検知エンジンです。以下は保育室録画の文字起こしログ（各行「[時刻] 発言」）。保育士→子どもの発言のうち次に該当するものを検知します。\n\n《A. 言葉の暴力》\n${cats.map(c=>'・'+c).join('\n')}\n\n《B. 不快にさせる性的言動（こども性暴力防止法の観点）》\n${SEXCATS.map(c=>'・'+c).join('\n')}\n（例：容姿や身体への性的な言及、不必要な身体接触に触れる発言、性的な冗談・からかい、「二人だけの秘密」など子どもを懐柔・孤立させる言動）\n\n判定の心得：あなたは人を裁くのではなく「後で人が映像で確認すべき発話」を拾うだけです。意図や事実は断定せず、迷ったら拾って人に回してください（特にBは撮り逃し厳禁）。\n感度: ${sensText(sens)}\n録音の条件：天井の防犯カメラのマイク（電話並みの音質）で、大勢の子どもの声が重なった騒がしい保育室の録音。文字起こしは断片的で、聞き間違い・欠落が多い。そのため、文として整っていなくても、保育者が子どもに向けた命令・叱責・否定・脅しの断片（例：「だめ」「やめなさい」「早くして」「何回言ったらわかるの」「もう知らない」「置いていくよ」、名前の呼び捨て＋強い命令など）が読み取れれば拾うこと。聞き間違いの可能性がある場合は、reasonに「聞き取り不確か」と書き、重大度を一段下げる。\n行頭の〔〕は声の高さと音量から機械的に推定した参考情報：〔大人の声らしい〕は保育者の発言の可能性が高い、〔子どもの声らしい〕は子どもの発言の可能性が高い、〔周囲より急に大きい声〕は強い口調の可能性がある。推定なので誤りもある。〔子どもの声らしい〕行は、内容が明らかに保育者の言葉でない限り検知しない。${hint}\n重要: 子どもの発言や問題ない声かけは検知しない。根拠の発言を必ず引用。categoryは上記いずれかの語をそのまま使う。重大度は高/中/低。時刻はログ行の時刻を使う。${lawKBPromptBlock()}\nログ:\n${chunk}\n\nJSON配列のみ返す（説明なし）。該当なしは[]:\n[{"time":"HH:MM:SS","category":"種別","severity":"高|中|低","quote":"引用","reason":"理由30字以内"}]`;
-    const res=await fetch(PROXY+'/claude',{method:'POST',headers:{'Content-Type':'application/json','X-Anthropic-Key':key},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1500,messages:[{role:'user',content:prompt}]})});
-    if(!res.ok){const t=await res.text();throw new Error('Claude '+res.status+' '+t.slice(0,100));}
-    const data=await res.json();const raw=data.content?.[0]?.text||'[]';const m=raw.match(/\[[\s\S]*\]/);
+    const data=await callClaude({model:CLAUDE_MODEL,max_tokens:1500,messages:[{role:'user',content:prompt}]},'危険語の検知 '+(Math.floor(i/CH)+1)+'/'+Math.ceil(lines.length/CH));
+    const raw=data.content?.[0]?.text||'[]';const m=raw.match(/\[[\s\S]*\]/);
     let arr=[];try{arr=m?JSON.parse(m[0]):[];}catch(e){}
     events=events.concat(Array.isArray(arr)?arr:[]);
   }
@@ -1156,7 +1250,7 @@ async function analyze(){
       await analyzeVisual();
     }
     return;
-  }catch(e){log('⚠ '+e.message,'err');stat('⚠ '+e.message,'var(--red)');}
+  }catch(e){if(!e.logged)log('⚠ '+e.message,'err');else log('⛔ 解析を中断しました（原因は上のログ）','err');stat('⚠ '+e.message,'var(--red)');}
   running=false;btn.disabled=false;btn.textContent='▶ 解析開始';
 }
 
@@ -1182,7 +1276,7 @@ async function runDetection(){
 async function reDetect(){
   if(running||!segments.length)return;
   running=true;const b=document.getElementById('reBtn');b.disabled=true;b.textContent='検知中…';
-  try{await runDetection();}catch(e){log('⚠ '+e.message,'err');stat('⚠ '+e.message,'var(--red)');}
+  try{await runDetection();}catch(e){if(!e.logged)log('⚠ '+e.message,'err');stat('⚠ '+e.message,'var(--red)');}
   running=false;b.disabled=false;b.textContent='再検知';
 }
 
@@ -1401,7 +1495,7 @@ function captureFrameAt(sec){
   });
 }
 
-/* --- 1フレーム（または動き検出時は前後を含む連続数コマ）をClaude(プロキシ)に送って判定 ---
+/* --- 1フレーム（または動き検出時は前後を含む連続数コマ）をClaude（API直接）に送って判定 ---
    base64Imgs は配列。1枚なら通常の静止画判定、複数枚なら「連続コマの変化」から動作を判断させる */
 async function analyzeFrame(base64Imgs,timeLabel,sensVal){
   if(!Array.isArray(base64Imgs))base64Imgs=[base64Imgs];
@@ -1467,15 +1561,12 @@ situation の形式：{"type":"isolation_1to1|separated|blind_spot","detail":"�
   try{
     const content=base64Imgs.map(img=>({type:'image',source:{type:'base64',media_type:'image/jpeg',data:img}}));
     content.push({type:'text',text:burst?('時刻 '+timeLabel+' 付近の連続'+base64Imgs.length+'コマを、動きの変化に注目して分析してください。'):('時刻 '+timeLabel+' のフレームを分析してください。')});
-    const res=await fetch(PROXY+'/claude',{method:'POST',headers:{'Content-Type':'application/json','X-Anthropic-Key':key},
-      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:600,system:systemPrompt,
-        messages:[{role:'user',content}]})});
-    if(!res.ok){const t=await res.text();throw new Error('Claude '+res.status+' '+t.slice(0,80));}
-    const data=await res.json();
+    const data=await callClaude({model:CLAUDE_MODEL,max_tokens:600,system:systemPrompt,
+        messages:[{role:'user',content}]},'映像解析 '+timeLabel);
     const raw=data.content?.[0]?.text||'{}';
     const m=raw.match(/\{[\s\S]*\}/);
     return m?JSON.parse(m[0]):{};
-  }catch(e){return {_error:e.message};}
+  }catch(e){if(isFatalApiError(e))throw e;return {_error:e.message};}
 }
 
 /* --- 裏付け検証：音声の暴言を映像フレームで裏付け／否定／判断不可 --- */
@@ -1501,18 +1592,15 @@ async function analyzeBackingFrame(base64Img,timeLabel,quote,category){
 - contradict：構図はむしろ穏やか（大人がしゃがんで寄り添う・子どもたちが和やかに散って活動している 等）
 - unknown：大人が画面に全く映っていない、または位置関係すら判別できないほど手がかりが無い場合のみ`;
   try{
-    const res=await fetch(PROXY+'/claude',{method:'POST',headers:{'Content-Type':'application/json','X-Anthropic-Key':key},
-      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:200,system:systemPrompt,
+    const data=await callClaude({model:CLAUDE_MODEL,max_tokens:200,system:systemPrompt,
         messages:[{role:'user',content:[
           {type:'image',source:{type:'base64',media_type:'image/jpeg',data:base64Img}},
           {type:'text',text:'時刻 '+timeLabel+' のフレームを検証してください。'}
-        ]}]})});
-    if(!res.ok){const t=await res.text();throw new Error('Claude '+res.status+' '+t.slice(0,80));}
-    const data=await res.json();
+        ]}]},'裏付け検証 '+timeLabel);
     const raw=data.content?.[0]?.text||'{}';
     const m=raw.match(/\{[\s\S]*\}/);
     return m?JSON.parse(m[0]):{verdict:'unknown',reason:''};
-  }catch(e){return {_error:e.message};}
+  }catch(e){if(isFatalApiError(e))throw e;return {_error:e.message};}
 }
 
 /* --- 軽量モーション検出（AIを使わず、低解像度フレームの差分で「動きが急な時刻」を拾う）
@@ -1655,7 +1743,7 @@ async function analyzeVisual(){
       log('🔎 裏付け検証 完了：裏付け'+sup+'件／映像は穏やか'+con+'件','ok');
     }
     stat('✅ 映像解析・裏付け 完了','var(--green)');
-  }catch(e){log('⚠ 映像解析エラー: '+e.message,'err');stat('⚠ '+e.message,'var(--red)');}
+  }catch(e){log('⚠ 映像解析エラー: '+(e.logged?'解析を中断しました（原因は上のログ）':e.message),'err');stat('⚠ '+e.message,'var(--red)');}
   visualRunning=false;
   if(btn){btn.disabled=false;btn.textContent='🎥 映像を解析';}
 }
