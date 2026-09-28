@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>しおどめポータル（3カラム版デモ）</title>
+<title>しおどめポータルサイト</title>
 <style>
   :root{
     --bg1:#efeafc; --bg2:#e7f0fb;
@@ -318,7 +318,7 @@ if(!GARDEN) document.write('<style>#appMain{display:none!important}#gardenError{
 
   <!-- ===== 中央：フィード ===== -->
   <main class="col-center">
-    <div class="c-head"><h1>しおどめポータル</h1><span id="feedLabel">すべての投稿</span></div>
+    <div class="c-head"><h1>しおどめポータルサイト</h1><span id="feedLabel">すべての投稿</span></div>
 
     <div class="feed-toolbar">
       <div class="search-box">
@@ -417,7 +417,7 @@ if(!GARDEN) document.write('<style>#appMain{display:none!important}#gardenError{
 <div class="guide-ov" id="guideOv" onclick="if(event.target===this)closeGuide();">
   <div class="guide-card">
     <h2>使い方ガイド</h2>
-    <p class="g-sub">しおどめポータルの基本的な使い方</p>
+    <p class="g-sub">しおどめポータルサイトの基本的な使い方</p>
     <ol>
       <li><b>投稿する：</b>左メニューの「＋投稿する」を押すと入力画面が開きます。投稿者・内容を入力し、トピック（お知らせ／質問／ノウハウ／できごと）を選んで「投稿」を押してください。写真だけでなく、Excel・PDFファイルも 📎 から添付できます。</li>
       <li><b>投稿を編集する：</b>自分の投稿には「編集」ボタンが表示されます。押すと入力画面が開き、内容を書き直して更新できます。</li>
@@ -944,7 +944,7 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
     return;
   }
   document.getElementById('gardenName').textContent = GARDEN;
-  document.title = GARDEN + '｜しおどめポータル';
+  document.title = GARDEN + '｜しおどめポータルサイト';
   document.getElementById('uqLink').href =
     'https://kimkat01.github.io/staff-dashboard/uqcheck/encho.html?garden=' + GARDEN_INFO.key;
   // 規約・マニュアルにも園を引き継ぐ（「ナレッジボードへ戻る」で同じ園のボードに戻れるように）
