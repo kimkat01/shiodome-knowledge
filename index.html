@@ -264,18 +264,54 @@
 </style>
 </head>
 <body>
-<div class="app">
+<!-- ============================================================
+     ★ 園の切り替え（2026-09）：URLの ?garden=園名 で園を決める。
+       例）https://kimkat01.github.io/shiodome-knowledge/?garden=しおどめ保育園つくば
+       ・園名は下の GARDENS の一覧にあるものだけ使える（打ち間違い防止）。
+         スペースの有無は無視して一覧の表記に揃える。
+       ・?garden が無い／一覧にない園名のときは、画面を出さずにエラー表示にする。
+       ・園によって変わる箇所：左上の園名、有給チェッカーのリンク、承認待ち件数バッジ
+     ============================================================ -->
+<div id="gardenError" style="display:none;min-height:100vh;align-items:center;justify-content:center;background:#f5f6fa;padding:24px">
+  <div style="max-width:380px;text-align:center;background:#fff;border-radius:12px;padding:32px 24px;box-shadow:0 2px 12px rgba(0,0,0,.08)">
+    <div style="font-size:18px;font-weight:700;color:#222;margin-bottom:12px">ナレッジボード</div>
+    <div style="font-size:14px;color:#c0392b;line-height:1.7">このURLからはアクセスできません。<br>園ごとに配布されている専用のリンクをご利用ください。</div>
+    <div style="margin-top:10px;font-size:12px;color:#999">リンクが分からない場合は、本部にご確認ください。</div>
+  </div>
+</div>
+<script>
+// 施設一覧（学校法人柴学園 S01〜S14／社会福祉法人雄雅会 Y01〜Y03）。園を増減するときはここを直す。
+var GARDENS = [
+  'しおどめの森', 'しおどめ保育園八潮駅北', 'しおどめ保育園京急蒲田駅前', 'しおどめ保育園小規模認可',
+  'しおどめ保育園江戸川中央', 'しおどめ保育園春日部', 'しおどめ保育園越谷', 'しおどめ保育園八潮茜町',
+  'ふれあいしおどめ保育園', 'しおどめ保育園つくば', 'しおどめ保育園稲城', 'しおどめ保育園久喜',
+  'しおどめ保育園三郷中央', 'ふれあいしおどめ保育園八潮',
+  '八潮しおどめ保育園', '守谷しおどめ保育園', 'しおどめなかよし保育園'
+];
+var GARDEN = (function(){
+  var raw = '';
+  try { raw = new URLSearchParams(location.search).get('garden') || ''; } catch(e){}
+  var norm = function(t){ return String(t).replace(/[\s\u3000]/g, ''); };
+  var key = norm(raw);
+  if(!key) return '';
+  for(var i=0;i<GARDENS.length;i++){ if(norm(GARDENS[i]) === key) return GARDENS[i]; }
+  return '';
+})();
+// 園が決まらないときは、本体を一瞬も見せずにエラー表示にする
+if(!GARDEN) document.write('<style>#appMain{display:none!important}#gardenError{display:flex!important}</style>');
+</script>
+<div class="app" id="appMain">
 
   <!-- ===== 左：ナビ ===== -->
   <aside class="col-left">
     <div class="brand" style="cursor:default;">
-      <span class="logo">し</span><span><b>しおどめ保育園つくば</b><small>ナレッジボード</small></span>
+      <span class="logo">し</span><span><b id="gardenName"></b><small>ナレッジボード</small></span>
     </div>
     <a class="tool-item" href="https://kimkat01.github.io/hiyari-hatto2/" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17v.4"/></svg>ヒヤリハットくん</a>
-    <a class="tool-item" href="https://kimkat01.github.io/staff-dashboard/uqcheck/encho.html?garden=%E3%81%97%E3%81%8A%E3%81%A9%E3%82%81%E4%BF%9D%E8%82%B2%E5%9C%92%E3%81%A4%E3%81%8F%E3%81%B0&v=1" target="_blank" rel="noopener">
+    <a class="tool-item" id="uqLink" href="#" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 3v4M16 3v4M9 15l2 2 4-4"/></svg>有給チェッカー<span class="nav-badge" id="yukyuBadge"></span></a>
-    <a class="tool-item" href="https://kimkat01.github.io/shiodome-knowledge/manual.html" target="_blank" rel="noopener">
+    <a class="tool-item" id="manualLink" href="https://kimkat01.github.io/shiodome-knowledge/manual.html" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></svg>規約・マニュアル</a>
     <a class="tool-item" href="https://kimkat01.github.io/shiodome-knowledge/corporate-book-flipbook.html" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 012-2h12v16H6a2 2 0 00-2 2z"/><path d="M4 19a2 2 0 012-2h12"/></svg>コーポレートブック</a>
@@ -912,11 +948,30 @@ function loadCalendarDeadlines(){
 updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadlines();
 
 // ============================================================
+// 園ごとの表示切り替え（園名・有給チェッカーのリンク）
+// ============================================================
+(function(){
+  if(!GARDEN){
+    document.getElementById('appMain').style.display = 'none';
+    document.getElementById('gardenError').style.display = 'flex';
+    return;
+  }
+  document.getElementById('gardenName').textContent = GARDEN;
+  document.title = GARDEN + '｜しおどめポータル';
+  document.getElementById('uqLink').href =
+    'https://kimkat01.github.io/staff-dashboard/uqcheck/encho.html?garden=' + encodeURIComponent(GARDEN);
+  // 規約・マニュアルにも園を引き継ぐ（「ナレッジボードへ戻る」で同じ園のボードに戻れるように）
+  document.getElementById('manualLink').href =
+    'https://kimkat01.github.io/shiodome-knowledge/manual.html?garden=' + encodeURIComponent(GARDEN);
+})();
+
+// ============================================================
 // 有給チェッカー：承認待ち件数バッジ（本番GASから実データを取得）
 // ============================================================
 (function(){
-  var GAS_URL = 'https://script.google.com/macros/s/AKfycbyLt4nDzttOHvJlPtgOuQix3Gcq30S5x2KNvdD6ujCcw8Q92l4QhNWqpqgPGu-0DFVi1A/exec';
-  var GARDEN = 'しおどめ保育園つくば';
+  // 2026-09：アカウント一本化後の本番GAS（cryk0289側）に切り替え。園は上の GARDEN（URLの ?garden）を使う
+  var GAS_URL = 'https://script.google.com/macros/s/AKfycbwoVzAB2ZHhhX6O7vHBJstEU4KEN5lGFwSfrCIRXBj7RahQ046-nyR9zlmd5qseECGgCg/exec';
+  if(!GARDEN) return;
   function parseGasResponse(text){
     var t=(text||'').trim();
     var m=t.match(/^[\w$]+\s*\(([\s\S]*)\)\s*;?$/); // cb({...}) を剥がす
@@ -934,7 +989,9 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
       return r.text();
     }).then(function(text){
       var res = parseGasResponse(text);
-      var n = (res && res.ok && Array.isArray(res.data)) ? res.data.length : 0;
+      // GASが全園分を返しても、この園の「申請中」だけを数える
+      var n = (res && res.ok && Array.isArray(res.data))
+        ? res.data.filter(function(r){ return r && r.garden === GARDEN && (!r.status || r.status === '申請中'); }).length : 0;
       setYukyuBadge(n);
     }).catch(function(){
       // 取得できない場合は、実際と異なる件数を見せ続けないようバッジを隠す
