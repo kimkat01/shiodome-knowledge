@@ -107,7 +107,7 @@
 <header>
   <div class="brand">
     <span class="logo">し</span>
-    <span><b id="mGardenName">しおどめ保育園つくば</b><small>規約・マニュアル</small></span>
+    <span><b id="mGardenName"></b><small>規約・マニュアル</small></span>
   </div>
   <a class="back" id="mBackLink" href="https://kimkat01.github.io/shiodome-knowledge/">← ナレッジボードへ戻る</a>
 </header>
@@ -159,30 +159,24 @@
 </div>
 
 <script src="./pdf.min.js"></script>
+<script src="https://kimkat01.github.io/staff-dashboard/docs/manuals.js"></script>
 <script>
 /* ===========================================================
-   文書一覧（ジャンル分け）
-   追加は該当グループの docs に1行足すだけ。
-   title=表示名／file=PDFファイル名（半角英数字・小文字推奨）
+   文書一覧（2026-09 改修：園ごとに分ける）
+   PDFと一覧は、職員ダッシュボードと共通の置き場所で管理する。
+     一覧：kimkat01/staff-dashboard の docs/manuals.js
+     PDF ：kimkat01/staff-dashboard の docs/園キー/（園ごと）と docs/common/（全園共通）
+   このページは URL の ?garden=園キー の園の一覧を出す（園長向け＝法人規程も表示）。
+   PDFを追加・差し替えるときは、このファイルではなく manuals.js と docs/ フォルダを直す。
    =========================================================== */
-var GROUPS = [
-  { label:"規約・マニュアル", docs:[
-    { title:"就業規則（正規職員）",   file:"seiki-shugyo-kisoku.pdf" },
-    { title:"就業規則（パート職員）", file:"part-shugyo-kisoku.pdf" },
-    { title:"給与規定（正規職員）",   file:"seiki-kyuyo-kitei.pdf" },
-    { title:"管理規程（法人）",       file:"kanri-kitei.pdf" },
-    { title:"経理規程（法人）",       file:"keiri-kitei.pdf" }
-  ]},
-  // ★つくば園向けの業務継続計画（BCP）が届くまで一時的に非表示にしています。
-  //   三郷中央の内容（misato-bcp.pdf）のままつくば園に見せないための措置です。
-  //   つくば版のPDFが届いたら、ファイル名を差し替えたうえで下記のコメントを外してください。
-  // { label:"BCP・防災", docs:[
-  //   { title:"業務継続計画（BCP）", file:"tsukuba-bcp.pdf" }
-  // ]},
-  { label:"参考資料", docs:[
-    { title:"こども性暴力防止法の施行について", file:"kodomo-seibouryoku-hou.pdf" }
-  ]}
-];
+var DOCS_BASE = "https://kimkat01.github.io/staff-dashboard/docs/";
+var GARDEN_M = (typeof gardenFromUrl === "function") ? gardenFromUrl() : null;
+var GROUPS = [];
+if(GARDEN_M && typeof manualGroupsFor === "function"){
+  GROUPS = manualGroupsFor(GARDEN_M.key, { encho:true }).map(function(g){
+    return { label:g.label, docs:g.docs.map(function(d){ return { title:d.title, file:DOCS_BASE + d.file }; }) };
+  });
+}
 
 var PDFJS_WORKER = "./pdf.worker.min.js";
 /* 日本語(CIDフォント)のテキスト抽出・検索に必須。無いと getTextContent が空になる。 */
@@ -230,6 +224,14 @@ GROUPS.forEach(function(g){
   });
   elList.appendChild(grp);
 });
+
+if(!GARDEN_M){
+  // 園が分からないときは、他の園の規約を見せないよう何も表示しない
+  setTimeout(function(){
+    elLoad.style.display = "none";
+    showOverlay("園が指定されていません", "ナレッジボードの「規約・マニュアル」から開いてください。");
+  }, 0);
+}
 
 function setActive(el){
   document.querySelectorAll(".doc.active").forEach(function(n){ n.classList.remove("active"); });
