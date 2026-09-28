@@ -265,12 +265,13 @@
 </head>
 <body>
 <!-- ============================================================
-     ★ 園の切り替え（2026-09）：URLの ?garden=園名 で園を決める。
-       例）https://kimkat01.github.io/shiodome-knowledge/?garden=しおどめ保育園つくば
-       ・園名は下の GARDENS の一覧にあるものだけ使える（打ち間違い防止）。
-         スペースの有無は無視して一覧の表記に揃える。
-       ・?garden が無い／一覧にない園名のときは、画面を出さずにエラー表示にする。
-       ・園によって変わる箇所：左上の園名、有給チェッカーのリンク、承認待ち件数バッジ
+     ★ 園の切り替え（2026-09）：URLの ?garden=園キー で園を決める。
+       例）https://kimkat01.github.io/shiodome-knowledge/?garden=tsukuba
+       ・園キーと園名の一覧は、全ツール共通の「園マスタ」
+         （kimkat01/staff-dashboard リポジトリの gardens.js）だけで管理する。
+       ・古いURL（?garden=しおどめ保育園つくば のような日本語）もそのまま使える。
+       ・?garden が無い／園マスタにない値のときは、画面を出さずにエラー表示にする。
+       ・園によって変わる箇所：左上の園名、有給チェッカーのリンク、承認待ち件数バッジ、規約・マニュアルへの引き継ぎ
      ============================================================ -->
 <div id="gardenError" style="display:none;min-height:100vh;align-items:center;justify-content:center;background:#f5f6fa;padding:24px">
   <div style="max-width:380px;text-align:center;background:#fff;border-radius:12px;padding:32px 24px;box-shadow:0 2px 12px rgba(0,0,0,.08)">
@@ -279,24 +280,10 @@
     <div style="margin-top:10px;font-size:12px;color:#999">リンクが分からない場合は、本部にご確認ください。</div>
   </div>
 </div>
+<script src="https://kimkat01.github.io/staff-dashboard/gardens.js"></script>
 <script>
-// 施設一覧（学校法人柴学園 S01〜S14／社会福祉法人雄雅会 Y01〜Y03）。園を増減するときはここを直す。
-var GARDENS = [
-  'しおどめの森', 'しおどめ保育園八潮駅北', 'しおどめ保育園京急蒲田駅前', 'しおどめ保育園小規模認可',
-  'しおどめ保育園江戸川中央', 'しおどめ保育園春日部', 'しおどめ保育園越谷', 'しおどめ保育園八潮茜町',
-  'ふれあいしおどめ保育園', 'しおどめ保育園つくば', 'しおどめ保育園稲城', 'しおどめ保育園久喜',
-  'しおどめ保育園三郷中央', 'ふれあいしおどめ保育園八潮',
-  '八潮しおどめ保育園', '守谷しおどめ保育園', 'しおどめなかよし保育園'
-];
-var GARDEN = (function(){
-  var raw = '';
-  try { raw = new URLSearchParams(location.search).get('garden') || ''; } catch(e){}
-  var norm = function(t){ return String(t).replace(/[\s\u3000]/g, ''); };
-  var key = norm(raw);
-  if(!key) return '';
-  for(var i=0;i<GARDENS.length;i++){ if(norm(GARDENS[i]) === key) return GARDENS[i]; }
-  return '';
-})();
+var GARDEN_INFO = (typeof gardenFromUrl === 'function') ? gardenFromUrl() : null; // {key, name, code}
+var GARDEN = GARDEN_INFO ? GARDEN_INFO.name : '';   // 日本語の園名（職員マスタの園名と同じ）
 // 園が決まらないときは、本体を一瞬も見せずにエラー表示にする
 if(!GARDEN) document.write('<style>#appMain{display:none!important}#gardenError{display:flex!important}</style>');
 </script>
@@ -959,10 +946,10 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
   document.getElementById('gardenName').textContent = GARDEN;
   document.title = GARDEN + '｜しおどめポータル';
   document.getElementById('uqLink').href =
-    'https://kimkat01.github.io/staff-dashboard/uqcheck/encho.html?garden=' + encodeURIComponent(GARDEN);
+    'https://kimkat01.github.io/staff-dashboard/uqcheck/encho.html?garden=' + GARDEN_INFO.key;
   // 規約・マニュアルにも園を引き継ぐ（「ナレッジボードへ戻る」で同じ園のボードに戻れるように）
   document.getElementById('manualLink').href =
-    'https://kimkat01.github.io/shiodome-knowledge/manual.html?garden=' + encodeURIComponent(GARDEN);
+    'https://kimkat01.github.io/shiodome-knowledge/manual.html?garden=' + GARDEN_INFO.key;
 })();
 
 // ============================================================
