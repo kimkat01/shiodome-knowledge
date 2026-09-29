@@ -427,7 +427,7 @@ if(GARDEN && !KB_LOGIN) document.write('<style>#appMain{display:none!important}#
       <span class="logo">し</span><span><b id="gardenName"></b><small>ナレッジボード</small></span>
     </div>
     <div class="kb-user" id="kbUser" style="display:none"><span><b id="kbUserName"></b> さん</span><button class="kb-logout" onclick="kbLogout()">ログアウト</button></div>
-    <a class="tool-item" href="https://kimkat01.github.io/hiyari-hatto2/" target="_blank" rel="noopener">
+    <a class="tool-item" id="hiyariLink" href="https://kimkat01.github.io/hiyari-hatto2/" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17v.4"/></svg>ヒヤリハットくん</a>
     <a class="tool-item" id="uqLink" href="#" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 3v4M16 3v4M9 15l2 2 4-4"/></svg>有給チェッカー<span class="nav-badge" id="yukyuBadge"></span></a>
@@ -1089,6 +1089,7 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
   document.getElementById('keieiLink').href  = 'https://kimkat01.github.io/shiodome-knowledge/keiei-dashboard.html' + gq;
   document.getElementById('kessaiLink').href = 'kessai-shinsei.html' + gq;
   document.getElementById('saiyoLink').href  = 'saiyo-shinsei.html' + gq;
+  document.getElementById('hiyariLink').href = 'https://kimkat01.github.io/hiyari-hatto2/' + gq;
 })();
 
 // ============================================================
