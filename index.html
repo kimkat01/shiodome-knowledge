@@ -262,6 +262,46 @@
 .cal-tip.above::after{bottom:-10px;border-top-color:#2b2f3a;}
 .cal-tip.below::after{top:-10px;border-bottom-color:#2b2f3a;}
 </style>
+
+<style>
+/* ============================================================
+   ★ 社会福祉法人雄雅会（園コード Y01〜Y03）は緑テーマ（2026-09）
+     ・職員ダッシュボードのユウガボットと同じ緑 #43a047 を基準にする
+     ・<html> に law-y クラスが付いたときだけ効く（柴学園の園は今までどおり紫〜青）
+     ・クラスは下の <body> 内のスクリプトで、園マスタ（gardens.js）の code が Y で始まるときに付ける
+   ============================================================ */
+html.law-y{
+  --bg1:#e6f4ea; --bg2:#eaf5ef;
+  --line:#e0eee4; --ink:#1f3327; --sub:#7d9186;
+  --grad:linear-gradient(135deg,#2e9e6b 0%,#43a047 100%);
+  --grad-soft:linear-gradient(135deg,#edf8f0 0%,#e6f4ea 100%);
+  --hq:#3f6b52; --hq-bg:#e6f2ea;
+}
+html.law-y body{background:linear-gradient(180deg,var(--bg1) 0%,var(--bg2) 55%,#eef7f1 100%);}
+html.law-y .c-head{background:rgba(232,245,236,.86);}
+html.law-y .nav-post,
+html.law-y .guide-btn{box-shadow:0 8px 20px rgba(67,160,71,.26);}
+html.law-y .post-btn{box-shadow:0 6px 16px rgba(67,160,71,.26);}
+html.law-y .post.mine{box-shadow:0 8px 22px rgba(67,160,71,.12);}
+html.law-y .nav-item.active,
+html.law-y .tool-item.active{box-shadow:0 4px 14px rgba(40,120,70,.08);}
+html.law-y .composer.drag-over{border-color:#43a047; box-shadow:0 0 0 3px rgba(67,160,71,.18);}
+html.law-y .composer textarea::placeholder,
+html.law-y .search-box input::placeholder{color:#a9bcb0;}
+html.law-y .icon-btn,
+html.law-y .file-chip{background:#f3faf5;}
+html.law-y .icon-btn:hover,
+html.law-y .search-clear,
+html.law-y .post-modal-close{background:#e3f3e7;}
+html.law-y .chip{color:#2e7d32; background:#e3f3e7;}
+html.law-y .w-all,
+html.law-y .hot-row:hover .hot-text{color:#2e7d32;}
+html.law-y .kbg-in:focus{border-color:#43a047; box-shadow:0 0 0 3px rgba(67,160,71,.15);}
+html.law-y .kbg-btn,
+html.law-y #cb-submit{background:#43a047 !important;}
+html.law-y .kb-user b{color:#1f3327;}
+html.law-y .kb-logout:hover{background:#e6f2ea;}
+</style>
 </head>
 <body>
 <!-- ============================================================
@@ -284,6 +324,8 @@
 <script>
 var GARDEN_INFO = (typeof gardenFromUrl === 'function') ? gardenFromUrl() : null; // {key, name, code}
 var GARDEN = GARDEN_INFO ? GARDEN_INFO.name : '';   // 日本語の園名（職員マスタの園名と同じ）
+// 社会福祉法人雄雅会（園コード Y〜）の園は緑テーマにする（色の中身は <head> 末尾の html.law-y）
+if(GARDEN_INFO && /^Y/.test(GARDEN_INFO.code || '')) document.documentElement.classList.add('law-y');
 // 園が決まらないときは、本体を一瞬も見せずにエラー表示にする
 if(!GARDEN) document.write('<style>#appMain{display:none!important}#gardenError{display:flex!important}</style>');
 
@@ -393,11 +435,11 @@ if(GARDEN && !KB_LOGIN) document.write('<style>#appMain{display:none!important}#
       <svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></svg>規約・マニュアル</a>
     <a class="tool-item" href="https://kimkat01.github.io/shiodome-knowledge/corporate-book-flipbook.html" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 012-2h12v16H6a2 2 0 00-2 2z"/><path d="M4 19a2 2 0 012-2h12"/></svg>コーポレートブック</a>
-    <a class="tool-item" href="https://kimkat01.github.io/shiodome-knowledge/keiei-dashboard.html" target="_blank" rel="noopener">
+    <a class="tool-item" id="keieiLink" href="https://kimkat01.github.io/shiodome-knowledge/keiei-dashboard.html" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24"><path d="M4 4v16h16"/><path d="M8 16v-4M12 16V8M16 16v-7"/></svg>月次収支レポート</a>
-    <a class="tool-item" href="kessai-shinsei.html" target="_blank" rel="noopener">
+    <a class="tool-item" id="kessaiLink" href="kessai-shinsei.html" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4"/><path d="M9 13l2 2 4-4"/></svg>決裁申請</a>
-    <a class="tool-item" href="saiyo-shinsei.html" target="_blank" rel="noopener">
+    <a class="tool-item" id="saiyoLink" href="saiyo-shinsei.html" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>採用計画申請書</a>
     <a class="tool-item" href="https://kimkat01.github.io/voiceminutes/" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>文字起こし</a>
@@ -1041,6 +1083,12 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
   // 規約・マニュアルにも園を引き継ぐ（「ナレッジボードへ戻る」で同じ園のボードに戻れるように）
   document.getElementById('manualLink').href =
     'https://kimkat01.github.io/shiodome-knowledge/manual.html?garden=' + GARDEN_INFO.key;
+
+  // 月次収支レポート・決裁申請・採用計画申請書にも園を引き継ぐ（雄雅会の園は緑テーマ＋月次収支は雄雅会版になる）
+  var gq = '?garden=' + GARDEN_INFO.key;
+  document.getElementById('keieiLink').href  = 'https://kimkat01.github.io/shiodome-knowledge/keiei-dashboard.html' + gq;
+  document.getElementById('kessaiLink').href = 'kessai-shinsei.html' + gq;
+  document.getElementById('saiyoLink').href  = 'saiyo-shinsei.html' + gq;
 })();
 
 // ============================================================

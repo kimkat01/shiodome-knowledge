@@ -147,6 +147,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 .footer-note{font-size:11px;color:var(--text-muted);line-height:1.8;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border)}
 @media(max-width:900px){.summary-grid{grid-template-columns:repeat(2,1fr)}.settings-grid{grid-template-columns:1fr}}
 </style>
+<style>
+/* ★ 社会福祉法人雄雅会（園コード Y〜）から開いたときは緑テーマ＋雄雅会3園版（2026-09） */
+html.law-y{ --accent:#43a047; --accent-light:#e8f5e9; }
+html.law-y .header{box-shadow:0 2px 8px rgba(67,160,71,.3);}
+</style>
 </head>
 <body>
 
@@ -299,6 +304,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 </div>
 </main>
 
+<script src="https://kimkat01.github.io/staff-dashboard/gardens.js"></script>
+<script>
+// 社会福祉法人雄雅会（園コード Y〜）から開かれたときは緑テーマ（html.law-y）。?garden が無いときは今までどおりの色
+(function(){ try{ var g=(typeof gardenFromUrl==='function')?gardenFromUrl():null;
+  if(g && /^Y/.test(g.code||'')) document.documentElement.classList.add('law-y'); }catch(e){} })();
+</script>
 <script>
 // ===== 日付 =====
 (function(){
@@ -348,6 +359,25 @@ const PARKS=[
   {id:'g14', label:'ふれあいしおどめ保育園八潮',   sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:null,
    staffTotal:0,staffDesc:'',age0:0,age1:0,age2:0,age3:0,age4:0,age5:0,hasData:false},
 ];
+
+// ===== 社会福祉法人雄雅会（2026-09）=====
+// 雄雅会の園（?garden= の園コードが Y〜）から開いたときは、柴学園14園の数字を一切出さず、雄雅会3園だけにする。
+// データが届いたら、下の YUGA_PARKS の該当園に人数・職員数を入れて hasData:true にする。
+const IS_YUGA = document.documentElement.classList.contains('law-y');
+const YUGA_PARKS=[
+  {id:'y01', label:'八潮しおどめ保育園',     sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:null,
+   staffTotal:0,staffDesc:'',age0:0,age1:0,age2:0,age3:0,age4:0,age5:0,hasData:false},
+  {id:'y02', label:'守谷しおどめ保育園',     sub:'茨城県守谷市・15/100地域', mult:1.15, capacity:null,
+   staffTotal:0,staffDesc:'',age0:0,age1:0,age2:0,age3:0,age4:0,age5:0,hasData:false},
+  {id:'y03', label:'しおどめなかよし保育園', sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:null,
+   staffTotal:0,staffDesc:'',age0:0,age1:0,age2:0,age3:0,age4:0,age5:0,hasData:false},
+];
+if(IS_YUGA){
+  PARKS.length = 0;                       // 柴学園のデータは消してから
+  YUGA_PARKS.forEach(p=>PARKS.push(p));   // 雄雅会の3園だけを入れる
+  document.title = '雄雅会 経営ダッシュボード';
+  document.querySelector('.header-sub').textContent = '社会福祉法人雄雅会　理事長向け月次概算レポート（3園）';
+}
 
 const fmtM=v=>'¥'+Math.round(v/10000).toLocaleString('ja-JP')+'万';
 const fmtN=v=>v.toLocaleString('ja-JP')+'円';

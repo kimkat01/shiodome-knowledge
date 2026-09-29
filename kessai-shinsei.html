@@ -344,8 +344,20 @@
   }
   .doc-footer{font-size:9px;color:var(--hint);text-align:right;margin-top:6px}
 </style>
+<style>
+/* ★ 社会福祉法人雄雅会（園コード Y〜）は緑テーマ（2026-09） */
+html.law-y{ --primary:#43a047; --primary-dark:#2e7d32; --primary-tint:#e8f5e9; }
+html.law-y input:focus, html.law-y select:focus, html.law-y textarea:focus{box-shadow:0 0 0 3px rgba(67,160,71,.16);}
+html.law-y button.primary{box-shadow:0 4px 14px rgba(67,160,71,.28);}
+</style>
 </head>
 <body>
+<script src="https://kimkat01.github.io/staff-dashboard/gardens.js"></script>
+<script>
+// 社会福祉法人雄雅会（園コード Y〜）から開かれたときは緑テーマ（html.law-y）。?garden が無いときは今までどおりの色
+(function(){ try{ var g=(typeof gardenFromUrl==='function')?gardenFromUrl():null;
+  if(g && /^Y/.test(g.code||'')) document.documentElement.classList.add('law-y'); }catch(e){} })();
+</script>
 
 <header class="masthead">
   <div class="wrap">

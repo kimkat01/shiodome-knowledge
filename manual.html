@@ -101,6 +101,27 @@
     .search input{width:120px;}
   }
 </style>
+
+<style>
+/* ★ 社会福祉法人雄雅会（園コード Y01〜Y03）は緑テーマ（ナレッジボードと同じ配色。2026-09） */
+html.law-y{
+  --bg1:#e6f4ea; --bg2:#eaf5ef;
+  --line:#e0eee4; --ink:#1f3327; --sub:#7d9186;
+  --grad:linear-gradient(135deg,#2e9e6b 0%,#43a047 100%);
+  --grad-soft:linear-gradient(135deg,#edf8f0 0%,#e6f4ea 100%);
+}
+html.law-y body{background:linear-gradient(180deg,var(--bg1) 0%,var(--bg2) 55%,#eef7f1 100%);}
+html.law-y .back,
+html.law-y .lres-doc,
+html.law-y .nav-btn{color:#2e7d32;}
+html.law-y .back{box-shadow:0 2px 8px rgba(40,120,70,.10);}
+html.law-y .grp-label{color:#2e9e6b;}
+html.law-y .lsearch,
+html.law-y .search{background:#f1f8f3;}
+html.law-y .lres-item{background:#f6fbf7;}
+html.law-y .lsearch input::placeholder,
+html.law-y .search input::placeholder{color:#a9bcb0;}
+</style>
 </head>
 <body>
 
@@ -118,6 +139,7 @@
 (function(){
   var g = (typeof gardenFromUrl === 'function') ? gardenFromUrl() : null;
   if(!g) return;
+  if(/^Y/.test(g.code || '')) document.documentElement.classList.add('law-y');  // 雄雅会の園は緑テーマ
   document.getElementById('mGardenName').textContent = g.name;
   document.getElementById('mBackLink').href = 'https://kimkat01.github.io/shiodome-knowledge/?garden=' + g.key;
 })();
