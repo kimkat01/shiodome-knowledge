@@ -367,8 +367,9 @@ const IS_YUGA = document.documentElement.classList.contains('law-y');
 const YUGA_PARKS=[
   {id:'y01', label:'八潮しおどめ保育園',     sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:null,
    staffTotal:0,staffDesc:'',age0:0,age1:0,age2:0,age3:0,age4:0,age5:0,hasData:false},
-  {id:'y02', label:'守谷しおどめ保育園',     sub:'茨城県守谷市・15/100地域', mult:1.15, capacity:null,
-   staffTotal:0,staffDesc:'',age0:0,age1:0,age2:0,age3:0,age4:0,age5:0,hasData:false},
+  // 守谷：2026年6月度（6/30時点・コドモン園児一覧／職員一覧CSVより）。6月入園2名（さくらんぼ）。7月以降の入園・9/16入職の1名は含まない
+  {id:'y02', label:'守谷しおどめ保育園',     sub:'茨城県守谷市・15/100地域・2026年6月度', mult:1.15, capacity:90,
+   staffTotal:18, staffDesc:'正規12・非正規6',age0:4,age1:12,age2:17,age3:13,age4:17,age5:18,hasData:true},
   {id:'y03', label:'しおどめなかよし保育園', sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:null,
    staffTotal:0,staffDesc:'',age0:0,age1:0,age2:0,age3:0,age4:0,age5:0,hasData:false},
 ];
