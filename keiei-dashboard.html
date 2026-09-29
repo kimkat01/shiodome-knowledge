@@ -83,6 +83,11 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .park-stat-val.positive{color:var(--accent)}
 .park-stat-val.negative{color:var(--accent2)}
 .park-stat-lbl{font-size:10px;color:var(--text-muted);margin-top:1px}
+.act-table{width:100%;border-collapse:collapse;font-size:11px;margin:.1rem 0 .75rem}
+.act-table th{font-weight:500;color:var(--text-muted);text-align:right;padding:3px 4px;border-bottom:1px solid var(--border)}
+.act-table th:first-child,.act-table td:first-child{text-align:left}
+.act-table td{text-align:right;padding:3px 4px;font-family:var(--mono);border-bottom:1px solid var(--border)}
+.act-table tr:last-child td{border-bottom:none;color:var(--text-muted)}
 
 /* 充足バー */
 .capacity-bar{margin-top:.5rem}
@@ -369,7 +374,14 @@ const YUGA_PARKS=[
    staffTotal:0,staffDesc:'',age0:0,age1:0,age2:0,age3:0,age4:0,age5:0,hasData:false},
   // 守谷：2026年6月度（6/30時点・コドモン園児一覧／職員一覧CSVより）。6月入園2名（さくらんぼ）。7月以降の入園・9/16入職の1名は含まない
   {id:'y02', label:'守谷しおどめ保育園',     sub:'茨城県守谷市・15/100地域・2026年6月度', mult:1.15, capacity:90,
-   staffTotal:18, staffDesc:'正規12・非正規6',age0:4,age1:12,age2:17,age3:13,age4:17,age5:18,hasData:true},
+   staffTotal:19, staffDesc:'正規12・非正規7',age0:4,age1:12,age2:17,age3:13,age4:17,age5:18,hasData:true,
+   // 常勤換算（名）：コドモン勤務実績 5/16〜6/15。正規＝1人1.0、非正規＝実働時間（休憩除く）÷常勤の所定168時間（8時間×平日21日）
+   fte:16.6,
+   // 実績：月次報告書 令和8年6月分（事業活動計算書・守谷）。単月＝当月の動き、累計＝4〜6月
+   actual:{ month:'令和8年6月分',
+     income:10656840, expense:7569549, profit:3087291, labor:5814215,
+     cum:{ label:'4〜6月累計', income:31071510, expense:26475516, profit:4595994, labor:15681251 },
+     prev:{ label:'前年同期', income:28698250, expense:19887755, profit:8810495, labor:12501149 } }},
   {id:'y03', label:'しおどめなかよし保育園', sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:null,
    staffTotal:0,staffDesc:'',age0:0,age1:0,age2:0,age3:0,age4:0,age5:0,hasData:false},
 ];
@@ -388,6 +400,34 @@ function calcReq(p, r3){
        + Math.ceil((p.age1+p.age2)/6)
        + Math.ceil(p.age3/r3)
        + Math.ceil((p.age4+p.age5)/30);
+}
+
+// ===== 実績（月次報告書）ブロック =====
+// p.actual があれば、推計ではなく月次報告書の数字（収入・支出・利益・人件費・人件費率）を出す
+const pct=(a,b)=>b?(a/b*100).toFixed(1)+'%':'—';
+function actualBlock(p){
+  const a=p.actual, c=a.cum, v=a.prev;
+  const cls=x=>x>=0?'positive':'negative';
+  const row=(t,o)=>`<tr><td>${t}</td><td>${fmtM(o.income)}</td><td>${fmtM(o.expense)}</td><td>${fmtM(o.profit)}</td><td>${pct(o.labor,o.income)}</td></tr>`;
+  return `
+  <div class="park-stat-row">
+    <div><div class="park-stat-val">${fmtM(a.income)}</div><div class="park-stat-lbl">収入（実績）</div></div>
+    <div><div class="park-stat-val">${fmtM(a.expense)}</div><div class="park-stat-lbl">支出（実績）</div></div>
+    <div><div class="park-stat-val ${cls(a.profit)}">${fmtM(a.profit)}</div><div class="park-stat-lbl">利益（実績）</div></div>
+  </div>
+  <div class="park-stat-row">
+    <div><div class="park-stat-val">${fmtM(a.labor)}</div><div class="park-stat-lbl">人件費（実績）</div></div>
+    <div><div class="park-stat-val">${pct(a.labor,a.income)}</div><div class="park-stat-lbl">人件費率（単月）</div></div>
+    <div><div class="park-stat-val">${p.fte!=null?p.fte+'名':'—'}</div><div class="park-stat-lbl">常勤換算</div></div>
+  </div>
+  <div style="font-size:10px;margin:-.4rem 0 .5rem;display:flex;align-items:center;gap:6px">
+    <span style="background:var(--accent-light);color:var(--accent);border-radius:4px;padding:1px 6px;font-weight:500">実績</span>
+    <span style="color:var(--text-muted)">月次報告書ベース（${a.month}・事業活動計算書）</span>
+  </div>
+  ${c?`<table class="act-table">
+    <tr><th></th><th>収入</th><th>支出</th><th>利益</th><th>人件費率</th></tr>
+    ${row(c.label,c)}${v?row(v.label,v):''}
+  </table>`:''}`;
 }
 
 // ===== カード生成 =====
@@ -417,11 +457,11 @@ function buildCards(){
         <span class="badge ${badgeClass}" id="${p.id}-badge">${badgeText}</span>
       </div>
       <div class="park-card-body">
-        <div class="park-stat-row">
+        ${p.actual?actualBlock(p):`<div class="park-stat-row">
           <div><div class="park-stat-val" id="${p.id}-income">—</div><div class="park-stat-lbl" id="${p.id}-income-lbl">${p.hasInvoice?'月次収入（実績）':'推計月次収入'}</div></div>
           <div><div class="park-stat-val" id="${p.id}-labor">—</div><div class="park-stat-lbl">推計人件費</div></div>
           <div><div class="park-stat-val" id="${p.id}-surplus">—</div><div class="park-stat-lbl">推計収支差</div></div>
-        </div>
+        </div>`}
         ${p.hasInvoice?`<div style="font-size:10px;color:var(--accent);margin:-.4rem 0 .5rem;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
           <span style="background:var(--accent-light);color:var(--accent);border-radius:4px;padding:1px 6px;font-weight:500">実績</span>
           <span style="color:var(--text-muted)">請求書ベース（${p.invoiceMonth}分）</span>
@@ -450,7 +490,7 @@ function buildCards(){
             <div class="staff-box">
               <div class="staff-box-label">在籍職員数</div>
               <div class="staff-box-val" id="${p.id}-staff-total">${p.staffTotal}名</div>
-              <div class="staff-box-sub">${p.staffDesc}</div>
+              <div class="staff-box-sub">${p.staffDesc}${('fte' in p)?`<br>常勤換算 ${p.fte!=null?p.fte+'名':'未登録'}`:''}</div>
             </div>
             <div class="staff-box">
               <div class="staff-box-label">適正範囲</div>
@@ -576,16 +616,20 @@ function update(){
     const total=p.age0+p.age1+p.age2+p.age3+p.age4+p.age5;
     const age12=p.age1+p.age2, age35=p.age3+p.age4+p.age5;
     // 請求書の実績データがある園はそれを正として使用。ない園は単価×人数の推計。
-    const inc=(p.hasInvoice && p.invoiceIncome) ? p.invoiceIncome : (p.age0*u0+age12*u12+age35*u35);
-    const lab=inc*lRate, oth=inc*oRate, sur=inc-lab-oth;
+    // 月次報告書の実績がある園（p.actual）は、その収入・人件費・支出・利益をそのまま使う
+    const A=p.actual;
+    const inc=A ? A.income : (p.hasInvoice && p.invoiceIncome) ? p.invoiceIncome : (p.age0*u0+age12*u12+age35*u35);
+    const lab=A ? A.labor : inc*lRate, oth=A ? A.expense-A.labor : inc*oRate, sur=A ? A.profit : inc-lab-oth;
 
     totInc+=inc; totLab+=lab; totOth+=oth; totCh+=total;
 
+    if(!A){
     document.getElementById(p.id+'-income').textContent=fmtM(inc);
     document.getElementById(p.id+'-labor').textContent=fmtM(lab);
     const surEl=document.getElementById(p.id+'-surplus');
     surEl.textContent=fmtM(sur);
     surEl.className='park-stat-val '+(sur>=0?'positive':'negative');
+    }
 
     // 充足バー
     if(p.capacity){
@@ -599,7 +643,9 @@ function update(){
 
     // 年齢テーブル（実績請求書がある園は、請求書の加算内訳を年齢帯ごとに按分した実績単価・小計を表示）
     let rowVals;
-    if(p.hasInvoice && p.invoiceRows){
+    if(A){
+      rowVals=[{u:null,amt:null},{u:null,amt:null},{u:null,amt:null}];
+    } else if(p.hasInvoice && p.invoiceRows){
       const ir=p.invoiceRows;
       rowVals=[
         {u:p.age0>0?Math.round(ir.amt0/p.age0):0, amt:ir.amt0},
@@ -617,7 +663,7 @@ function update(){
      {rowId:p.id+'-r12',v:rowVals[1]},
      {rowId:p.id+'-r35',v:rowVals[2]}].forEach(r=>{
       const row=document.getElementById(r.rowId);
-      if(row){ row.cells[2].textContent=fmtN(r.v.u); row.cells[3].textContent=fmtM(r.v.amt); }
+      if(row){ row.cells[2].textContent=r.v.u==null?'—':fmtN(r.v.u); row.cells[3].textContent=r.v.amt==null?'—':fmtM(r.v.amt); }
     });
     document.getElementById(p.id+'-total-n').textContent=total+'名';
     document.getElementById(p.id+'-total-val').textContent=fmtM(inc);
@@ -662,12 +708,15 @@ function update(){
 
   document.getElementById('bval-income').textContent=fmtM(totInc);
   document.getElementById('bval-labor').textContent=fmtM(totLab);
-  document.getElementById('bval-other').textContent=fmtM(totInc*oRate);
+  // 実績の園が混ざっても合うよう、比率は合計額から出す（推計だけの園ならスライダーの率と同じ）
+  const shL=totInc?totLab/totInc:lRate, shO=totInc?totOth/totInc:oRate;
+  document.getElementById('labor-pct-label').textContent=Math.round(shL*100);
+  document.getElementById('bval-other').textContent=fmtM(totOth);
   document.getElementById('bval-surplus').textContent=fmtM(totSur);
   document.getElementById('bval-surplus').style.color=totSur>=0?'var(--accent)':'var(--accent2)';
-  document.getElementById('bar-labor').style.width=Math.min(lRate*100,100)+'%';
-  document.getElementById('bar-other').style.width=Math.min(oRate*100,100)+'%';
-  const surPct=Math.max(0,(1-lRate-oRate)*100);
+  document.getElementById('bar-labor').style.width=Math.min(shL*100,100)+'%';
+  document.getElementById('bar-other').style.width=Math.min(shO*100,100)+'%';
+  const surPct=Math.max(0,(1-shL-shO)*100);
   const surBar=document.getElementById('bar-surplus');
   surBar.style.width=Math.min(surPct,100)+'%';
   surBar.className='balance-bar-fill '+(totSur>=0?'bar-surplus-pos':'bar-surplus-neg');
