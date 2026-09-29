@@ -286,7 +286,97 @@ var GARDEN_INFO = (typeof gardenFromUrl === 'function') ? gardenFromUrl() : null
 var GARDEN = GARDEN_INFO ? GARDEN_INFO.name : '';   // 日本語の園名（職員マスタの園名と同じ）
 // 園が決まらないときは、本体を一瞬も見せずにエラー表示にする
 if(!GARDEN) document.write('<style>#appMain{display:none!important}#gardenError{display:flex!important}</style>');
+
+// ============================================================
+// ★ 園長ログイン（2026-09）
+//   ・「PINマスタ_テンプレート」のログインマスタで照合（職員ダッシュボードと同じID・パスワード）
+//   ・G列「権限」が 園長（または本部）の人だけ入れる。判定はGAS側（action=enchoLogin）
+//   ・「ログインしたままにする」ON＝このパソコンに30日保存／OFF＝ブラウザを閉じるまで
+// ============================================================
+var KB_LOGIN_KEY = 'kb_encho_login__' + (GARDEN_INFO ? GARDEN_INFO.key : 'none');
+var KB_LOGIN_DAYS = 30;
+function kbReadLogin(){
+  var s = null;
+  try{ s = JSON.parse(sessionStorage.getItem(KB_LOGIN_KEY) || 'null'); }catch(e){}
+  if(!s){ try{ s = JSON.parse(localStorage.getItem(KB_LOGIN_KEY) || 'null'); }catch(e){} }
+  if(!s || s.garden !== GARDEN || !s.loginId) return null;
+  if(s.exp && Date.now() > s.exp) return null;
+  return s;
+}
+var KB_LOGIN = GARDEN ? kbReadLogin() : null;
+if(GARDEN && !KB_LOGIN) document.write('<style>#appMain{display:none!important}#kbGate{display:flex!important}</style>');
 </script>
+
+<!-- ===== 園長ログイン画面 ===== -->
+<style>
+  #kbGate{display:none;min-height:100vh;align-items:center;justify-content:center;padding:24px 16px;
+    background:linear-gradient(135deg,var(--bg1) 0%,var(--bg2) 100%);}
+  .kbg-card{background:#fff;border-radius:16px;padding:36px 32px 28px;width:380px;max-width:100%;
+    box-shadow:0 10px 40px rgba(40,30,90,.14);text-align:center;color:#2b2b3a}
+  .kbg-logo{width:52px;height:52px;border-radius:14px;background:var(--grad);color:#fff;font-weight:800;
+    font-size:24px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+  .kbg-garden{font-size:18px;font-weight:700}
+  .kbg-sub{font-size:13px;color:#8a8f9c;margin:4px 0 22px}
+  .kbg-label{display:block;text-align:left;font-size:13px;color:#555;margin:0 0 6px;font-weight:700}
+  .kbg-in{width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid #ddd;border-radius:8px;font-size:16px;color:#000;margin-bottom:14px;font-family:inherit}
+  .kbg-in:focus{outline:none;border-color:#4169e1;box-shadow:0 0 0 3px rgba(65,105,225,.15)}
+  .kbg-id{letter-spacing:.3em;text-align:center}
+  .kbg-row{display:flex;align-items:center;gap:6px;font-size:13px;color:#555;margin:-4px 0 6px;text-align:left}
+  .kbg-row input{width:16px;height:16px;margin:0}
+  .kbg-err{color:#e33;font-size:13px;min-height:20px;margin:8px 0;line-height:1.5}
+  .kbg-btn{width:100%;padding:12px;border:none;border-radius:8px;background:#4169e1;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+  .kbg-btn:disabled{background:#aab6e6;cursor:wait}
+  .kbg-link{background:none;border:none;color:#8a8f9c;font-size:13px;margin-top:12px;cursor:pointer;text-decoration:underline;font-family:inherit}
+  .kbg-hint{font-size:13px;color:#555;line-height:1.7;text-align:left;margin:0 0 16px}
+  .kbg-help{font-size:12px;color:#999;margin-top:16px;line-height:1.7}
+  .kbg-shake{animation:kbgShake .35s}
+  @keyframes kbgShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+  .kb-user{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:-6px 10px 12px;padding:8px 10px;
+    border-radius:10px;background:#f6f5fc;font-size:12px;color:#555}
+  .kb-user b{font-weight:700;color:#242042}
+  .kb-logout{border:1px solid #ddd;background:#fff;border-radius:6px;padding:4px 8px;font-size:12px;color:#555;cursor:pointer;white-space:nowrap;font-family:inherit}
+  .kb-logout:hover{background:#eeecfa}
+</style>
+<div id="kbGate">
+  <div class="kbg-card" id="kbgCard">
+    <div class="kbg-logo">し</div>
+    <div class="kbg-garden" id="kbgGarden"></div>
+    <div class="kbg-sub">園長ダッシュボード</div>
+
+    <!-- ① ログイン -->
+    <div id="kbgLoginStep">
+      <label class="kbg-label" for="kbgId">ログインID（4桁の数字）</label>
+      <input class="kbg-in kbg-id" id="kbgId" type="text" inputmode="numeric" maxlength="4" autocomplete="username">
+      <label class="kbg-label" for="kbgPw">パスワード</label>
+      <input class="kbg-in" id="kbgPw" type="password" autocomplete="current-password">
+      <label class="kbg-row"><input type="checkbox" onchange="kbgShow(this,['kbgPw'])">パスワードを表示する</label>
+      <label class="kbg-row"><input type="checkbox" id="kbgKeep" checked>このパソコンではログインしたままにする</label>
+      <div class="kbg-err" id="kbgErr"></div>
+      <button class="kbg-btn" id="kbgLoginBtn" onclick="kbgLogin()">ログイン</button>
+      <div class="kbg-help">職員ダッシュボードと同じログインID・パスワードです。<br>分からない場合は、本部にお問い合わせください。</div>
+    </div>
+
+    <!-- ② 初回：パスワード変更 -->
+    <div id="kbgChangeStep" style="display:none">
+      <p class="kbg-hint">初回ログインです。ご自分のパスワードを設定してください。<br>（半角の小文字英字と数字を両方含む8文字）</p>
+      <label class="kbg-label" for="kbgNew1">新しいパスワード</label>
+      <input class="kbg-in" id="kbgNew1" type="password" maxlength="8" autocomplete="new-password">
+      <label class="kbg-label" for="kbgNew2">新しいパスワード（確認のためもう一度）</label>
+      <input class="kbg-in" id="kbgNew2" type="password" maxlength="8" autocomplete="new-password">
+      <label class="kbg-row"><input type="checkbox" onchange="kbgShow(this,['kbgNew1','kbgNew2'])">パスワードを表示する</label>
+      <div class="kbg-err" id="kbgErr2"></div>
+      <button class="kbg-btn" id="kbgChangeBtn" onclick="kbgChange()">このパスワードに変更する</button>
+      <button class="kbg-link" onclick="kbgSkip()">あとで変更する</button>
+    </div>
+
+    <!-- ③ 変更完了 -->
+    <div id="kbgDoneStep" style="display:none">
+      <p class="kbg-hint" style="text-align:center">パスワードを変更しました。<br>次回から新しいパスワードでログインしてください。<br>（職員ダッシュボードも同じパスワードになります）</p>
+      <button class="kbg-btn" onclick="kbgEnter()">ダッシュボードを開く</button>
+    </div>
+  </div>
+</div>
+
 <div class="app" id="appMain">
 
   <!-- ===== 左：ナビ ===== -->
@@ -294,6 +384,7 @@ if(!GARDEN) document.write('<style>#appMain{display:none!important}#gardenError{
     <div class="brand" style="cursor:default;">
       <span class="logo">し</span><span><b id="gardenName"></b><small>ナレッジボード</small></span>
     </div>
+    <div class="kb-user" id="kbUser" style="display:none"><span><b id="kbUserName"></b> さん</span><button class="kb-logout" onclick="kbLogout()">ログアウト</button></div>
     <a class="tool-item" href="https://kimkat01.github.io/hiyari-hatto2/" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17v.4"/></svg>ヒヤリハットくん</a>
     <a class="tool-item" id="uqLink" href="#" target="_blank" rel="noopener">
@@ -987,6 +1078,127 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
   }
   loadYukyuBadge();
   setInterval(loadYukyuBadge, 60000); // 1分ごとに最新の承認待ち件数を反映
+})();
+</script>
+<script>
+// ============================================================
+// 園長ログイン処理（2026-09）
+//   GAS：「PINマスタ_テンプレート」に紐づくWebアプリ（職員ダッシュボードと同じURL）
+// ============================================================
+(function(){
+  var AUTH_GAS_URL = 'https://script.google.com/macros/s/AKfycbwnTzHQ5XdHPPLdf9QnWJLA-Dc7oBIYzfr1MfFd-Uunyarw0QWc48WzzAme6hR1muBisg/exec';
+  var PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[0-9])[a-z0-9]{8}$/;
+  var pending = null;   // ログイン成功後、画面に入る前に保持する情報
+  var $ = function(id){ return document.getElementById(id); };
+  if(!GARDEN) return;
+
+  $('kbgGarden').textContent = GARDEN;
+  function showUser(s){
+    if(!s) return;
+    $('kbUserName').textContent = s.name || '';
+    $('kbUser').style.display = 'flex';
+  }
+  if(KB_LOGIN) showUser(KB_LOGIN);
+
+  // 入力のゆらぎを吸収（全角→半角、大文字→小文字、空白除去）…職員ダッシュボードと同じ
+  function normPw(s){ s = String(s || ''); if(s.normalize) s = s.normalize('NFKC'); return s.replace(/\s+/g, '').toLowerCase(); }
+  function normDigit(s){ s = String(s || ''); if(s.normalize) s = s.normalize('NFKC'); return s.replace(/[^0-9]/g, ''); }
+
+  function postGas(payload){
+    function once(n){
+      return fetch(AUTH_GAS_URL, { method:'POST', body: JSON.stringify(payload), redirect:'follow' })
+        .then(function(r){ return r.text(); })
+        .then(function(t){ var d = null; try{ d = JSON.parse(t); }catch(e){} if(!d) throw new Error('parse'); return d; })
+        .catch(function(err){
+          if(n < 3) return new Promise(function(res){ setTimeout(res, 800 * n); }).then(function(){ return once(n + 1); });
+          throw err;
+        });
+    }
+    return once(1);
+  }
+  function shake(){ var c = $('kbgCard'); c.classList.remove('kbg-shake'); void c.offsetWidth; c.classList.add('kbg-shake'); }
+
+  function saveLogin(s){
+    var keep = $('kbgKeep').checked;
+    var obj = { garden:GARDEN, loginId:s.loginId, name:s.name, exp: keep ? Date.now() + KB_LOGIN_DAYS*86400000 : 0 };
+    try{ if(keep) localStorage.setItem(KB_LOGIN_KEY, JSON.stringify(obj)); else sessionStorage.setItem(KB_LOGIN_KEY, JSON.stringify(obj)); }catch(e){}
+    return obj;
+  }
+
+  window.kbgShow = function(cb, ids){ ids.forEach(function(id){ $(id).type = cb.checked ? 'text' : 'password'; }); };
+
+  window.kbgEnter = function(){
+    var s = saveLogin(pending);
+    showUser(s);
+    $('kbGate').style.display = 'none';
+    $('appMain').style.setProperty('display', '', 'important');
+    document.querySelectorAll('style').forEach(function(st){
+      if(/#kbGate\{display:flex!important\}/.test(st.textContent)) st.parentNode.removeChild(st);
+    });
+  };
+
+  window.kbgLogin = function(){
+    var id = normDigit($('kbgId').value);
+    var pw = normPw($('kbgPw').value);
+    var err = $('kbgErr'); err.textContent = '';
+    if(!/^[0-9]{4}$/.test(id)){ err.textContent = 'ログインIDは4桁の数字で入力してください'; shake(); return; }
+    if(!pw){ err.textContent = 'パスワードを入力してください'; shake(); return; }
+    var btn = $('kbgLoginBtn'); btn.disabled = true; btn.textContent = '確認中…';
+    postGas({ action:'enchoLogin', garden:GARDEN, loginId:id, password:pw })
+      .then(function(d){
+        btn.disabled = false; btn.textContent = 'ログイン';
+        if(!d.ok){ err.textContent = d.message || 'ログインIDまたはパスワードが正しくありません'; shake(); $('kbgPw').select(); return; }
+        pending = { loginId:id, name:d.name, oldPw:pw };
+        if(d.mustChangePassword){
+          $('kbgLoginStep').style.display = 'none';
+          $('kbgChangeStep').style.display = 'block';
+          $('kbgNew1').focus();
+        } else {
+          kbgEnter();
+        }
+      })
+      .catch(function(){
+        btn.disabled = false; btn.textContent = 'ログイン';
+        err.textContent = '通信エラーです。インターネット接続を確認して、もう一度お試しください。';
+      });
+  };
+
+  window.kbgChange = function(){
+    var p1 = normPw($('kbgNew1').value), p2 = normPw($('kbgNew2').value);
+    var err = $('kbgErr2'); err.textContent = '';
+    if(!PASSWORD_PATTERN.test(p1)){ err.textContent = '半角の小文字英字と数字を組み合わせた8文字で入力してください'; shake(); return; }
+    if(p1 !== p2){ err.textContent = '確認用のパスワードが一致しません'; shake(); return; }
+    if(p1 === pending.oldPw){ err.textContent = '今の仮パスワードとは違うパスワードにしてください'; shake(); return; }
+    var btn = $('kbgChangeBtn'); btn.disabled = true; btn.textContent = '変更中…';
+    postGas({ action:'changePassword', garden:GARDEN, loginId:pending.loginId, oldPassword:pending.oldPw, newPassword:p1 })
+      .then(function(d){
+        btn.disabled = false; btn.textContent = 'このパスワードに変更する';
+        if(!d.ok){ err.textContent = (d.message || '変更に失敗しました') + '（パスワードはまだ変更されていません）'; return; }
+        $('kbgChangeStep').style.display = 'none';
+        $('kbgDoneStep').style.display = 'block';
+      })
+      .catch(function(){
+        btn.disabled = false; btn.textContent = 'このパスワードに変更する';
+        err.textContent = '通信エラーです（パスワードはまだ変更されていません）。もう一度お試しください。';
+      });
+  };
+
+  window.kbgSkip = function(){
+    alert('パスワードは変更されていません。\n次回も、今の仮パスワードでログインしてください。');
+    kbgEnter();
+  };
+
+  window.kbLogout = function(){
+    if(!confirm('ログアウトしますか？')) return;
+    try{ localStorage.removeItem(KB_LOGIN_KEY); }catch(e){}
+    try{ sessionStorage.removeItem(KB_LOGIN_KEY); }catch(e){}
+    location.reload();
+  };
+
+  $('kbgId').addEventListener('keydown', function(e){ if(e.key === 'Enter') $('kbgPw').focus(); });
+  $('kbgPw').addEventListener('keydown', function(e){ if(e.key === 'Enter') kbgLogin(); });
+  $('kbgNew2').addEventListener('keydown', function(e){ if(e.key === 'Enter') kbgChange(); });
+  if(!KB_LOGIN) setTimeout(function(){ $('kbgId').focus(); }, 50);
 })();
 </script>
 </body>
