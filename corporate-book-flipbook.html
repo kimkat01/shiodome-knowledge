@@ -11,7 +11,7 @@ body{margin:0;overflow:hidden;display:flex;flex-direction:column;
   font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium",Meiryo,sans-serif;
   -webkit-tap-highlight-color:transparent}
 
-#stage{flex:1;display:flex;align-items:center;justify-content:center;perspective:2800px;overflow:hidden;padding:16px}
+#stage{flex:1;display:flex;align-items:center;justify-content:center;perspective:2800px;overflow:hidden;padding:calc(56px + env(safe-area-inset-top)) 16px 16px}
 #book{position:relative;width:940px;height:664px;transform-style:preserve-3d;flex:none}
 #book::after{content:"";position:absolute;left:50%;top:1%;height:98%;width:64px;transform:translateX(-50%);
   background:radial-gradient(closest-side,rgba(0,0,0,.34),rgba(0,0,0,0));pointer-events:none;z-index:0}
@@ -50,6 +50,12 @@ body{margin:0;overflow:hidden;display:flex;flex-direction:column;
 #count{font:11px/1 Helvetica,Arial,sans-serif;letter-spacing:.16em;min-width:78px;text-align:center;color:#C4B9A8}
 #hint{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);color:#B5AA9A;font-size:11.5px;
   letter-spacing:.08em;pointer-events:none;transition:opacity .7s;z-index:60;text-align:center}
+#homeBtn{position:fixed;top:calc(12px + env(safe-area-inset-top));right:14px;z-index:70;display:inline-flex;align-items:center;gap:5px;
+  border:1.5px solid rgba(255,255,255,.7);background:rgba(33,30,26,.55);color:#E8DECE;font-size:12.5px;font-weight:800;
+  padding:6px 12px 6px 9px;border-radius:999px;text-decoration:none;cursor:pointer;white-space:nowrap;
+  font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium",Meiryo,sans-serif;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+#homeBtn:active{background:rgba(255,255,255,.16)}
+#homeBtn svg{width:16px;height:16px;flex:0 0 auto}
 #boot{position:fixed;inset:0;display:grid;place-items:center;background:#211E1A;color:#B5AA9A;
   font-size:12px;letter-spacing:.2em;z-index:99;transition:opacity .5s}
 @media (prefers-reduced-motion:reduce){.leaf,.card{transition-duration:.01ms}}
@@ -57,6 +63,7 @@ body{margin:0;overflow:hidden;display:flex;flex-direction:column;
 
 <div id="boot">CORPORATE BOOK</div>
 <div id="stage"><div id="book"></div></div>
+<a id="homeBtn" href="#" aria-label="ホームに戻る"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11L12 4L20 11"></path><path d="M6 10V19a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V10"></path><path d="M10 20v-5h4v5"></path></svg>Home</a>
 <div id="hint">ページをクリック／← → キー／スワイプでめくれます</div>
 <nav id="bar">
   <button id="prev" aria-label="前のページ">‹</button>
@@ -144,13 +151,46 @@ addEventListener('keydown',e=>{
   if(e.key==='ArrowLeft') go(-1);
   if(e.key==='Home'){leafIdx=0;pageIdx=0;render()}
 });
-stage.addEventListener('click',e=>go(e.clientX > innerWidth/2 ? 1 : -1));
-let sx=null;
-stage.addEventListener('touchstart',e=>sx=e.touches[0].clientX,{passive:true});
+/* ピンチアウト（2本指）や拡大表示中の指の動きでページが飛ばないようにする */
+const zoomed=()=>!!(window.visualViewport && visualViewport.scale>1.02);
+let sx=null, multi=false, lastPinch=0;
+stage.addEventListener('click',e=>{
+  if(zoomed() || Date.now()-lastPinch<600) return;   // 拡大中・ピンチ直後はタップでめくらない
+  go(e.clientX > innerWidth/2 ? 1 : -1);
+});
+stage.addEventListener('touchstart',e=>{
+  if(e.touches.length>1){ multi=true; sx=null; lastPinch=Date.now(); return; }
+  if(!multi) sx=e.touches[0].clientX;
+},{passive:true});
+stage.addEventListener('touchmove',e=>{
+  if(e.touches.length>1){ multi=true; sx=null; lastPinch=Date.now(); }
+},{passive:true});
 stage.addEventListener('touchend',e=>{
-  if(sx===null)return; const dx=e.changedTouches[0].clientX-sx;
-  if(Math.abs(dx)>45) go(dx<0?1:-1); sx=null;},{passive:true});
+  if(multi){ lastPinch=Date.now(); if(e.touches.length===0) multi=false; sx=null; return; }
+  if(sx===null) return;
+  const dx=e.changedTouches[0].clientX-sx; sx=null;
+  if(zoomed()) return;                                // 拡大中の横移動は「見る位置の移動」なのでめくらない
+  if(Math.abs(dx)>45) go(dx<0?1:-1);
+},{passive:true});
+stage.addEventListener('touchcancel',()=>{ sx=null; multi=false; },{passive:true});
+
+/* Homeボタン：?home=戻り先URL があればそこへ戻る（職員ダッシュボードから開いた場合）。
+   無ければ前の画面へ戻る／新しいタブで開かれていればタブを閉じる */
+(function(){
+  const hb=document.getElementById('homeBtn');
+  const h=new URLSearchParams(location.search).get('home');
+  const ok=h && /^https:\/\/(kimkat01|hojyokinsenyo-cell)\.github\.io\//.test(h);
+  if(ok){ hb.href=h; return; }
+  hb.addEventListener('click',e=>{
+    e.preventDefault(); e.stopPropagation();
+    if(history.length>1){ history.back(); return; }
+    window.close();
+    setTimeout(()=>{ location.href = document.referrer || 'https://kimkat01.github.io/shiodome-knowledge/'; },300);
+  });
+})();
+
 addEventListener('resize',()=>{
+  if(zoomed()) return;                                 // ピンチで拡大している間は組み替えない
   const s=innerWidth<900;
   if(s!==single){ single=s; if(single) pageIdx=Math.min(leafIdx*2,P.length-1); else leafIdx=Math.floor(pageIdx/2); render(); }
   else fit();
