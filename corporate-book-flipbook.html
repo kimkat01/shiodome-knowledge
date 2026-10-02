@@ -61,7 +61,8 @@ html,body{touch-action:pan-x pan-y;overscroll-behavior:none}
 /* 拡大表示（1ページを平らに表示） */
 #zoomView{position:fixed;inset:0;z-index:80;background:#15130F;display:none;overflow:hidden;touch-action:none}
 #zoomView.show{display:block}
-#zoomImg{position:absolute;left:0;top:0;transform-origin:0 0;background:#fff;box-shadow:0 10px 40px rgba(0,0,0,.5);user-select:none;-webkit-user-select:none;cursor:grab}
+#zoomCanvas{position:absolute;left:0;top:0;cursor:grab;touch-action:none}
+body.zooming #stage,body.zooming #bar,body.zooming #hint{visibility:hidden}
 #zbar{position:absolute;left:0;right:0;bottom:0;height:64px;display:flex;align-items:center;justify-content:center;gap:14px;
   padding-bottom:env(safe-area-inset-bottom);background:rgba(21,19,15,.92);color:#E8DECE}
 #zbar button{height:40px;min-width:40px;border-radius:999px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);
@@ -81,7 +82,7 @@ body.zooming #homeBtn{display:none}
 <a id="homeBtn" href="#" aria-label="ホームに戻る"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11L12 4L20 11"></path><path d="M6 10V19a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V10"></path><path d="M10 20v-5h4v5"></path></svg>Home</a>
 <div id="hint">タップ・スワイプでめくれます／2本指で広げると拡大表示</div>
 <div id="zoomView" aria-label="拡大表示">
-  <img id="zoomImg" alt="拡大表示中のページ" draggable="false">
+  <canvas id="zoomCanvas" aria-label="拡大表示中のページ"></canvas>
   <div id="zhint">2本指で拡大・縮小／ダブルタップで拡大⇔元に戻す</div>
   <div id="zbar">
     <button id="zprev" aria-label="前のページ">‹</button>
@@ -251,23 +252,41 @@ function pageAtX(x){
 }
 
 /* ===== 拡大表示（1ページだけを平らに表示して、2本指で拡大・1本指で移動） ===== */
-const zv=document.getElementById('zoomView'), zimg=document.getElementById('zoomImg'), zcount=document.getElementById('zcount');
+const zv=document.getElementById('zoomView'), zc=document.getElementById('zoomCanvas'), zctx=zc.getContext('2d'), zcount=document.getElementById('zcount');
+/* 拡大表示は「画面と同じ大きさのキャンバス」に、見えている部分だけを描く。
+   画像そのものを4倍に引き伸ばすと、iPhoneが巨大な画像を作ろうとしてメモリがあふれるため。 */
+let zsrc=null, zraf=0;
 let zPage=0, zs=1, ztx=0, zty=0, zw=0, zh=0, zg=null;
 const ZMAX=4;
 function zLayout(){
   const W=innerWidth, H=innerHeight-64, ar=1135/1603;
   zw=Math.min(W-16, (H-16)*ar); zh=zw/ar;
-  zimg.style.width=zw+'px'; zimg.style.height=zh+'px';
+  const dpr=Math.min(window.devicePixelRatio||1, 2);
+  zc.width=Math.round(W*dpr); zc.height=Math.round(H*dpr);
+  zc.style.width=W+'px'; zc.style.height=H+'px';
+  zctx.setTransform(dpr,0,0,dpr,0,0);
+}
+function zDraw(){
+  zraf=0;
+  const W=innerWidth, H=innerHeight-64;
+  zctx.fillStyle='#15130F'; zctx.fillRect(0,0,W,H);
+  zctx.fillStyle='#fff'; zctx.fillRect(ztx,zty,zw*zs,zh*zs);
+  if(zsrc && zsrc.complete && zsrc.naturalWidth){
+    zctx.imageSmoothingEnabled=true; zctx.imageSmoothingQuality='high';
+    zctx.drawImage(zsrc, ztx, zty, zw*zs, zh*zs);
+  }
 }
 function zClamp(){
   const W=innerWidth, H=innerHeight-64, w=zw*zs, h=zh*zs;
   ztx = w<=W ? (W-w)/2 : Math.min(0, Math.max(W-w, ztx));
   zty = h<=H ? (H-h)/2 : Math.min(0, Math.max(H-h, zty));
 }
-function zApply(){ zClamp(); zimg.style.transform=`translate(${ztx}px,${zty}px) scale(${zs})`; }
+function zApply(){ zClamp(); if(!zraf) zraf=requestAnimationFrame(zDraw); }
 function zoomPage(i){
   if(i<0||i>=P.length) return;
-  zPage=i; zimg.src=P[i]; zs=1; zApply();
+  zPage=i; zs=1;
+  const im=new Image(); im.decoding='async'; im.onload=()=>{ if(zsrc===im) zApply(); }; im.src=P[i];
+  if(zsrc) zsrc.src=''; zsrc=im; zApply();
   zcount.textContent=`${String(i+1).padStart(2,'0')} / ${P.length}`;
   document.getElementById('zprev').disabled = i===0;
   document.getElementById('znext').disabled = i===P.length-1;
@@ -282,7 +301,8 @@ function openZoom(i, touches){
 }
 function closeZoom(){
   zv.classList.remove('show'); document.body.classList.remove('zooming');
-  zimg.removeAttribute('src'); zg=null;
+  if(zsrc){ zsrc.onload=null; zsrc.src=''; zsrc=null; } zg=null;
+  zc.width=1; zc.height=1;   // キャンバスのメモリも空ける
   gotoPage(zPage);
 }
 function zd(t){ return Math.hypot(t[0].clientX-t[1].clientX, t[0].clientY-t[1].clientY); }
@@ -335,10 +355,10 @@ zv.addEventListener('wheel',e=>{
   ztx=e.clientX-px*zs; zty=e.clientY-py*zs; zApply();
 },{passive:false});
 let md=null;
-zimg.addEventListener('mousedown',e=>{ e.preventDefault(); md={x:e.clientX,y:e.clientY,tx:ztx,ty:zty}; });
+zc.addEventListener('mousedown',e=>{ e.preventDefault(); md={x:e.clientX,y:e.clientY,tx:ztx,ty:zty}; });
 addEventListener('mousemove',e=>{ if(md){ ztx=md.tx+e.clientX-md.x; zty=md.ty+e.clientY-md.y; zApply(); } });
 addEventListener('mouseup',()=>{ md=null; });
-zimg.addEventListener('dblclick',e=>{ const px=(e.clientX-ztx)/zs, py=(e.clientY-zty)/zs; zs = zs>1.05?1:2.5; ztx=e.clientX-px*zs; zty=e.clientY-py*zs; zApply(); });
+zc.addEventListener('dblclick',e=>{ const px=(e.clientX-ztx)/zs, py=(e.clientY-zty)/zs; zs = zs>1.05?1:2.5; ztx=e.clientX-px*zs; zty=e.clientY-py*zs; zApply(); });
 document.getElementById('zclose').onclick=closeZoom;
 document.getElementById('zprev').onclick=()=>zoomPage(zPage-1);
 document.getElementById('znext').onclick=()=>zoomPage(zPage+1);
