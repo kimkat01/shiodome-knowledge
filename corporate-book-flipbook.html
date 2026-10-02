@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>CORPORATE BOOK｜学校法人柴学園 / 社会福祉法人雄雅会</title>
 <style>
 :root{--gold:#F6C43A}
@@ -56,6 +56,20 @@ body{margin:0;overflow:hidden;display:flex;flex-direction:column;
   font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium",Meiryo,sans-serif;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
 #homeBtn:active{background:rgba(255,255,255,.16)}
 #homeBtn svg{width:16px;height:16px;flex:0 0 auto}
+html,body{touch-action:pan-x pan-y;overscroll-behavior:none}
+#stage{touch-action:none}
+/* 拡大表示（1ページを平らに表示） */
+#zoomView{position:fixed;inset:0;z-index:80;background:#15130F;display:none;overflow:hidden;touch-action:none}
+#zoomView.show{display:block}
+#zoomImg{position:absolute;left:0;top:0;transform-origin:0 0;background:#fff;box-shadow:0 10px 40px rgba(0,0,0,.5);user-select:none;-webkit-user-select:none;cursor:grab}
+#zbar{position:absolute;left:0;right:0;bottom:0;height:64px;display:flex;align-items:center;justify-content:center;gap:14px;
+  padding-bottom:env(safe-area-inset-bottom);background:rgba(21,19,15,.92);color:#E8DECE}
+#zbar button{height:40px;min-width:40px;border-radius:999px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);
+  color:#E8DECE;font-size:16px;cursor:pointer;padding:0 14px;font-family:inherit}
+#zbar button:disabled{opacity:.3}
+#zcount{font:11px/1 Helvetica,Arial,sans-serif;letter-spacing:.16em;color:#C4B9A8;min-width:64px;text-align:center}
+#zhint{transition:opacity .6s;position:absolute;top:calc(14px + env(safe-area-inset-top));left:0;right:0;text-align:center;color:#B5AA9A;font-size:11.5px;pointer-events:none}
+body.zooming #homeBtn{display:none}
 #boot{position:fixed;inset:0;display:grid;place-items:center;background:#211E1A;color:#B5AA9A;
   font-size:12px;letter-spacing:.2em;z-index:99;transition:opacity .5s}
 @media (prefers-reduced-motion:reduce){.leaf,.card{transition-duration:.01ms}}
@@ -65,12 +79,23 @@ body{margin:0;overflow:hidden;display:flex;flex-direction:column;
 <div id="boot">CORPORATE BOOK</div>
 <div id="stage"><div id="book"></div></div>
 <a id="homeBtn" href="#" aria-label="ホームに戻る"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11L12 4L20 11"></path><path d="M6 10V19a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V10"></path><path d="M10 20v-5h4v5"></path></svg>Home</a>
-<div id="hint">ページをクリック／← → キー／スワイプでめくれます</div>
+<div id="hint">タップ・スワイプでめくれます／2本指で広げると拡大表示</div>
+<div id="zoomView" aria-label="拡大表示">
+  <img id="zoomImg" alt="拡大表示中のページ" draggable="false">
+  <div id="zhint">2本指で拡大・縮小／ダブルタップで拡大⇔元に戻す</div>
+  <div id="zbar">
+    <button id="zprev" aria-label="前のページ">‹</button>
+    <span id="zcount"></span>
+    <button id="znext" aria-label="次のページ">›</button>
+    <button id="zclose">✕ 閉じる</button>
+  </div>
+</div>
 <nav id="bar">
   <button id="prev" aria-label="前のページ">‹</button>
   <div id="meter"><i></i></div>
   <span id="count"></span>
   <button id="next" aria-label="次のページ">›</button>
+  <button id="zoomBtn" aria-label="拡大表示" title="拡大表示" style="font-size:16px">🔍</button>
   <button id="fs" aria-label="全画面表示" title="全画面表示" style="font-size:15px">⤢</button>
 </nav>
 
@@ -84,33 +109,27 @@ const meter=document.querySelector('#meter i'), hint=document.getElementById('hi
 const nLeaves = Math.ceil(P.length/2);
 let single = window.innerWidth < 900, leafIdx = 0, pageIdx = 0;
 
-/* ページ画像は corporate-book/ フォルダの別ファイル。以前は全ページを1つのHTMLに埋め込んでいたため（約5MB）、
-   全部届くまで何も表示されなかった。今は表示中のページから先に読み込み、残りは裏で順番に読み込む。 */
+/* ===== ページ画像の読み込み =====
+   画像は corporate-book/ フォルダの別ファイル。
+   スマホのメモリを使いすぎないよう、画面に出すのは「今のページの前後数ページ」だけ。
+   それ以外は通信だけ先に済ませておき（すぐ出せるように）、画面からは外しておく。 */
 const img = (src,n) => src ? `<img data-pg="${n-1}" alt="${n}ページ" draggable="false" decoding="async">` : '';
-const loaded = new Set();
-function loadPage(i){
-  if(i<0 || i>=P.length || loaded.has(i) || !P[i]) return;
-  loaded.add(i);
-  book.querySelectorAll(`img[data-pg="${i}"]`).forEach(im=>{ im.src=P[i]; });
-}
-function reapplyLoaded(){ loaded.forEach(i=>book.querySelectorAll(`img[data-pg="${i}"]`).forEach(im=>{ if(!im.src) im.src=P[i]; })); }
-function loadAround(){
-  const c = single ? pageIdx : leafIdx*2;
-  for(let i=c-2;i<=c+4;i++) loadPage(i);
+const WIN_BEFORE=2, WIN_AFTER=3;
+function curPage(){ return single ? pageIdx : leafIdx*2; }
+function syncImages(){
+  const c=curPage();
+  book.querySelectorAll('img[data-pg]').forEach(im=>{
+    const i=+im.dataset.pg;
+    if(i>=c-WIN_BEFORE && i<=c+WIN_AFTER){ if(!im.getAttribute('src')) im.src=P[i]; }
+    else if(im.getAttribute('src')) im.removeAttribute('src');   // 遠いページは画面から外してメモリを空ける
+  });
 }
 let bgStarted=false;
-function loadRestInBackground(){
+function prefetchAll(){                 // 残りのページは通信だけ先に済ませる（画面には出さない＝メモリを使わない）
   if(bgStarted) return; bgStarted=true;
   let i=0;
-  const next=()=>{
-    while(i<P.length && loaded.has(i)) i++;
-    if(i>=P.length) return;
-    const k=i; loadPage(k);
-    const im=book.querySelector(`img[data-pg="${k}"]`);
-    if(!im || im.complete){ setTimeout(next,30); return; }
-    im.addEventListener('load',next,{once:true}); im.addEventListener('error',next,{once:true});
-  };
-  next(); next();   // 2枚ずつ並行して読み込む
+  const next=()=>{ if(i>=P.length) return; const u=P[i++]; fetch(u).then(r=>r.blob()).catch(()=>{}).finally(next); };
+  next(); next();
 }
 
 function buildSpread(){
@@ -128,6 +147,7 @@ function syncSpread(){
     const fl = i < leafIdx;
     l.classList.toggle('flipped',fl);
     l.style.zIndex = fl ? i+1 : nLeaves-i;
+    l.style.visibility = (i < leafIdx-2 || i > leafIdx+1) ? 'hidden' : 'visible';   // 見えない紙は描かない
   });
 }
 function buildSingle(){
@@ -141,7 +161,7 @@ function buildSingle(){
 function syncSingle(){
   [...book.children].forEach((c,i)=>{
     c.classList.toggle('away', i<pageIdx);
-    c.style.visibility = i < pageIdx-1 ? 'hidden' : 'visible';
+    c.style.visibility = (i < pageIdx-1 || i > pageIdx+2) ? 'hidden' : 'visible';
   });
 }
 function go(d){
@@ -152,7 +172,12 @@ function go(d){
     const n=Math.min(Math.max(leafIdx+d,0),nLeaves);
     if(n===leafIdx) return; leafIdx=n; syncSpread();
   }
-  loadAround(); update(); hint.style.opacity=0;
+  syncImages(); update(); hint.style.opacity=0;
+}
+function gotoPage(i){             // ページ番号（0始まり）へ移動
+  i=Math.min(Math.max(i,0),P.length-1);
+  if(single) pageIdx=i; else leafIdx=Math.floor((i+1)/2);
+  single?syncSingle():syncSpread(); syncImages(); update();
 }
 function update(){
   const cur = single ? pageIdx+1 : Math.min(leafIdx*2+1,P.length);
@@ -166,7 +191,7 @@ function fit(){
   const s = Math.min((stage.clientWidth-20)/bw,(stage.clientHeight-20)/bh,1.35);
   book.style.transform=`scale(${s})`;
 }
-function render(){ single?buildSingle():buildSpread(); reapplyLoaded(); loadAround(); update(); fit(); }
+function render(){ single?buildSingle():buildSpread(); syncImages(); update(); fit(); }
 
 nextBtn.onclick=e=>{e.stopPropagation();go(1)};
 prevBtn.onclick=e=>{e.stopPropagation();go(-1)};
@@ -175,32 +200,149 @@ fsBtn.onclick=e=>{e.stopPropagation();
 document.addEventListener('fullscreenchange',()=>{
   fsBtn.textContent = document.fullscreenElement ? '⤡' : '⤢'; setTimeout(fit,150);});
 addEventListener('keydown',e=>{
+  if(zv.classList.contains('show')){
+    if(e.key==='Escape') closeZoom();
+    if(e.key==='ArrowRight') zoomPage(zPage+1);
+    if(e.key==='ArrowLeft') zoomPage(zPage-1);
+    return;
+  }
   if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();go(1)}
   if(e.key==='ArrowLeft') go(-1);
   if(e.key==='Home'){leafIdx=0;pageIdx=0;render()}
 });
-/* ピンチアウト（2本指）や拡大表示中の指の動きでページが飛ばないようにする */
-const zoomed=()=>!!(window.visualViewport && visualViewport.scale>1.02);
+
+/* ===== 画面全体の拡大（ブラウザのピンチ）は止める =====
+   立体的にめくる表示のまま画面全体を拡大すると、iPhoneのメモリがあふれて
+   「問題が繰り返し起きました」で落ちるため。拡大は下の「拡大表示」で1ページだけを平らに表示して行う。 */
+['gesturestart','gesturechange','gestureend'].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),{passive:false}));
+document.addEventListener('touchmove',e=>{ if(e.touches.length>1) e.preventDefault(); },{passive:false});
+document.addEventListener('dblclick',e=>e.preventDefault());
+
+/* ===== ブックの操作：タップ／スワイプでめくる、2本指で拡大表示を開く ===== */
 let sx=null, multi=false, lastPinch=0;
 stage.addEventListener('click',e=>{
-  if(zoomed() || Date.now()-lastPinch<600) return;   // 拡大中・ピンチ直後はタップでめくらない
+  if(Date.now()-lastPinch<600) return;
   go(e.clientX > innerWidth/2 ? 1 : -1);
 });
 stage.addEventListener('touchstart',e=>{
-  if(e.touches.length>1){ multi=true; sx=null; lastPinch=Date.now(); return; }
+  if(e.touches.length>1){
+    e.preventDefault();
+    multi=true; sx=null; lastPinch=Date.now();
+    // 2本指を置いたら、指の真ん中にあるページを拡大表示で開き、そのままピンチを続けられるようにする
+    const mx=(e.touches[0].clientX+e.touches[1].clientX)/2;
+    openZoom(pageAtX(mx), e.touches);
+    return;
+  }
   if(!multi) sx=e.touches[0].clientX;
-},{passive:true});
-stage.addEventListener('touchmove',e=>{
-  if(e.touches.length>1){ multi=true; sx=null; lastPinch=Date.now(); }
-},{passive:true});
+},{passive:false});
 stage.addEventListener('touchend',e=>{
   if(multi){ lastPinch=Date.now(); if(e.touches.length===0) multi=false; sx=null; return; }
   if(sx===null) return;
   const dx=e.changedTouches[0].clientX-sx; sx=null;
-  if(zoomed()) return;                                // 拡大中の横移動は「見る位置の移動」なのでめくらない
   if(Math.abs(dx)>45) go(dx<0?1:-1);
 },{passive:true});
 stage.addEventListener('touchcancel',()=>{ sx=null; multi=false; },{passive:true});
+function pageAtX(x){
+  if(single) return pageIdx;
+  const r=book.getBoundingClientRect(), left = x < r.left + r.width/2;
+  const L=leafIdx*2-1, R=leafIdx*2;          // 見開きの左ページ・右ページ
+  if(left && L>=0) return L;
+  return R<P.length ? R : L;
+}
+
+/* ===== 拡大表示（1ページだけを平らに表示して、2本指で拡大・1本指で移動） ===== */
+const zv=document.getElementById('zoomView'), zimg=document.getElementById('zoomImg'), zcount=document.getElementById('zcount');
+let zPage=0, zs=1, ztx=0, zty=0, zw=0, zh=0, zg=null;
+const ZMAX=4;
+function zLayout(){
+  const W=innerWidth, H=innerHeight-64, ar=1135/1603;
+  zw=Math.min(W-16, (H-16)*ar); zh=zw/ar;
+  zimg.style.width=zw+'px'; zimg.style.height=zh+'px';
+}
+function zClamp(){
+  const W=innerWidth, H=innerHeight-64, w=zw*zs, h=zh*zs;
+  ztx = w<=W ? (W-w)/2 : Math.min(0, Math.max(W-w, ztx));
+  zty = h<=H ? (H-h)/2 : Math.min(0, Math.max(H-h, zty));
+}
+function zApply(){ zClamp(); zimg.style.transform=`translate(${ztx}px,${zty}px) scale(${zs})`; }
+function zoomPage(i){
+  if(i<0||i>=P.length) return;
+  zPage=i; zimg.src=P[i]; zs=1; zApply();
+  zcount.textContent=`${String(i+1).padStart(2,'0')} / ${P.length}`;
+  document.getElementById('zprev').disabled = i===0;
+  document.getElementById('znext').disabled = i===P.length-1;
+}
+function openZoom(i, touches){
+  zLayout(); zv.classList.add('show'); document.body.classList.add('zooming');
+  const zh=document.getElementById('zhint'); zh.style.opacity=1; clearTimeout(zh._t); zh._t=setTimeout(()=>zh.style.opacity=0,3500);
+  zoomPage(i);
+  // 本体の画像は外してメモリを空ける（閉じたら戻す）
+  book.querySelectorAll('img[src]').forEach(im=>im.removeAttribute('src'));
+  if(touches && touches.length>1) zStartPinch(touches);
+}
+function closeZoom(){
+  zv.classList.remove('show'); document.body.classList.remove('zooming');
+  zimg.removeAttribute('src'); zg=null;
+  gotoPage(zPage);
+}
+function zd(t){ return Math.hypot(t[0].clientX-t[1].clientX, t[0].clientY-t[1].clientY); }
+function zStartPinch(t){
+  const mx=(t[0].clientX+t[1].clientX)/2, my=(t[0].clientY+t[1].clientY)/2;
+  zg={type:'pinch', d0:zd(t), s0:zs, px:(mx-ztx)/zs, py:(my-zty)/zs};
+}
+// 拡大表示中の指の操作は画面全体で受け取る（ブックで始めたピンチもそのまま続く）
+document.addEventListener('touchstart',e=>{
+  if(!zv.classList.contains('show') || e.target.closest('#zbar')) return;
+  e.preventDefault();
+  if(e.touches.length>1) zStartPinch(e.touches);
+  else{
+    const t=e.touches[0], now=Date.now();
+    if(zg && zg.lastTap && now-zg.lastTap<300 && Math.hypot(t.clientX-zg.tx0,t.clientY-zg.ty0)<30){
+      // ダブルタップ：拡大⇔元の大きさ
+      const ns = zs>1.05 ? 1 : 2.5, px=(t.clientX-ztx)/zs, py=(t.clientY-zty)/zs;
+      zs=ns; ztx=t.clientX-px*zs; zty=t.clientY-py*zs; zApply(); zg=null; return;
+    }
+    zg={type:'pan', x:t.clientX, y:t.clientY, tx:ztx, ty:zty, tx0:t.clientX, ty0:t.clientY, t0:now, lastTap:now};
+  }
+},{passive:false});
+document.addEventListener('touchmove',e=>{
+  if(!zv.classList.contains('show') || !zg) return;
+  e.preventDefault();
+  if(zg.type==='pinch' && e.touches.length>1){
+    const t=e.touches, mx=(t[0].clientX+t[1].clientX)/2, my=(t[0].clientY+t[1].clientY)/2;
+    zs=Math.min(ZMAX, Math.max(1, zg.s0*zd(t)/zg.d0));
+    ztx=mx-zg.px*zs; zty=my-zg.py*zs; zApply();
+  }else if(zg.type==='pan' && e.touches.length===1){
+    const t=e.touches[0];
+    ztx=zg.tx+(t.clientX-zg.x); zty=zg.ty+(t.clientY-zg.y); zApply();
+  }
+},{passive:false});
+document.addEventListener('touchend',e=>{
+  if(!zv.classList.contains('show') || !zg) return;
+  if(zg.type==='pan' && e.touches.length===0){
+    const t=e.changedTouches[0], dx=t.clientX-zg.tx0, dy=t.clientY-zg.ty0;
+    if(zs<=1.02 && Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.5){ zoomPage(zPage+(dx<0?1:-1)); zg=null; return; }  // 等倍のときは横スワイプでページ送り
+    const keep=zg.lastTap; zg={lastTap:keep, tx0:zg.tx0, ty0:zg.ty0};
+  }else if(zg.type==='pinch' && e.touches.length===1){
+    const t=e.touches[0]; zg={type:'pan', x:t.clientX, y:t.clientY, tx:ztx, ty:zty, tx0:t.clientX, ty0:t.clientY};
+  }else if(e.touches.length===0){ zg=null; }
+},{passive:false});
+// PC：ホイールで拡大、ドラッグで移動
+zv.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const px=(e.clientX-ztx)/zs, py=(e.clientY-zty)/zs;
+  zs=Math.min(ZMAX, Math.max(1, zs*Math.exp(-e.deltaY*0.002)));
+  ztx=e.clientX-px*zs; zty=e.clientY-py*zs; zApply();
+},{passive:false});
+let md=null;
+zimg.addEventListener('mousedown',e=>{ e.preventDefault(); md={x:e.clientX,y:e.clientY,tx:ztx,ty:zty}; });
+addEventListener('mousemove',e=>{ if(md){ ztx=md.tx+e.clientX-md.x; zty=md.ty+e.clientY-md.y; zApply(); } });
+addEventListener('mouseup',()=>{ md=null; });
+zimg.addEventListener('dblclick',e=>{ const px=(e.clientX-ztx)/zs, py=(e.clientY-zty)/zs; zs = zs>1.05?1:2.5; ztx=e.clientX-px*zs; zty=e.clientY-py*zs; zApply(); });
+document.getElementById('zclose').onclick=closeZoom;
+document.getElementById('zprev').onclick=()=>zoomPage(zPage-1);
+document.getElementById('znext').onclick=()=>zoomPage(zPage+1);
+document.getElementById('zoomBtn').onclick=e=>{ e.stopPropagation(); openZoom(single?pageIdx:pageAtX(innerWidth*0.75)); };
 
 /* Homeボタン：?home=戻り先URL があればそこへ戻る（職員ダッシュボードから開いた場合）。
    無ければ前の画面へ戻る／新しいタブで開かれていればタブを閉じる */
@@ -218,7 +360,7 @@ stage.addEventListener('touchcancel',()=>{ sx=null; multi=false; },{passive:true
 })();
 
 addEventListener('resize',()=>{
-  if(zoomed()) return;                                 // ピンチで拡大している間は組み替えない
+  if(zv.classList.contains('show')){ zLayout(); zApply(); return; }
   const s=innerWidth<900;
   if(s!==single){ single=s; if(single) pageIdx=Math.min(leafIdx*2,P.length-1); else leafIdx=Math.floor(pageIdx/2); render(); }
   else fit();
@@ -227,7 +369,7 @@ render();
 /* 最初のページが届いた時点で表紙を見せる（全ページを待たない） */
 (function(){
   const b=document.getElementById('boot'); let done=false;
-  const hide=()=>{ if(done) return; done=true; b.style.opacity=0; setTimeout(()=>b.remove(),600); loadRestInBackground(); };
+  const hide=()=>{ if(done) return; done=true; b.style.opacity=0; setTimeout(()=>b.remove(),600); prefetchAll(); };
   const first=book.querySelector('img[data-pg="0"]');
   if(first){ if(first.complete && first.naturalWidth) hide(); else { first.addEventListener('load',hide,{once:true}); first.addEventListener('error',hide,{once:true}); } }
   setTimeout(hide,4000);   // 念のため、4秒で必ず表示
