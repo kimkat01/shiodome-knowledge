@@ -633,7 +633,7 @@ function filterSubsidies(list){ return Array.isArray(list) ? list.filter(isSubsi
    ・投稿者はログイン中の人（ログインID）で判定。自分の投稿だけ編集・削除できる。
    ・FEED_GAS_URL が空のあいだは、これまで通りのデモ表示（保存されない）。
    ============================================================ */
-const FEED_GAS_URL = '';   // ← フィード用GASのウェブアプリURL（/exec）
+const FEED_GAS_URL = 'https://script.google.com/macros/s/AKfycbxOi0s3Uua4i9Y4rPKJc-kAMRTT52VwaiZB8S8yxnl5KRJ3DKFn2RSszcTQ710yOpqO/exec';   // ← フィード用GASのウェブアプリURL（/exec）
 const FEED_LIVE = !!FEED_GAS_URL;
 const FEED_POLL_MS = 60000;   // 他の園の新しい投稿を1分ごとに取り込む
 
