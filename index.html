@@ -326,6 +326,27 @@ html.law-y .kb-logout:hover{background:#e6f2ea;}
 <script src="https://kimkat01.github.io/staff-dashboard/gardens.js"></script>
 <script>
 var GARDEN_INFO = (typeof gardenFromUrl === 'function') ? gardenFromUrl() : null; // {key, name, code}
+// ★ 本部モード（2026-10）：?garden=honbu で開くと「本部」として表示する（本部ダッシュボードからのリンク用）
+//   ・園マスタ（gardens.js）には本部を入れず、このページだけで扱う（他ツールの園選択に本部が混ざらないように）
+//   ・園長ログインの代わりに本部用パスワードで入る（HQ_PW。本部ダッシュボードと同じにしておく）
+//   ・左上のプルダウンで園を選ぶと、その園の園長ダッシュボードと同じ表示になる（URL：?garden=honbu&view=園キー）
+//     園を選ぶと、有給チェッカー・規約マニュアルのリンクと有給の承認待ち件数がその園のものになる
+//   ・決裁申請・採用計画申請書は園長が申請するフォームなので、本部モードでは常に隠す
+//   ・本部モードでの投稿は、どの園を表示していても「本部」として投稿される
+var HQ_PW = 'honbu2026';   // ← 本部用パスワード（変更するときは本部ダッシュボードの PW も合わせる）
+var HQ_AUTH_KEY = 'kb_honbu_auth';
+var HQ_MODE = (function(){
+  try{ return /^(honbu|本部|hq)$/i.test(String(new URLSearchParams(location.search).get('garden')||'').trim()); }
+  catch(e){ return false; }
+})();
+var HQ_VIEW = null;   // 本部モードで表示中の園（園マスタの1件）。null＝本部（園を選んでいない）
+if(HQ_MODE){
+  try{ HQ_VIEW = (typeof findGarden === 'function') ? findGarden(new URLSearchParams(location.search).get('view')) : null; }catch(e){}
+  GARDEN_INFO = HQ_VIEW || { key:'honbu', name:'本部', code:'本部' };
+}
+var HQ_AUTHED = false;
+if(HQ_MODE){ try{ HQ_AUTHED = sessionStorage.getItem(HQ_AUTH_KEY) === '1'; }catch(e){} }
+if(HQ_MODE && !HQ_AUTHED) document.write('<style>#appMain{display:none!important}#hqGate{display:flex!important}</style>');
 var GARDEN = GARDEN_INFO ? GARDEN_INFO.name : '';   // 日本語の園名（職員マスタの園名と同じ）
 // 社会福祉法人雄雅会（園コード Y〜）の園は緑テーマにする（色の中身は <head> 末尾の html.law-y）
 if(GARDEN_INFO && /^Y/.test(GARDEN_INFO.code || '')) document.documentElement.classList.add('law-y');
@@ -348,8 +369,8 @@ function kbReadLogin(){
   if(s.exp && Date.now() > s.exp) return null;
   return s;
 }
-var KB_LOGIN = GARDEN ? kbReadLogin() : null;
-if(GARDEN && !KB_LOGIN) document.write('<style>#appMain{display:none!important}#kbGate{display:flex!important}</style>');
+var KB_LOGIN = (GARDEN && !HQ_MODE) ? kbReadLogin() : null;
+if(GARDEN && !HQ_MODE && !KB_LOGIN) document.write('<style>#appMain{display:none!important}#kbGate{display:flex!important}</style>');
 </script>
 
 <!-- ===== 園長ログイン画面 ===== -->
@@ -422,6 +443,45 @@ if(GARDEN && !KB_LOGIN) document.write('<style>#appMain{display:none!important}#
   </div>
 </div>
 
+<!-- ===== 本部用パスワード画面（本部モードのときだけ表示） ===== -->
+<style>
+  #hqGate{display:none;min-height:100vh;align-items:center;justify-content:center;padding:24px 16px;
+    background:linear-gradient(135deg,var(--bg1) 0%,var(--bg2) 100%);}
+  .hq-view{margin:-6px 10px 14px}
+  .hq-view label{display:block;font-size:11px;color:var(--sub);margin:0 0 4px;font-weight:700}
+  .hq-view select{width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #d6d9e6;border-radius:8px;
+    font-size:13px;font-family:inherit;color:#000;background:#fff;cursor:pointer}
+  .hq-view select:focus{outline:none;border-color:#4169e1;box-shadow:0 0 0 3px rgba(65,105,225,.15)}
+  .hq-view .hq-note{font-size:11px;color:var(--sub);margin-top:5px;line-height:1.5}
+</style>
+<div id="hqGate">
+  <div class="kbg-card">
+    <div class="kbg-logo">し</div>
+    <div class="kbg-garden">本部</div>
+    <div class="kbg-sub">ポータルサイト 本部用</div>
+    <label class="kbg-label" for="hqPw">本部用パスワード</label>
+    <input class="kbg-in" id="hqPw" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')hqLogin()">
+    <label class="kbg-row"><input type="checkbox" onchange="document.getElementById('hqPw').type=this.checked?'text':'password'">パスワードを表示する</label>
+    <div class="kbg-err" id="hqErr"></div>
+    <button class="kbg-btn" onclick="hqLogin()">開く</button>
+    <div class="kbg-help">本部ダッシュボードと同じパスワードです。<br>ブラウザを閉じるまでログインしたままになります。</div>
+  </div>
+</div>
+<script>
+function hqLogin(){
+  var el = document.getElementById('hqPw');
+  var pw = String(el.value || '').trim();
+  if(pw !== HQ_PW){
+    document.getElementById('hqErr').textContent = 'パスワードが違います';
+    el.select();
+    return;
+  }
+  try{ sessionStorage.setItem(HQ_AUTH_KEY, '1'); }catch(e){}
+  location.reload();
+}
+if(HQ_MODE && !HQ_AUTHED) setTimeout(function(){ var el=document.getElementById('hqPw'); if(el) el.focus(); }, 50);
+</script>
+
 <div class="app" id="appMain">
 
   <!-- ===== 左：ナビ ===== -->
@@ -430,6 +490,11 @@ if(GARDEN && !KB_LOGIN) document.write('<style>#appMain{display:none!important}#
       <span class="logo">し</span><span><b id="gardenName"></b><small>ナレッジボード</small></span>
     </div>
     <div class="kb-user" id="kbUser" style="display:none"><span><b id="kbUserName"></b> さん</span><button class="kb-logout" onclick="kbLogout()">ログアウト</button></div>
+    <div class="hq-view" id="hqView" style="display:none">
+      <label for="hqViewSel">表示する園</label>
+      <select id="hqViewSel"></select>
+      <div class="hq-note" id="hqViewNote"></div>
+    </div>
     <a class="tool-item" id="hiyariLink" href="https://kimkat01.github.io/hiyari-hatto2/" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17v.4"/></svg>ヒヤリハットくん</a>
     <a class="tool-item" id="uqLink" href="#" target="_blank" rel="noopener">
@@ -652,6 +717,8 @@ function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,m=>({'&':'&amp;',
 
 /* ログイン中の人（ログイン直後でも読めるよう毎回ストレージから取る） */
 function me(){
+  // 本部モードはログインなしのため、共通ID「honbu」で投稿する（フィードを本番GASにつないだ後も投稿できるように）
+  if(typeof HQ_MODE!=="undefined" && HQ_MODE) return { loginId:"honbu", name:"", role:"本部" };
   const s = (typeof kbReadLogin==="function" ? kbReadLogin() : null) || {};
   return { loginId: String(s.loginId||""), name: s.name||"", role: s.role||"" };
 }
@@ -1193,6 +1260,42 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
   }
   document.getElementById('gardenName').textContent = GARDEN;
   document.title = GARDEN + '｜しおどめポータルサイト';
+  if(HQ_MODE){
+    var hide = function(id){ var el = document.getElementById(id); if(el) el.style.display = 'none'; };
+    // 左上は常に「本部」。表示中の園はタブ名とプルダウンで分かるようにする
+    document.getElementById('gardenName').textContent = '本部';
+    document.title = (HQ_VIEW ? '本部（' + HQ_VIEW.name + '）' : '本部') + '｜しおどめポータルサイト';
+
+    // 表示する園のプルダウン（園の一覧は園マスタ gardens.js から作る）
+    var sel = document.getElementById('hqViewSel');
+    var addOpt = function(parent, value, text){
+      var o = document.createElement('option'); o.value = value; o.textContent = text; parent.appendChild(o);
+    };
+    addOpt(sel, '', '本部（園を選ばない）');
+    var GM = (typeof GARDEN_MASTER !== 'undefined' && Array.isArray(GARDEN_MASTER)) ? GARDEN_MASTER : [];
+    [['学校法人柴学園', /^S/], ['社会福祉法人雄雅会', /^Y/]].forEach(function(grp){
+      var og = document.createElement('optgroup'); og.label = grp[0];
+      GM.filter(function(g){ return grp[1].test(g.code); }).forEach(function(g){ addOpt(og, g.key, g.code + '｜' + g.name); });
+      if(og.children.length) sel.appendChild(og);
+    });
+    sel.value = HQ_VIEW ? HQ_VIEW.key : '';
+    sel.addEventListener('change', function(){
+      location.search = '?garden=honbu' + (sel.value ? '&view=' + encodeURIComponent(sel.value) : '');
+    });
+    document.getElementById('hqViewNote').textContent = HQ_VIEW
+      ? 'この園の園長と同じ画面です。投稿は「本部」として行われます。'
+      : '園を選ぶと、その園の有給チェッカー・規約マニュアルが開けます。';
+    document.getElementById('hqView').style.display = 'block';
+
+    // 決裁申請・採用計画申請書は園長の申請フォームなので、本部モードでは常に隠す
+    hide('kessaiLink'); hide('saiyoLink');
+    if(!HQ_VIEW){
+      // 園を選んでいないときは、園ごとのツールも隠す（月次収支・ヒヤリハット等は園指定なしのリンクのまま）
+      hide('uqLink'); hide('manualLink');
+      return;
+    }
+    // 園を選んでいるときは、下の通常処理でその園のリンクに切り替える
+  }
   document.getElementById('uqLink').href =
     'https://kimkat01.github.io/staff-dashboard/uqcheck/encho.html?garden=' + GARDEN_INFO.key;
   // 規約・マニュアルにも園を引き継ぐ（「ナレッジボードへ戻る」で同じ園のボードに戻れるように）
@@ -1213,7 +1316,7 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
 (function(){
   // 2026-09：アカウント一本化後の本番GAS（cryk0289側）に切り替え。園は上の GARDEN（URLの ?garden）を使う
   var GAS_URL = 'https://script.google.com/macros/s/AKfycbwoVzAB2ZHhhX6O7vHBJstEU4KEN5lGFwSfrCIRXBj7RahQ046-nyR9zlmd5qseECGgCg/exec';
-  if(!GARDEN) return;
+  if(!GARDEN || (HQ_MODE && !HQ_VIEW)) return;   // 本部モードは園を選んだときだけ件数を出す
   function parseGasResponse(text){
     var t=(text||'').trim();
     var m=t.match(/^[\w$]+\s*\(([\s\S]*)\)\s*;?$/); // cb({...}) を剥がす
@@ -1254,7 +1357,7 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
   var PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[0-9])[a-z0-9]{8}$/;
   var pending = null;   // ログイン成功後、画面に入る前に保持する情報
   var $ = function(id){ return document.getElementById(id); };
-  if(!GARDEN) return;
+  if(!GARDEN || HQ_MODE) return;  // 本部モードは園長ログインなし
 
   $('kbgGarden').textContent = GARDEN;
   function showUser(s){
