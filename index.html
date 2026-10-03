@@ -770,6 +770,8 @@ function ago(ts){
   const dt=new Date(ts); return `${dt.getMonth()+1}/${dt.getDate()}`;
 }
 function initial(name){ return (name||"?").trim().charAt(0) || "?"; }
+/* 本部アカウントは、他の人の投稿・コメントも削除できる（ダミーは除く） */
+const canModerate = p => !p.demo && FEED_LIVE && isHonbuUser();
 const isMine = p => p.demo ? false : FEED_LIVE ? (!!me().loginId && p.loginId===me().loginId) : (p.code===who.value && p.name===(myname.value.trim()||"名無し"));
 const likedByMe = p => (p.likers||[]).some(l=>l.id===((FEED_LIVE && me().loginId)?me().loginId:"__demo__"));
 
@@ -782,7 +784,7 @@ function feedGet(){
 }
 function feedPost(action, data){
   const m = me();
-  const payload = Object.assign({action, who:{code:who.value, name:(myname.value.trim()||m.name||"名無し"), loginId:m.loginId}}, data);
+  const payload = Object.assign({action, who:{code:who.value, name:(myname.value.trim()||m.name||"名無し"), loginId:m.loginId, role:m.role}}, data);
   return fetch(FEED_GAS_URL, {method:"POST", body:JSON.stringify(payload), redirect:"follow"})
     .then(r=>r.text()).then(t=>{ let d=null; try{ d=JSON.parse(t); }catch(e){} if(!d) throw new Error("サーバーの応答を読み取れませんでした"); if(!d.ok) throw new Error(d.message||"保存に失敗しました"); return d; });
 }
@@ -879,13 +881,13 @@ function render(){
       <div class="p-acts">
         <button class="act ${liked?'liked':''}" data-like="${esc(p.id)}">${liked?'♥':'♡'} <span>いいね${nLike?` ${nLike}`:''}</span></button>
         <button class="act" data-toggle="${esc(p.id)}">💬 <span>コメント${cm.length?` ${cm.length}`:''}</span></button>
-        ${mine?`<button class="act" data-edit="${esc(p.id)}">✎ 編集</button><button class="act danger" data-del="${esc(p.id)}">🗑 削除</button>`:""}
+        ${mine?`<button class="act" data-edit="${esc(p.id)}">✎ 編集</button>`:""}${(mine||canModerate(p))?`<button class="act danger" data-del="${esc(p.id)}">🗑 削除</button>`:""}
       </div>
       ${likeByHtml(p)}
       <div class="comments${openComments.has(String(p.id))?" open":""}" id="c-${esc(p.id)}">
         ${cm.map(c=>`
           <div class="cmt"><div class="avatar" style="background:${orgColor(c.org)}">${esc(initial(c.name))}</div>
-            <div class="cmt-bubble"><div class="cmt-name">${esc(c.name)}<span class="badge ${orgClass(c.org)}">${esc(c.code)}</span>${c.ts?`<span class="cmt-time">${ago(c.ts)}</span>`:""}${FEED_LIVE&&myId&&c.loginId===myId?`<button class="cmt-del" data-cdel="${esc(c.id)}" title="このコメントを削除">削除</button>`:""}</div>
+            <div class="cmt-bubble"><div class="cmt-name">${esc(c.name)}<span class="badge ${orgClass(c.org)}">${esc(c.code)}</span>${c.ts?`<span class="cmt-time">${ago(c.ts)}</span>`:""}${FEED_LIVE&&myId&&(c.loginId===myId||isHonbuUser())?`<button class="cmt-del" data-cdel="${esc(c.id)}" title="このコメントを削除">削除</button>`:""}</div>
               <div class="cmt-text">${esc(c.text)}</div></div></div>`).join("")}
         <div class="cmt-form"><input type="text" placeholder="コメントを書く…" data-cin="${esc(p.id)}"><button data-csend="${esc(p.id)}" disabled>送信</button></div>
       </div>`;
@@ -1027,7 +1029,8 @@ feed.addEventListener("click",e=>{
   if(edit){ const p=findPost(edit.dataset.edit); if(p && !p.demo) openPostModal(p); return; }
   const del=e.target.closest("[data-del]");
   if(del){
-    if(!confirm("この投稿を削除します。よろしいですか？")) return;
+    const dp=findPost(del.dataset.del);
+    if(!confirm(dp && !isMine(dp) ? `${dp.name}さんの投稿を本部として削除します。よろしいですか？` : "この投稿を削除します。よろしいですか？")) return;
     if(!FEED_LIVE){ posts = posts.filter(x=>String(x.id)!==del.dataset.del); render(); return; }
     del.disabled = true;
     runAction("delete", {id:del.dataset.del}, "投稿を削除しました").catch(()=>{ del.disabled=false; });
