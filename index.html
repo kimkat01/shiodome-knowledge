@@ -653,9 +653,12 @@ function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,m=>({'&':'&amp;',
 /* ログイン中の人（ログイン直後でも読めるよう毎回ストレージから取る） */
 function me(){
   const s = (typeof kbReadLogin==="function" ? kbReadLogin() : null) || {};
-  return { loginId: String(s.loginId||""), name: s.name||"" };
+  return { loginId: String(s.loginId||""), name: s.name||"", role: s.role||"" };
 }
-function myGardenCode(){ return (GARDEN_INFO && GARDEN_INFO.code) || "本部"; }
+/* 本部アカウント（権限＝本部。ログインIDが9で始まる本部用IDも本部扱い）で入っているときは、
+   どの園の画面から投稿しても所属は「本部」にする */
+function isHonbuUser(){ const m=me(); return m.role==="本部" || /^9\d{3}$/.test(m.loginId); }
+function myGardenCode(){ return isHonbuUser() ? "本部" : ((GARDEN_INFO && GARDEN_INFO.code) || "本部"); }
 function resetPoster(){
   who.value = findOrg(myGardenCode()).code;
   myname.value = me().name || myname.value || "";
@@ -1281,7 +1284,7 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
 
   function saveLogin(s){
     var keep = $('kbgKeep').checked;
-    var obj = { garden:GARDEN, loginId:s.loginId, name:s.name, exp: keep ? Date.now() + KB_LOGIN_DAYS*86400000 : 0 };
+    var obj = { garden:GARDEN, loginId:s.loginId, name:s.name, role:s.role||'', exp: keep ? Date.now() + KB_LOGIN_DAYS*86400000 : 0 };
     try{ if(keep) localStorage.setItem(KB_LOGIN_KEY, JSON.stringify(obj)); else sessionStorage.setItem(KB_LOGIN_KEY, JSON.stringify(obj)); }catch(e){}
     return obj;
   }
@@ -1309,7 +1312,7 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
       .then(function(d){
         btn.disabled = false; btn.textContent = 'ログイン';
         if(!d.ok){ err.textContent = d.message || 'ログインIDまたはパスワードが正しくありません'; shake(); $('kbgPw').select(); return; }
-        pending = { loginId:id, name:d.name, oldPw:pw };
+        pending = { loginId:id, name:d.name, oldPw:pw, role:d.role||'' };
         if(d.mustChangePassword){
           $('kbgLoginStep').style.display = 'none';
           $('kbgChangeStep').style.display = 'block';
