@@ -292,8 +292,8 @@ body{font-family:'Noto Sans JP',sans-serif;background:
     <span class="logo">AI<b>moniter</b> 解析</span>
     <span class="tag">映像を読み込み、言葉を解析する</span>
     <div class="topact">
-      <button class="rpbtn" onclick="saveAnalysis()" title="この解析を保存（検証ビューに読み込めます）">💾 保存</button>
-      <button class="rpbtn" onclick="document.getElementById('loadAnalysisFile').click()" title="保存した解析を開く">📂 読込</button>
+      <button class="rpbtn" onclick="saveAnalysis()" title="この解析を保存（保存先を選べます。最初はデスクトップ）">💾 保存</button>
+      <button class="rpbtn" onclick="openAnalysisFile()" title="保存した解析を開く">📂 読込</button>
     </div>
     <div class="keys">
       <span class="kdot" id="kdot">キー未設定</span>
@@ -1392,6 +1392,9 @@ function buildAnalysis(){
     reviewQueue:(typeof buildReviewQueue==='function'?buildReviewQueue().map(it=>({time:fmt(it.t),src:it.src,label:it.label,detail:it.sub,verdict:it.verdict||'未確認'})):[])
   };
 }
+/* 保存：保存先を選べるダイアログを開く（最初はデスクトップを表示）。
+   Chrome・Edge（Mac/Windows）は「ファイル保存ダイアログ」で場所とファイル名を選べる。
+   ダイアログに対応しないブラウザ（Safari・Firefox）では、従来どおり「ダウンロード」フォルダに保存する。 */
 function saveAnalysis(){
   if(!segments.length){toast('先に解析してください');return;}
   const data=buildAnalysis();
@@ -1399,11 +1402,46 @@ function saveAnalysis(){
   const base=(data.media.name||'解析').replace(/\.[^.]+$/,'');
   const d=new Date(),p=n=>String(n).padStart(2,'0');
   const stamp=d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'_'+p(d.getHours())+p(d.getMinutes());
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='AImoniter解析_'+base+'_'+stamp+'.json';
-  document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(a.href);
-  log('💾 解析を保存しました（検知'+data.detections.length+'件）','ok');
-  toast('解析を保存しました');
+  const fileName='AImoniter解析_'+base+'_'+stamp+'.json';
+  const json=JSON.stringify(data,null,2);
+  const n=data.detections.length;
+  if(window.showSaveFilePicker){
+    // ボタンを押した直後に呼ぶ必要があるため、awaitより前にダイアログを開く
+    window.showSaveFilePicker({
+      suggestedName:fileName,
+      startIn:'desktop',
+      types:[{description:'AImoniter 解析ファイル',accept:{'application/json':['.json']}}]
+    }).then(async handle=>{
+      const w=await handle.createWritable();await w.write(json);await w.close();
+      log('💾 解析を保存しました：'+handle.name+'（検知'+n+'件）','ok');
+      toast('保存しました：'+handle.name);
+    }).catch(e=>{
+      if(e&&e.name==='AbortError'){toast('保存をキャンセルしました');return;}
+      log('⚠ 保存先を選んで保存できませんでした（'+(e&&e.message||e)+'）。「ダウンロード」フォルダに保存します','err');
+      downloadAnalysis(json,fileName,n,true);
+    });
+  }else{
+    downloadAnalysis(json,fileName,n,false);
+  }
+}
+function downloadAnalysis(json,fileName,n,fallback){
+  const blob=new Blob([json],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fileName;
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  log('💾 解析を「ダウンロード」フォルダに保存しました：'+fileName+'（検知'+n+'件）'+(fallback?'':'　※このブラウザは保存先の選択に対応していません（Chrome・Edgeなら選べます）'),'ok');
+  toast('ダウンロードフォルダに保存しました');
+}
+/* 読込：ファイル選択もデスクトップから開く（対応ブラウザのみ。非対応なら従来の選択画面） */
+async function openAnalysisFile(){
+  if(window.showOpenFilePicker){
+    try{
+      const [h]=await window.showOpenFilePicker({startIn:'desktop',multiple:false,
+        types:[{description:'AImoniter 解析ファイル',accept:{'application/json':['.json']}}]});
+      loadAnalysisFromFile(await h.getFile());
+    }catch(e){if(!(e&&e.name==='AbortError'))document.getElementById('loadAnalysisFile').click();}
+  }else{
+    document.getElementById('loadAnalysisFile').click();
+  }
 }
 function restoreAnalysis(data){
   segments=(data.segments||[]).map(s=>({start:s.start,end:s.end,text:s.text,speaker:s.speaker||null,danger:s.danger||null,visualBacking:s.visualBacking||null,review:s.review||'',voice:s.voice||null,f0:s.f0||0,loud:!!s.loud,focus:!!s.focus}));
