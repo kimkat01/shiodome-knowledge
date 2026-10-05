@@ -489,7 +489,9 @@ async function apiFetch(api,url,opts,label){
     const type=errObj.type||errObj.code||'';
     const apiMsg=errObj.message||(bodyText?bodyText.slice(0,300):'')||res.statusText||'';
     const reqId=res.headers.get('x-request-id')||res.headers.get('request-id')||'';
-    const hint=_statusHint(api,res.status,type);
+    let hint=_statusHint(api,res.status,type);
+    if(/credit balance/i.test(apiMsg))hint='Anthropicの残高（クレジット）が不足しています。https://platform.claude.com/settings/billing で購入してから、もう一度解析してください';
+    else if(type==='insufficient_quota')hint='OpenAIの残高が不足しています。https://platform.openai.com/settings/organization/billing で購入してください';
     const retryable=res.status===429&&type!=='insufficient_quota'||res.status>=500||res.status===529;
     lastErr=new ApiError(api+' HTTP '+res.status+(type?' ['+type+']':'')+'（'+label+'）: '+apiMsg+(hint?' ／ '+hint:''),{api,status:res.status,type,apiMessage:apiMsg,requestId:reqId,retryable});
     log('⚠ '+lastErr.message,'err');
@@ -520,7 +522,9 @@ async function callClaude(body,label){
   if(data&&data.stop_reason==='max_tokens')log('  ⚠ Claudeの回答が長さ上限で途中までになりました（'+(label||'Claude')+'）','err');
   return data;
 }
-function isFatalApiError(e){return !!(e&&(e.fatal||e.status===401||e.status===403||(e.status===429&&/quota/i.test(e.type||''))));}
+function isCreditError(e){return !!(e&&(e.status===402||/credit balance|insufficient_quota|billing/i.test((e.apiMessage||'')+' '+(e.type||''))));}
+/* 残高（クレジット）不足は全区間・全コマで同じく失敗するため、黙って飛ばさず中断する */
+function isFatalApiError(e){return !!(e&&(e.fatal||e.status===401||e.status===403||(e.status===429&&/quota/i.test(e.type||''))||isCreditError(e)));}
 const DEFAULT_ASR_PROMPT='';
 const CATCLASS={'強い口調':'hi','脅し':'hi','突き放し':'hi','侮辱':'mid','無視':'lo'};
 const SEVCLASS={'高':'hi','中':'mid','低':'lo'};
@@ -552,7 +556,7 @@ function applyFlagRules(segs){
   segs.forEach(s=>{
     flagRules.forEach(r=>{
       if(!r.phrase)return;
-      if(s.text===r.phrase||s.text.indexOf(r.phrase)>=0){
+      if(_lfind(s.text,r.phrase)){
         s.danger={category:r.category,severity:r.severity,quote:r.phrase,reason:'学習した判定'};
       }
     });
@@ -618,13 +622,47 @@ function openCorrManager(){
   ta.value=corrections.map(c=>c.from+'→'+c.to).join('\n');
   ta.scrollIntoView({behavior:'smooth',block:'center'});ta.focus();
 }
+/* 学習の照合：Whisperの結果は実行のたびに句読点・語尾・ひらがな/カタカナが少し変わるため、
+   完全一致だけでなく「ほぼ同じ」でも効くようにする */
+function _lnorm(t){
+  return (t||'').normalize('NFKC')
+    .replace(/[\u30a1-\u30f6]/g,ch=>String.fromCharCode(ch.charCodeAt(0)-0x60)) // カタカナ→ひらがな
+    .replace(/[\s、。,.!?！？「」『』（）()・…〜~ー－-]/g,'');
+}
+function _lsim(a,b){ // 0〜1の似ている度合い（編集距離ベース）
+  if(a===b)return 1;const m=a.length,n=b.length;if(!m||!n)return 0;
+  let prev=Array.from({length:n+1},(_,j)=>j);
+  for(let i=1;i<=m;i++){const cur=[i];for(let j=1;j<=n;j++){cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));}prev=cur;}
+  return 1-prev[n]/Math.max(m,n);
+}
+const LEARN_SIM=0.75;      // 発言全体がこの割合以上似ていれば同じ言葉とみなす
+const LEARN_SIM_PART=0.85; // 長い発言の一部として含まれる場合は、より厳しく
+const LEARN_MIN_LEN=4;     // 短すぎる言葉（3文字以下）はあいまい照合しない（誤爆防止）
+function _lfind(text,from){ // 戻り値：'exact' | 'whole' | 'part' | null
+  if(!from||!text)return null;
+  if(text===from||text.indexOf(from)>=0)return 'exact';
+  const t=_lnorm(text),f=_lnorm(from);
+  if(!t||!f)return null;
+  if(t.indexOf(f)>=0)return t.length<=f.length*1.6+3?'whole':'part';
+  if(f.length<LEARN_MIN_LEN)return null;
+  if(t.length<=f.length*1.6+3&&_lsim(t,f)>=LEARN_SIM)return 'whole';
+  for(let L=Math.max(1,f.length-1);L<=f.length+1;L++){
+    for(let i=0;i+L<=t.length;i++){if(_lsim(t.substr(i,L),f)>=LEARN_SIM_PART)return 'part';}
+  }
+  return null;
+}
 function applyCorrections(segs){
   let n=0;
   segs.forEach(s=>{
     corrections.forEach(c=>{
-      if(!c.from)return;
-      if(s.text===c.from){s.text=c.to;n++;}
-      else if(s.text.indexOf(c.from)>=0){s.text=s.text.split(c.from).join(c.to);n++;}
+      if(!c.from||!s.text)return;
+      const k=_lfind(s.text,c.from);if(!k)return;
+      const orig=s.text;
+      if(k==='exact'){s.text=s.text===c.from?c.to:s.text.split(c.from).join(c.to);}
+      else if(k==='whole'){s.text=c.to;}
+      else{s.text=c.to+'（聞き取り：'+orig+'）';}
+      if(k!=='exact'){s.asrOrig=orig;log('  ✏ 似た言葉に学習を適用：「'+orig.slice(0,20)+'」→「'+c.to+'」','ok');}
+      n++;
     });
   });
   return n;
@@ -1148,7 +1186,7 @@ async function detectAll(sens){
     const chunk=lines.slice(i,i+CH).join('\n');
     stat('🔍 危険語を検知中…');
     const prompt=`あなたは保育の「不適切保育」検知エンジンです。以下は保育室録画の文字起こしログ（各行「[時刻] 発言」）。保育士→子どもの発言のうち次に該当するものを検知します。\n\n《A. 言葉の暴力》\n${cats.map(c=>'・'+c).join('\n')}\n\n《B. 不快にさせる性的言動（こども性暴力防止法の観点）》\n${SEXCATS.map(c=>'・'+c).join('\n')}\n（例：容姿や身体への性的な言及、不必要な身体接触に触れる発言、性的な冗談・からかい、「二人だけの秘密」など子どもを懐柔・孤立させる言動）\n\n判定の心得：あなたは人を裁くのではなく「後で人が映像で確認すべき発話」を拾うだけです。意図や事実は断定せず、迷ったら拾って人に回してください（特にBは撮り逃し厳禁）。\n感度: ${sensText(sens)}\n録音の条件：天井の防犯カメラのマイク（電話並みの音質）で、大勢の子どもの声が重なった騒がしい保育室の録音。文字起こしは断片的で、聞き間違い・欠落が多い。そのため、文として整っていなくても、保育者が子どもに向けた命令・叱責・否定・脅しの断片（例：「だめ」「やめなさい」「早くして」「何回言ったらわかるの」「もう知らない」「置いていくよ」、名前の呼び捨て＋強い命令など）が読み取れれば拾うこと。聞き間違いの可能性がある場合は、reasonに「聞き取り不確か」と書き、重大度を一段下げる。\n行頭の〔〕は声の高さと音量から機械的に推定した参考情報：〔大人の声らしい〕は保育者の発言の可能性が高い、〔子どもの声らしい〕は子どもの発言の可能性が高い、〔周囲より急に大きい声〕は強い口調の可能性がある。推定なので誤りもある。〔子どもの声らしい〕行は、内容が明らかに保育者の言葉でない限り検知しない。${hint}\n重要: 子どもの発言や問題ない声かけは検知しない。根拠の発言を必ず引用。categoryは上記いずれかの語をそのまま使う。重大度は高/中/低。時刻はログ行の時刻を使う。${lawKBPromptBlock()}\nログ:\n${chunk}\n\nJSON配列のみ返す（説明なし）。該当なしは[]:\n[{"time":"HH:MM:SS","category":"種別","severity":"高|中|低","quote":"引用","reason":"理由30字以内"}]`;
-    const data=await callClaude({model:CLAUDE_MODEL,max_tokens:1500,messages:[{role:'user',content:prompt}]},'危険語の検知 '+(Math.floor(i/CH)+1)+'/'+Math.ceil(lines.length/CH));
+    const data=await callClaude({model:CLAUDE_MODEL,max_tokens:1500,temperature:0,messages:[{role:'user',content:prompt}]},'危険語の検知 '+(Math.floor(i/CH)+1)+'/'+Math.ceil(lines.length/CH));
     const raw=data.content?.[0]?.text||'[]';const m=raw.match(/\[[\s\S]*\]/);
     let arr=[];try{arr=m?JSON.parse(m[0]):[];}catch(e){}
     events=events.concat(Array.isArray(arr)?arr:[]);
@@ -1599,7 +1637,7 @@ situation の形式：{"type":"isolation_1to1|separated|blind_spot","detail":"�
   try{
     const content=base64Imgs.map(img=>({type:'image',source:{type:'base64',media_type:'image/jpeg',data:img}}));
     content.push({type:'text',text:burst?('時刻 '+timeLabel+' 付近の連続'+base64Imgs.length+'コマを、動きの変化に注目して分析してください。'):('時刻 '+timeLabel+' のフレームを分析してください。')});
-    const data=await callClaude({model:CLAUDE_MODEL,max_tokens:600,system:systemPrompt,
+    const data=await callClaude({model:CLAUDE_MODEL,max_tokens:600,temperature:0,system:systemPrompt,
         messages:[{role:'user',content}]},'映像解析 '+timeLabel);
     const raw=data.content?.[0]?.text||'{}';
     const m=raw.match(/\{[\s\S]*\}/);
@@ -1630,7 +1668,7 @@ async function analyzeBackingFrame(base64Img,timeLabel,quote,category){
 - contradict：構図はむしろ穏やか（大人がしゃがんで寄り添う・子どもたちが和やかに散って活動している 等）
 - unknown：大人が画面に全く映っていない、または位置関係すら判別できないほど手がかりが無い場合のみ`;
   try{
-    const data=await callClaude({model:CLAUDE_MODEL,max_tokens:200,system:systemPrompt,
+    const data=await callClaude({model:CLAUDE_MODEL,max_tokens:200,temperature:0,system:systemPrompt,
         messages:[{role:'user',content:[
           {type:'image',source:{type:'base64',media_type:'image/jpeg',data:base64Img}},
           {type:'text',text:'時刻 '+timeLabel+' のフレームを検証してください。'}
