@@ -101,7 +101,7 @@
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   @media(max-width:560px){.row2{grid-template-columns:1fr}}
 
-  input[type=text],input[type=date],input[type=number],textarea,select{
+  input[type=text],input[type=email],input[type=date],input[type=number],textarea,select{
     font-family:var(--font);font-size:15px;color:var(--ink);
     border:1px solid var(--line-strong);border-radius:10px;
     padding:11px 12px;background:#fff;width:100%;transition:border-color .15s,box-shadow .15s;
@@ -214,6 +214,15 @@
     display:none;margin-bottom:4px;
   }
   .err.show{display:block}
+  /* 差戻し後の再申請モード */
+  .resubmit-note{
+    display:none;background:#F3EDFB;border:1px solid #CDB8EC;color:#4B2A80;
+    border-radius:10px;padding:14px 16px;font-size:15px;margin-bottom:12px;line-height:1.7;
+  }
+  .resubmit-note.show{display:block}
+  .resubmit-note b{font-size:16px}
+  .resubmit-note .cmt{white-space:pre-wrap;background:#fff;border-radius:8px;padding:8px 12px;margin-top:6px;color:#26303A}
+  .keep-chk{width:18px;height:18px;flex:0 0 auto}
   .spin{
     width:16px;height:16px;border:2px solid rgba(255,255,255,.5);border-top-color:#fff;
     border-radius:50%;display:inline-block;vertical-align:-3px;margin-right:8px;
@@ -381,6 +390,8 @@ html.law-y button.primary{box-shadow:0 4px 14px rgba(67,160,71,.28);}
 
 <div class="wrap">
   <div class="err" id="err"></div>
+  <!-- 差戻し後の再申請モードで表示 -->
+  <div class="resubmit-note" id="resubmitNote"></div>
 
   <form id="ringiForm" autocomplete="off">
 
@@ -400,10 +411,17 @@ html.law-y button.primary{box-shadow:0 4px 14px rgba(67,160,71,.28);}
           <input type="text" id="shozoku" name="shozoku" placeholder="例）しおどめ保育園○○" required>
         </div>
       </div>
-      <div class="field">
-        <label for="kianja">起案者名（園長）<span class="req">必須</span></label>
-        <input type="text" id="kianja" name="kianja" placeholder="例）園長氏名" required>
+      <div class="row2">
+        <div class="field">
+          <label for="kianja">起案者名（園長）<span class="req">必須</span></label>
+          <input type="text" id="kianja" name="kianja" placeholder="例）園長氏名" required>
+        </div>
+        <div class="field">
+          <label for="email">連絡用メールアドレス<span class="req">必須</span></label>
+          <input type="email" id="email" name="email" placeholder="例）encho@example.com" required>
+        </div>
       </div>
+      <p class="quote-note" style="margin-top:-4px">承認・差戻し・却下の結果は、このメールアドレスにお知らせします。</p>
     </section>
 
     <!-- 件名・理由 -->
@@ -513,6 +531,10 @@ html.law-y button.primary{box-shadow:0 4px 14px rgba(67,160,71,.28);}
         <input type="file" id="files" multiple accept="application/pdf,image/*" hidden>
       </div>
       <ul class="filelist" id="filelist"></ul>
+      <div id="keepWrap" style="display:none;margin-top:12px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:4px">前回添付したファイル（チェックを外すと削除されます）</div>
+        <ul class="filelist" id="keeplist"></ul>
+      </div>
     </section>
 
     <div class="submit-bar">
@@ -553,8 +575,15 @@ html.law-y button.primary{box-shadow:0 4px 14px rgba(67,160,71,.28);}
 
 <script>
 /* ======== 設定 ======== */
-// GASウェブアプリのURL（デプロイ後にここへ貼り付け）
+// 決裁承認GAS（cryk0289「決裁申請 管理」）のウェブアプリURL。空のときは送信せずデモ動作
 const GAS_URL = ""; // 例: "https://script.google.com/macros/s/xxxxx/exec"
+
+// 差戻し後の再申請モード（メールのリンク ?resubmit=申請No&ek=編集キー で開いたとき）
+const RESUBMIT = (function(){
+  const q = new URLSearchParams(location.search);
+  return q.get('resubmit') ? { appNo: q.get('resubmit'), editKey: q.get('ek') || '' } : null;
+})();
+let keptFiles = []; // 再申請時：前回の添付 {id,name,url,keep}
 
 /* ======== 金額のカンマ整形 ======== */
 document.querySelectorAll('[data-amt]').forEach(function(inp){
@@ -667,6 +696,7 @@ function buildPayload(f){
     kian_date: f.kian_date.value,
     shozoku:   f.shozoku.value.trim(),
     kianja:    f.kianja.value.trim(),
+    email:     f.email.value.trim(),
     kenmei:    f.kenmei.value.trim(),
     riyu:      f.riyu.value.trim(),
     kouka:     f.kouka.value.trim(),
@@ -702,8 +732,9 @@ function renderDoc(p){
   const vendorFillRows = 3 - p.vendors.filter(v=>v.name||v.amt).length;
   const emptyRow = '<tr><td>&nbsp;</td><td></td><td></td></tr>';
 
-  const filesText = p.files.length
-    ? '📎 ' + p.files.map(fl=>fl.name).join('　/　')
+  const allNames = keptFiles.filter(k=>k.keep).map(k=>k.name).concat(p.files.map(fl=>fl.name));
+  const filesText = allNames.length
+    ? '📎 ' + allNames.join('　/　')
     : '添付ファイルなし';
 
   document.getElementById('docPreview').innerHTML =
@@ -749,7 +780,7 @@ function renderDoc(p){
     +   '</div>'
     +   '<div class="doc-block" style="margin-bottom:0">'
     +     '<div class="bh">見積書の添付</div>'
-    +     '<div class="doc-files-line'+(p.files.length?'':' empty')+'">'+escapeHtml(filesText)+'</div>'
+    +     '<div class="doc-files-line'+(allNames.length?'':' empty')+'">'+escapeHtml(filesText)+'</div>'
     +   '</div>'
     + '</div>'
 
@@ -775,13 +806,20 @@ function stampBox(label, filled){
 document.getElementById('confirmSubmitBtn').addEventListener('click', async function(){
   const f = document.getElementById('ringiForm');
   const payload = buildPayload(f);
+  if(RESUBMIT){
+    payload.action = 'resubmit';
+    payload.appNo = RESUBMIT.appNo;
+    payload.editKey = RESUBMIT.editKey;
+    payload.keepFiles = keptFiles.filter(k=>k.keep).map(k=>k.id);
+  }
+  try{ localStorage.setItem('kessai_email', payload.email); localStorage.setItem('kessai_kianja', payload.kianja); }catch(e){}
   const btn = this;
   btn.disabled = true;
   btn.innerHTML = '<span class="spin"></span>送信中…';
 
   // GAS未設定時はデモ動作（画面確認用）
   if(!GAS_URL){
-    setTimeout(()=>{ showDone('（デモ）SIN-XXXX'); }, 700);
+    setTimeout(()=>{ showDone(RESUBMIT ? RESUBMIT.appNo : '（デモ）K-XXXX-XXX'); }, 700);
     return;
   }
 
@@ -806,12 +844,79 @@ function showDone(appNo){
   document.getElementById('ringiForm').style.display='none';
   const d=document.getElementById('done');
   document.getElementById('doneNo').textContent='申請No. '+appNo;
+  if(RESUBMIT){
+    d.querySelector('h2').textContent='再申請を受け付けました';
+    d.querySelector('button').style.display='none';
+    document.getElementById('resubmitNote').classList.remove('show');
+  }
   d.classList.add('show');
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-/* 起案日の初期値＝今日 */
+/* 起案日の初期値＝今日。氏名・メールは前回の入力を自動で入れる */
 document.getElementById('kian_date').valueAsDate = new Date();
+try{
+  const em = localStorage.getItem('kessai_email'), nm = localStorage.getItem('kessai_kianja');
+  if(em) document.getElementById('email').value = em;
+  if(nm) document.getElementById('kianja').value = nm;
+}catch(e){}
+
+/* ======== 差戻し後の再申請：前回の内容を読み込む ======== */
+if(RESUBMIT) loadResubmit();
+
+function loadResubmit(){
+  const form = document.getElementById('ringiForm');
+  const note = document.getElementById('resubmitNote');
+  document.querySelector('.mast-eyebrow').textContent = '申請承認｜差戻し後の再申請';
+  document.getElementById('confirmSubmitBtn').textContent = 'この内容で再申請する';
+  if(!GAS_URL){
+    note.innerHTML = '<b>再申請（デモ表示）</b><br>GASのURLが未設定のため、前回の内容は読み込めません。';
+    note.classList.add('show');
+    return;
+  }
+  form.style.opacity = '.4'; form.style.pointerEvents = 'none';
+  fetch(GAS_URL, {
+    method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({action:'load', appNo:RESUBMIT.appNo, editKey:RESUBMIT.editKey})
+  }).then(r=>r.json()).then(function(res){
+    form.style.opacity = ''; form.style.pointerEvents = '';
+    if(!res.ok) throw new Error(res.error || '読み込めませんでした');
+    const it = res.item;
+    const set = (n,v)=>{ if(form[n]) form[n].value = v || ''; };
+    const yen = v => { const d=String(v||'').replace(/[^\d]/g,''); return d ? Number(d).toLocaleString('ja-JP') : ''; };
+    set('kian_date', new Date().toISOString().slice(0,10));
+    set('shozoku', it.shozoku); set('kianja', it.kianja); set('email', it.email);
+    set('kenmei', it.kenmei); set('riyu', it.riyu); set('kouka', it.kouka); set('jiki', it.jiki);
+    (it.vendors||[]).forEach(function(v,i){ set('v'+(i+1)+'_name', v.name); set('v'+(i+1)+'_amt', yen(v.amt)); });
+    const ad = document.querySelector('input[name=adopt][value="'+it.adopt+'"]'); if(ad) ad.checked = true;
+    set('kingaku', yen(it.kingaku));
+    const bd = document.querySelector('input[name=budget][value="'+it.budget+'"]'); if(bd) bd.checked = true;
+
+    // 前回の添付ファイル（残すかどうかを選べる）
+    keptFiles = (it.files||[]).map(f=>({id:f.id,name:f.name,url:f.url,keep:true}));
+    if(keptFiles.length){
+      document.getElementById('keepWrap').style.display = 'block';
+      document.getElementById('keeplist').innerHTML = keptFiles.map(function(k,i){
+        return '<li><input type="checkbox" class="keep-chk" data-k="'+i+'" checked>'
+          + '<a class="fname" href="'+escapeHtml(k.url||'#')+'" target="_blank" rel="noopener">'+escapeHtml(k.name)+'</a></li>';
+      }).join('');
+      document.querySelectorAll('.keep-chk').forEach(function(c){
+        c.addEventListener('change', function(){ keptFiles[+this.dataset.k].keep = this.checked; });
+      });
+    }
+
+    // 差し戻した人とコメント
+    const back = (it.history||[]).filter(h=>h.action==='差戻し').pop();
+    note.innerHTML = '<b>差戻しされた申請の修正（申請No. '+escapeHtml(it.appNo)+'）</b><br>'
+      + '内容を修正し、「内容を確認する」→「この内容で再申請する」で、もう一度法人本部へ送ってください。'
+      + (back ? '<div class="cmt"><b>'+escapeHtml(back.role)+'</b>（'+escapeHtml(back.name||'')+'）からのコメント：<br>'+escapeHtml(back.comment||'')+'</div>' : '');
+    note.classList.add('show');
+  }).catch(function(err){
+    form.style.display = 'none';
+    note.innerHTML = '<b>この再申請リンクは使えません</b><br>'+escapeHtml(err.message)+'<br>新しく申請する場合は、ナレッジボードの「決裁申請」から開き直してください。';
+    note.classList.add('show');
+  });
+}
 </script>
 </body>
 </html>
