@@ -509,6 +509,9 @@ if(HQ_MODE && !HQ_AUTHED) setTimeout(function(){ var el=document.getElementById(
       <svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4"/><path d="M9 13l2 2 4-4"/></svg>決裁申請</a>
     <a class="tool-item" id="saiyoLink" href="saiyo-shinsei.html" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>採用計画申請書</a>
+    <!-- 給食・駐車場の記録一覧（2026-10-08）：職員がシフト管理で押した「食べた／使った」を園全員分・1ヶ月で見る -->
+    <a class="tool-item" id="kpLink" href="kp-list.html" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 13h2M8 16h2M14 13h2M14 16h2"/></svg>給食・駐車場</a>
     <a class="tool-item" href="https://kimkat01.github.io/voiceminutes/" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>文字起こし</a>
     <a class="tool-item" href="https://kimkat01.github.io/anpi/anpi_admin.html" target="_blank" rel="noopener">
@@ -1294,7 +1297,7 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
     hide('kessaiLink'); hide('saiyoLink');
     if(!HQ_VIEW){
       // 園を選んでいないときは、園ごとのツールも隠す（月次収支・ヒヤリハット等は園指定なしのリンクのまま）
-      hide('uqLink'); hide('manualLink');
+      hide('uqLink'); hide('manualLink'); hide('kpLink');
       return;
     }
     // 園を選んでいるときは、下の通常処理でその園のリンクに切り替える
@@ -1310,6 +1313,7 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
   document.getElementById('keieiLink').href  = 'https://kimkat01.github.io/shiodome-knowledge/keiei-dashboard.html' + gq;
   document.getElementById('kessaiLink').href = 'kessai-shinsei.html' + gq;
   document.getElementById('saiyoLink').href  = 'saiyo-shinsei.html' + gq;
+  document.getElementById('kpLink').href     = 'kp-list.html' + gq;
   document.getElementById('hiyariLink').href = 'https://kimkat01.github.io/hiyari-hatto2/' + gq;
 })();
 

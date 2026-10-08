@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>給食・駐車場 記録一覧</title>
+<!--
+  給食・駐車場 記録一覧（園長ダッシュボード用・2026-10-08）
+  置き場所：kimkat01/shiodome-knowledge リポジトリの一番上（kp-list.html）
+  開き方：ナレッジボード（園長ダッシュボード）左メニューの「給食・駐車場」から ?garden=園キー 付きで開く
+  データ：職員ダッシュボードの「きょうの給食／駐車場」ボタンの記録
+          （スプレッドシート「給食駐車場記録」のGAS、action=list）
+  期間：連絡票と同じ 16日〜翌月15日
+-->
+<style>
+  :root{
+    --blue:#4169e1; --blue-dark:#2f4fc2; --blue-pale:#eef1fd;
+    --ink:#000000; --sub:#4b5563; --line:#e2e5ec; --bg:#f4f5f8; --card:#ffffff;
+    --meal:#1b7a5a; --meal-bg:#dff3ea; --park:#2f4fc2; --park-bg:#e3e9fc;
+    --sat:#2f6fd6; --sun:#d64b4b;
+  }
+  html.law-y{ --blue:#43a047; --blue-dark:#2e7d32; --blue-pale:#edf7ee; }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:"Hiragino Kaku Gothic ProN","Noto Sans JP",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:var(--bg);color:var(--ink);font-size:16px;-webkit-font-smoothing:antialiased;}
+  header{background:var(--blue);color:#fff;padding:16px 16px;}
+  .head-row{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  .head-title{display:flex;align-items:center;gap:10px;font-size:21px;font-weight:700;}
+  .head-sub{font-size:14px;opacity:.92;margin-top:3px;}
+  .home-btn{display:inline-flex;align-items:center;gap:6px;color:#fff;text-decoration:none;font-size:14px;font-weight:700;
+    border:1px solid rgba(255,255,255,.5);border-radius:999px;padding:7px 14px;background:rgba(255,255,255,.12);}
+  .home-btn svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2;}
+  main{max-width:1200px;margin:0 auto;padding:16px;}
+  .bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+  .nav{display:flex;align-items:center;gap:8px;}
+  .nav button{border:1px solid var(--line);background:var(--card);border-radius:10px;width:42px;height:40px;font-size:16px;cursor:pointer;}
+  .nav button:disabled{opacity:.35;cursor:default;}
+  .ttl{font-size:18px;font-weight:800;min-width:150px;text-align:center;line-height:1.25;}
+  .ttl small{display:block;font-size:13px;color:var(--sub);font-weight:700;}
+  .spacer{flex:1;}
+  .btn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:9px 14px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--ink);}
+  .btn:hover{background:var(--blue-pale);}
+  .summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:12px;}
+  .summary div{background:var(--card);border-radius:14px;padding:12px 14px;box-shadow:0 2px 8px rgba(20,30,60,.05);}
+  .summary b{display:block;font-size:26px;line-height:1.2;}
+  .summary span{font-size:13px;color:var(--sub);font-weight:700;}
+  .legend{font-size:13px;color:var(--sub);margin:0 0 8px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;}
+  .wrap{background:var(--card);border-radius:14px;box-shadow:0 2px 8px rgba(20,30,60,.05);overflow:auto;max-height:calc(100vh - 260px);}
+  table{border-collapse:separate;border-spacing:0;font-size:13px;min-width:100%;}
+  th,td{border-bottom:1px solid var(--line);padding:6px 3px;text-align:center;white-space:nowrap;}
+  thead th{position:sticky;top:0;background:#f3f5fa;z-index:2;font-weight:800;color:var(--sub);font-size:12px;}
+  thead th.sat{color:var(--sat)} thead th.sun{color:var(--sun)}
+  th.name,td.name{position:sticky;left:0;background:var(--card);text-align:left;padding:6px 10px;font-size:14px;font-weight:700;z-index:1;border-right:1px solid var(--line);}
+  thead th.name{z-index:3;background:#f3f5fa;}
+  td.tot{font-weight:800;font-size:15px;min-width:52px;}
+  th.tot{min-width:52px;}
+  td.tot.tm{color:var(--meal)} td.tot.tp{color:var(--park)}
+  td.day{min-width:34px;}
+  td.day.today,th.today{background:#fff8e6;}
+  td.day.fut{background:#fafafa;}
+  .m,.p{display:inline-block;width:20px;height:20px;line-height:20px;border-radius:6px;font-size:12px;font-weight:800;}
+  .chip-m{background:var(--meal-bg);color:var(--meal);}
+  .chip-p{background:var(--park-bg);color:var(--park);}
+  .cell{display:flex;flex-direction:column;align-items:center;gap:2px;}
+  .msg{padding:40px 16px;text-align:center;color:var(--sub);font-size:15px;line-height:1.8;}
+  .note{font-size:13px;color:var(--sub);line-height:1.7;margin:12px 2px;}
+  #err{display:none;}
+  @media (max-width:600px){ .summary b{font-size:22px;} .ttl{font-size:16px;min-width:120px;} }
+  @media print{ header .home-btn,.bar .btn,.nav button{display:none;} .wrap{max-height:none;overflow:visible;box-shadow:none;} body{background:#fff;} }
+</style>
+<script src="https://kimkat01.github.io/staff-dashboard/gardens.js"></script>
+<script>
+(function(){ try{ var g=(typeof gardenFromUrl==='function')?gardenFromUrl():null;
+  if(g && /^Y/.test(g.code||'')) document.documentElement.classList.add('law-y'); }catch(e){} })();
+</script>
+</head>
+<body>
+<header>
+  <div class="head-row">
+    <div>
+      <div class="head-title">🍚🚗 給食・駐車場 記録一覧</div>
+      <div class="head-sub" id="gname"></div>
+    </div>
+    <a class="home-btn" id="homeBtn" href="https://kimkat01.github.io/shiodome-knowledge/">
+      <svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>Home</a>
+  </div>
+</header>
+<main>
+  <div id="err" class="msg"></div>
+  <div id="app">
+    <div class="bar">
+      <div class="nav">
+        <button id="prev" aria-label="前の月">◀</button>
+        <div class="ttl" id="ttl"></div>
+        <button id="next" aria-label="次の月">▶</button>
+      </div>
+      <div class="spacer"></div>
+      <button class="btn" id="reload">🔄 最新にする</button>
+      <button class="btn" id="csv">⬇ CSVで保存</button>
+    </div>
+    <div class="summary">
+      <div><b id="sNum">-</b><span>記録した職員</span></div>
+      <div><b id="sMeal" style="color:var(--meal)">-</b><span>🍚 給食 合計</span></div>
+      <div><b id="sPark" style="color:var(--park)">-</b><span>🚗 駐車場 合計</span></div>
+    </div>
+    <div class="legend"><span><span class="m chip-m">給</span> 給食を食べた</span><span><span class="p chip-p">駐</span> 駐車場を使った</span><span>黄色＝今日</span></div>
+    <div class="wrap" id="wrap"><div class="msg">読み込み中…</div></div>
+    <p class="note">
+      ・職員が職員ダッシュボード（シフト管理）の「きょうの給食／駐車場」で押した内容です。期間は連絡票と同じ16日〜翌月15日です。<br>
+      ・一度でも「食べた」「使った」を押した職員が表示されます（押したことがない職員は表示されません）。<br>
+      ・この回数が月末の連絡票（給食・駐車場の回数）に使われます。記録の修正が必要なときは、本部にご連絡ください。
+    </p>
+  </div>
+</main>
+<script>
+var KP_ENDPOINT = "https://script.google.com/macros/s/AKfycbxov7LyccCioWBxq64G0XdgcI-IRscXzQYghWXl3Xc8hD-tK25l7o3Bfn7Fb636v8Bzeg/exec";
+var G = (typeof gardenFromUrl==='function') ? gardenFromUrl() : null;
+var OFS = 0, CACHE = {}, CUR = null;
+var W = ["日","月","火","水","木","金","土"];
+
+function pad(n){ return ('0'+n).slice(-2); }
+function iso(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function period(ofs){
+  var t=new Date(), y=t.getFullYear(), m=t.getMonth();
+  if(t.getDate()<16) m-=1;
+  m+=ofs;
+  var s=new Date(y,m,16), e=new Date(y,m+1,15);
+  return {s:s,e:e,start:iso(s),end:iso(e),label:(s.getFullYear())+'年'+(s.getMonth()+1)+'月度',
+          range:(s.getMonth()+1)+'/16〜'+(e.getMonth()+1)+'/15'};
+}
+
+if(!G){
+  document.getElementById('app').style.display='none';
+  var er=document.getElementById('err'); er.style.display='block';
+  er.innerHTML='園が指定されていません。<br>ナレッジボード（園長ダッシュボード）の左メニュー「給食・駐車場」から開いてください。';
+}else{
+  document.getElementById('gname').textContent = G.name;
+  document.title = '給食・駐車場 記録一覧 | ' + G.name;
+  document.getElementById('homeBtn').href = 'https://kimkat01.github.io/shiodome-knowledge/?garden=' + G.key;
+  document.getElementById('prev').onclick=function(){ OFS--; draw(); };
+  document.getElementById('next').onclick=function(){ if(OFS<0){ OFS++; draw(); } };
+  document.getElementById('reload').onclick=function(){ delete CACHE[period(OFS).start]; draw(); };
+  document.getElementById('csv').onclick=downloadCsv;
+  draw();
+}
+
+function draw(){
+  var p=period(OFS);
+  document.getElementById('ttl').innerHTML = esc(p.label)+'<small>'+esc(p.range)+'</small>';
+  document.getElementById('next').disabled = OFS>=0;
+  var wrap=document.getElementById('wrap');
+  if(CACHE[p.start]){ render(p, CACHE[p.start]); return; }
+  wrap.innerHTML='<div class="msg">読み込み中…</div>';
+  setSummary('-','-','-');
+  var url=KP_ENDPOINT+'?action=list&facility='+encodeURIComponent(G.key)+'&start='+p.start+'&end='+p.end+'&_='+Date.now();
+  fetch(url).then(function(r){ return r.json(); }).then(function(d){
+    if(!d || d.error || !d.staff) throw new Error((d&&d.error)||'no data');
+    CACHE[p.start]=d;
+    if(period(OFS).start===p.start) render(p,d);
+  }).catch(function(){
+    if(period(OFS).start!==p.start) return;
+    wrap.innerHTML='<div class="msg">記録を読み込めませんでした。<br>少し待ってから「🔄 最新にする」を押してください。</div>';
+  });
+}
+
+function setSummary(n,m,pk){
+  document.getElementById('sNum').textContent=n;
+  document.getElementById('sMeal').textContent=m;
+  document.getElementById('sPark').textContent=pk;
+}
+
+function days(p){ var a=[]; for(var x=new Date(p.s); x<=p.e; x.setDate(x.getDate()+1)) a.push(new Date(x)); return a; }
+
+function render(p,d){
+  var staff=(d.staff||[]).slice().sort(function(a,b){ return a.name.localeCompare(b.name,'ja'); });
+  CUR={p:p,staff:staff};
+  var tm=0,tp=0; staff.forEach(function(s){ tm+=s.meal||0; tp+=s.park||0; });
+  setSummary(staff.length+'人', tm+'回', tp+'回');
+  var wrap=document.getElementById('wrap');
+  if(!staff.length){ wrap.innerHTML='<div class="msg">この期間の記録はまだありません。</div>'; return; }
+  var ds=days(p), today=iso(new Date());
+  var h='<table><thead><tr><th class="name">氏名</th><th class="tot">🍚給食</th><th class="tot">🚗駐車</th>';
+  ds.forEach(function(x){
+    var w=x.getDay(), c=(w===6?'sat':w===0?'sun':'')+(iso(x)===today?' today':'');
+    h+='<th class="'+c+'">'+(x.getMonth()+1)+'/'+x.getDate()+'<br>'+W[w]+'</th>';
+  });
+  h+='</tr></thead><tbody>';
+  staff.forEach(function(s){
+    h+='<tr><td class="name">'+esc(s.name)+'</td><td class="tot tm">'+(s.meal||0)+'</td><td class="tot tp">'+(s.park||0)+'</td>';
+    ds.forEach(function(x){
+      var k=iso(x), r=(s.days||{})[k]||{}, c='day'+(k===today?' today':k>today?' fut':'');
+      var inner=(r.meal?'<span class="m chip-m">給</span>':'')+(r.park?'<span class="p chip-p">駐</span>':'');
+      h+='<td class="'+c+'"><div class="cell">'+inner+'</div></td>';
+    });
+    h+='</tr>';
+  });
+  h+='</tbody></table>';
+  wrap.innerHTML=h;
+}
+
+function downloadCsv(){
+  if(!CUR || !CUR.staff.length){ alert('保存できる記録がありません。'); return; }
+  var ds=days(CUR.p), q=function(v){ return '"'+String(v).replace(/"/g,'""')+'"'; };
+  var head=['氏名','給食(回)','駐車場(回)'].concat(ds.map(function(x){ return (x.getMonth()+1)+'/'+x.getDate(); }));
+  var lines=[head.map(q).join(',')];
+  CUR.staff.forEach(function(s){
+    var row=[s.name, s.meal||0, s.park||0];
+    ds.forEach(function(x){ var r=(s.days||{})[iso(x)]||{}; row.push((r.meal?'給':'')+(r.park?'駐':'')); });
+    lines.push(row.map(q).join(','));
+  });
+  var blob=new Blob(['﻿'+lines.join('\r\n')],{type:'text/csv'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='給食駐車場_'+G.name+'_'+CUR.p.label+'.csv';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+</script>
+</body>
+</html>
