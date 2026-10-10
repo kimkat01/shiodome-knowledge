@@ -328,7 +328,7 @@ html.law-y .kb-logout:hover{background:#e6f2ea;}
 var GARDEN_INFO = (typeof gardenFromUrl === 'function') ? gardenFromUrl() : null; // {key, name, code}
 // ★ 本部モード（2026-10）：?garden=honbu で開くと「本部」として表示する（本部ダッシュボードからのリンク用）
 //   ・園マスタ（gardens.js）には本部を入れず、このページだけで扱う（他ツールの園選択に本部が混ざらないように）
-//   ・園長ログインの代わりに本部用パスワードで入る（HQ_PW。本部ダッシュボードと同じにしておく）
+//   ・本部用パスワード（HQ_PW）は現在オフ（HQ_GATE_ENABLED=false）。復活させる時は true にする
 //   ・左上のプルダウンで園を選ぶと、その園の園長ダッシュボードと同じ表示になる（URL：?garden=honbu&view=園キー）
 //     園を選ぶと、有給チェッカー・規約マニュアルのリンクと有給の承認待ち件数がその園のものになる
 //   ・決裁申請・採用計画申請書は園長が申請するフォームなので、本部モードでは常に隠す
@@ -344,8 +344,9 @@ if(HQ_MODE){
   try{ HQ_VIEW = (typeof findGarden === 'function') ? findGarden(new URLSearchParams(location.search).get('view')) : null; }catch(e){}
   GARDEN_INFO = HQ_VIEW || { key:'honbu', name:'本部', code:'本部' };
 }
-var HQ_AUTHED = false;
-if(HQ_MODE){ try{ HQ_AUTHED = sessionStorage.getItem(HQ_AUTH_KEY) === '1'; }catch(e){} }
+var HQ_GATE_ENABLED = false;   // 2026-10：本部用はパスワードなしで入る。パスワードを復活させる時は true に戻す
+var HQ_AUTHED = !HQ_GATE_ENABLED;
+if(HQ_MODE && HQ_GATE_ENABLED){ try{ HQ_AUTHED = sessionStorage.getItem(HQ_AUTH_KEY) === '1'; }catch(e){} }
 if(HQ_MODE && !HQ_AUTHED) document.write('<style>#appMain{display:none!important}#hqGate{display:flex!important}</style>');
 var GARDEN = GARDEN_INFO ? GARDEN_INFO.name : '';   // 日本語の園名（職員マスタの園名と同じ）
 // 社会福祉法人雄雅会（園コード Y〜）の園は緑テーマにする（色の中身は <head> 末尾の html.law-y）
