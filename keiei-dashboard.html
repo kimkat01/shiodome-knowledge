@@ -229,7 +229,7 @@ html.law-y .header{box-shadow:0 2px 8px rgba(67,160,71,.3);}
 <div class="footer-note">
   ※ 施設型給付費の基本分単価のみによる概算です。処遇改善等加算・賃借料加算等は含まれていません。<br>
   ※ 職員配置の「最低必要数」は国の配置基準（0歳3:1、1・2歳6:1、3歳20:1、4・5歳30:1）による算出です。<br>
-  ※ しおどめ保育園稲城・認定こども園しおどめの森・しおどめ保育園つくば・ふれあいしおどめ保育園のカードは新しい形式（月次報告書の実績・国の新基準：3歳15:1、4・5歳25:1）です。<br>
+  <span id="v3note">※ しおどめ保育園稲城・認定こども園しおどめの森・しおどめ保育園つくば・ふれあいしおどめ保育園のカードは新しい形式（月次報告書の実績・国の新基準：3歳15:1、4・5歳25:1）です。</span><br>
   ※ データがない園（白カード）は、データが揃い次第このダッシュボードに反映します。
 </div>
 </main>
@@ -356,26 +356,54 @@ const PARKS=[
 // データが届いたら、下の YUGA_PARKS の該当園に人数・職員数を入れて hasData:true にする。
 const IS_YUGA = document.documentElement.classList.contains('law-y');
 const YUGA_PARKS=[
-  {id:'y01', label:'八潮しおどめ保育園',     sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:null,
-   staffTotal:0,staffDesc:'',age0:0,age1:0,age2:0,age3:0,age4:0,age5:0,hasData:false},
-  // 守谷：2026年6月度（6/30時点・コドモン園児一覧／職員一覧CSVより）。6月入園2名（さくらんぼ）。7月以降の入園・9/16入職の1名は含まない
-  {id:'y02', label:'守谷しおどめ保育園',     sub:'茨城県守谷市・15/100地域・2026年6月度', mult:1.15, capacity:90,
-   staffTotal:19, staffDesc:'正規12・非正規7',age0:4,age1:12,age2:17,age3:13,age4:17,age5:18,hasData:true,
-   // 常勤換算（名）：コドモン勤務実績 5/16〜6/15。正規＝1人1.0、非正規＝実働時間（休憩除く）÷常勤の所定168時間（8時間×平日21日）
-   fte:16.6,
-   // 実績：月次報告書 令和8年6月分（事業活動計算書・守谷）。単月＝当月の動き、累計＝4〜6月
-   actual:{ month:'令和8年6月分',
-     income:10656840, expense:7569549, profit:3087291, labor:5814215,
-     cum:{ label:'4〜6月累計', income:31071510, expense:26475516, profit:4595994, labor:15681251 },
-     prev:{ label:'前年同期', income:28698250, expense:19887755, profit:8810495, labor:12501149 } }},
-  {id:'y03', label:'しおどめなかよし保育園', sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:null,
-   staffTotal:0,staffDesc:'',age0:0,age1:0,age2:0,age3:0,age4:0,age5:0,hasData:false},
+  // ★新カード（v3）。出典：雄雅会 月次報告書R08-06 資金収支計算書（当月＝当月借方・貸方の動き）
+  //   収入＝事業活動収入計、人件費＝人件費支出、事業費・事務費＝事業費支出＋事務費支出、利息等＝サービス活動外費用（支払利息等）
+  // 八潮：園児＝6/30時点（コドモン園児一覧）。国基準（新基準）：0歳9名→3、1・2歳24名→4、3歳14名→1、4・5歳26名→2＝10名
+  //   保育職員＝コドモン職員一覧より6月在籍者（10/5入職の1名を除く）から園長・栄養士・調理2名・保育補助1名を除いた19名（主任・派遣1名を含む）
+//   常勤換算＝コドモン6月度勤務実績（5/16〜6/15）：正規14名×1.0＋非正規・派遣5名の実働643.75h÷168h＝17.6。6月在籍の退職者1名（栄養士）は全職員に含む
+  {id:'y01', label:'八潮しおどめ保育園',     sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:75,
+   staffTotal:25,staffDesc:'',age0:9,age1:12,age2:12,age3:14,age4:13,age5:13,hasData:true,
+   v3:{ order:['k'], months:{
+     k:{ label:'令和8年6月 確定', kind:'k', adminLabel:'事業費・事務費', intLabel:'利息等',
+         income:10079742, labor:8270476, admin:1651595, interest:179826,
+         enrolled:73, base:10, staff:19, fte:17.6, fteNote:'保育職員・6月度勤務実績',
+         staffNote:'園長・調理・栄養士・保育補助を除く', extraNote:'ほかに保育補助 1名（0.4名）',
+         staffAll:'全職員 25名（保育19・保育補助1・調理2・栄養士2・園長1）',
+         expRows:[['人件費支出',8270476],['事業費支出',737599],['事務費支出',913996],['支払利息等（サービス活動外費用）',179826]],
+         incRows:[['委託費収入',9577402],['利用者等利用料収入',247640],['その他（補助金・雑収入等）',254700]] } } }},
+  // 守谷：園児＝6/30時点（コドモン園児一覧）。国基準（新基準）：0歳4名→2、1・2歳29名→5、3歳13名→1、4・5歳35名→2＝10名
+  //   保育職員＝職員マスタより6月在籍者（10/1入職・9/16入職の2名を除く）から園長・調理3名を除いた14名（看護師1名を含む）＋6月在籍の退職者1名（浅川）＝15名
+//   常勤換算＝コドモン6月度勤務実績（5/16〜6/15）：正規8名×1.0＋非正規7名（退職者含む）の実働786.75h÷168h＝12.7
+  {id:'y02', label:'守谷しおどめ保育園',     sub:'茨城県守谷市・15/100地域', mult:1.15, capacity:90,
+   staffTotal:19, staffDesc:'',age0:4,age1:12,age2:17,age3:13,age4:17,age5:18,hasData:true,
+   v3:{ order:['k'], months:{
+     k:{ label:'令和8年6月 確定', kind:'k', adminLabel:'事業費・事務費', intLabel:'利息等',
+         income:10838364, labor:5814215, admin:1755334, interest:133173,
+         enrolled:81, base:10, staff:15, fte:12.7, fteNote:'保育職員・6月度勤務実績',
+         staffNote:'園長・調理を除く（看護師1名・6月在籍の退職者1名を含む）',
+         staffAll:'全職員 19名（保育15・調理3・園長1）',
+         expRows:[['人件費支出',5814215],['事業費支出',1126421],['事務費支出',628913],['支払利息等（サービス活動外費用）',133173]],
+         incRows:[['委託費収入',10339480],['利用者等利用料収入',277110],['その他（補助金・雑収入等）',221774]] } } }},
+  // なかよし：園児＝6/30時点（コドモン園児一覧。7/1・9/1入園の2名は含まない）。国基準（新基準）：0歳3名→1、1・2歳9名→2、3歳19名→2、4・5歳12名→1＝6名
+  //   保育職員＝コドモン職員一覧より6月在籍者（10/1入職の1名を除く）から園長・栄養士・調理を除いた12名（主任を含む）＋6月在籍の退職者1名（延）＝13名
+//   常勤換算＝コドモン6月度勤務実績（5/16〜6/15）：正規9名×1.0＋非正規・退職者4名の実働462.25h÷168h＝11.8
+  {id:'y03', label:'しおどめなかよし保育園', sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:70,
+   staffTotal:16,staffDesc:'',age0:3,age1:5,age2:4,age3:19,age4:8,age5:4,hasData:true,
+   v3:{ order:['k'], months:{
+     k:{ label:'令和8年6月 確定', kind:'k', adminLabel:'事業費・事務費', intLabel:'利息等',
+         income:5906690, labor:5265604, admin:3189791, interest:104635,
+         enrolled:43, base:6, staff:13, fte:11.8, fteNote:'保育職員・6月度勤務実績',
+         staffNote:'園長・調理・栄養士を除く（6月在籍の退職者1名を含む）',
+         staffAll:'全職員 16名（保育13・調理1・栄養士1・園長1）',
+         expRows:[['人件費支出',5265604],['事業費支出',559368],['事務費支出',2630423],['支払利息等（サービス活動外費用）',104635]],
+         incRows:[['委託費収入',5588138],['利用者等利用料収入',177350],['その他（補助金・雑収入等）',141202]] } } }},
 ];
 if(IS_YUGA){
   PARKS.length = 0;                       // 柴学園のデータは消してから
   YUGA_PARKS.forEach(p=>PARKS.push(p));   // 雄雅会の3園だけを入れる
   document.title = '雄雅会 経営ダッシュボード';
   document.querySelector('.header-sub').textContent = '社会福祉法人雄雅会　理事長向け月次概算レポート（3園）';
+  const v3n=document.getElementById('v3note'); if(v3n) v3n.textContent='※ 3園のカードは新しい形式（月次報告書の実績・国の新基準：3歳15:1、4・5歳25:1）です。収入・支出は資金収支計算書の当月の動きです。';
 }
 
 const fmtM=v=>'¥'+Math.round(v/10000).toLocaleString('ja-JP')+'万';
@@ -431,7 +459,7 @@ function v3Donut(pct,color,center,mark){
 }
 function v3Judge(v,base){ const up=Math.round(base*V3_COEF*10)/10;
   return v<base?['var(--c-ng)','国基準を下回る']:v<=up?['var(--c-labor)','適正範囲内']:['var(--c-over)',`適正を${Math.round((v-up)*10)/10}名超え`]; }
-function v3Scale(m){ const up=m.base*V3_COEF; return Math.max(30, Math.ceil(Math.max(up, m.staff||0, m.fte||0)*1.1/10)*10); }
+function v3Scale(m){ if(m.base==null) return 30; const up=m.base*V3_COEF; return Math.max(30, Math.ceil(Math.max(up, m.staff||0, m.fte||0)*1.1/10)*10); }
 function v3Columns(v,base,label,max){
   max=max||30;
   const up=Math.round(base*V3_COEF*10)/10, Y0=105, K=90/max, none=(v==null), [col]=none?['']:v3Judge(v,base);
@@ -450,23 +478,24 @@ function v3Columns(v,base,label,max){
    <text x="52" y="123" text-anchor="middle" font-size="12" fill="var(--ink)">国基準</text>
    <text x="110" y="123" text-anchor="middle" font-size="12" fill="var(--ink)">${label}</text></svg>`;
 }
+const v3Wait=t=>`<div style="aspect-ratio:150/128;display:flex;align-items:center;justify-content:center;border:1px dashed var(--line);border-radius:6px;font-size:12px;color:var(--ink)">${t}</div>`;
 const v3Jtext=(v,base)=>{if(v==null)return `<div class="kf l" style="font-weight:700">勤務実績待ち</div>`;const [c,t]=v3Judge(v,base);return `<div class="kf l" style="color:${c==='var(--c-labor)'?'var(--ink)':c};font-weight:700">${t}</div>`;};
 const v3Man=v=>(Math.round(v/1000)/10).toLocaleString('ja-JP',{minimumFractionDigits:1})+'万';
 const v3Pct=(a,b)=>(a/b*100).toFixed(1);
 
 function v3Body(p,key){
   const m=p.v3.months[key], conf=m.kind==='k';
-  const capPct=p.capacity?m.enrolled/p.capacity*100:null;
+  const capPct=(p.capacity&&m.enrolled!=null)?m.enrolled/p.capacity*100:null;
   let money;
   if(conf){
-    const exp=m.labor+m.admin+m.interest, bal=m.income-exp, w=x=>Math.max(0,x/m.income*100).toFixed(1)+'%';
+    const exp=m.labor+m.admin+m.interest, bal=m.income-exp, den=Math.max(m.income,exp), w=x=>Math.max(0,x/den*100).toFixed(1)+'%';
     money=`<div class="m3">
      <div class="mb"><div class="sm">収入</div><div class="mv">${fmtM(m.income)}</div><span class="tag t-src">月次報告書</span></div>
      <div class="mb"><div class="sm">支出</div><div class="mv">${fmtM(exp)}</div><span class="tag t-src">月次報告書</span></div>
      <div class="mb"><div class="sm">収支残</div><div class="mv ${bal>=0?'pos':'neg'}">${bal>=0?'+':'−'}${fmtM(Math.abs(bal))}</div><span class="sm">収支残率 ${v3Pct(bal,m.income)}%</span></div>
     </div>
     <div class="stack"><div style="width:${w(m.labor)};background:var(--c-labor)"></div><div style="width:${w(m.admin)};background:var(--c-admin)"></div><div style="width:${w(m.interest)};background:var(--c-int)"></div><div style="width:${w(bal)};background:var(--c-profit)"></div></div>
-    <div class="lg"><span><i style="background:var(--c-labor)"></i>人件費 ${v3Pct(m.labor,m.income)}%</span><span><i style="background:var(--c-admin)"></i>管理経費 ${v3Pct(m.admin,m.income)}%</span><span><i style="background:var(--c-int)"></i>利息</span><span><i style="background:var(--c-profit)"></i>収支残</span></div>`;
+    <div class="lg"><span><i style="background:var(--c-labor)"></i>人件費 ${v3Pct(m.labor,m.income)}%</span><span><i style="background:var(--c-admin)"></i>${m.adminLabel||'管理経費'} ${v3Pct(m.admin,m.income)}%</span><span><i style="background:var(--c-int)"></i>${m.intLabel||'利息'}</span>${bal>=0?'<span><i style="background:var(--c-profit)"></i>収支残</span>':''}</div>${bal<0?'<div class="note">支出が収入を上回っています（帯は支出全体を100%として表示）</div>':''}`;
   } else {
     money=`<div class="m3">
      <div class="mb"><div class="sm">収入</div><div class="mv">${fmtM(m.income)}</div><span class="tag t-src">${m.incomeSrc}</span></div>
@@ -479,14 +508,14 @@ function v3Body(p,key){
   const lab=conf?m.labor/m.income*100:null, mx=v3Scale(m);
   const kpi=`<div class="k4">
    <div class="kb"><div class="kh"><span class="sm">定員充足度</span></div>
-     ${v3Donut(capPct,'var(--c-profit)',capPct==null?'—':Math.round(capPct)+'%')}<div class="kf">${m.enrolled} / ${p.capacity||'—'}名</div></div>
+     ${v3Donut(capPct,'var(--c-profit)',capPct==null?'—':Math.round(capPct)+'%')}<div class="kf">${m.enrolled==null?'園児一覧待ち':m.enrolled+' / '+(p.capacity||'—')+'名'}</div></div>
    <div class="kb"><div class="kh"><span class="sm">人件費率</span></div>
      ${v3Donut(lab,'var(--c-labor)',lab==null?'—':lab.toFixed(1)+'%',V3_LABOR_TARGET)}
      <div class="kf">${lab==null?'経理待ち':(lab<=V3_LABOR_TARGET?`目安${V3_LABOR_TARGET}%（黒線）以内`:`目安${V3_LABOR_TARGET}%（黒線）超え`)}</div></div>
-   <div class="kb"><div class="kh"><span class="sm">保育士の配置</span><span class="kv">${m.staff}名</span></div>
-     ${v3Columns(m.staff,m.base,'保育',mx)}${v3Jtext(m.staff,m.base)}<div class="kf l">${m.staffNote||'園長・調理・事務を除く'}</div></div>
+   <div class="kb"><div class="kh"><span class="sm">保育士の配置</span><span class="kv">${m.staff==null?'—':m.staff+'名'}</span></div>
+     ${m.base==null?v3Wait('職員一覧待ち'):v3Columns(m.staff,m.base,'保育',mx)+v3Jtext(m.staff,m.base)}<div class="kf l">${m.staffNote||'園長・調理・事務を除く'}</div></div>
    <div class="kb"><div class="kh"><span class="sm">常勤換算</span><span class="kv">${m.fte==null?'—':m.fte+'名'}</span></div>
-     ${v3Columns(m.fte,m.base,'常勤換算',mx)}${v3Jtext(m.fte,m.base)}<div class="kf l">${m.fteNote}${m.extraNote?'<br>'+m.extraNote:''}</div></div>
+     ${m.base==null?v3Wait('勤務実績待ち'):v3Columns(m.fte,m.base,'常勤換算',mx)+v3Jtext(m.fte,m.base)}<div class="kf l">${m.fteNote}${m.extraNote?'<br>'+m.extraNote:''}</div></div>
   </div><div class="klg">${m.staffAll}</div>`;
   const rows=r=>r.map(x=>x.length===1?`<tr class="grp"><td colspan="2">${x[0]}</td></tr>`:`<tr><td>${x[0]}</td><td>${x[1]?v3Man(x[1]):'0'}</td></tr>`).join('');
   const mon=m.label.replace(/^令和\d+年|\s.*$/g,'');
@@ -498,7 +527,7 @@ function v3Body(p,key){
 function v3Card(p){
   const opts=p.v3.order.map(k=>`<option value="${k}">${p.v3.months[k].label}</option>`).join('');
   return `<div class="park-card-head">
-    <div><div class="park-card-name">${p.label}</div><div class="park-card-sub">${p.sub.split('・')[0]}・定員${p.capacity}名</div></div>
+    <div><div class="park-card-name">${p.label}</div><div class="park-card-sub">${p.sub.split('・')[0]}・定員${p.capacity||'—'}名</div></div>
     <div style="text-align:right"><label class="sm" for="${p.id}-ms" style="display:block">表示する月</label>
       <select id="${p.id}-ms" onchange="v3Show('${p.id}',this.value)">${opts}</select><div id="${p.id}-st"></div></div>
   </div><div class="park-card-body" id="${p.id}-v3b"></div>`;
