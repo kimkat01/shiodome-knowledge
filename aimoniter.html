@@ -316,7 +316,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:
         <option value="gpt-4o-transcribe-diarize">gpt-4o-transcribe-diarize（高精度・話者つき・試験）</option>
       </select>
       <label>よく出る語（任意・短く）</label>
-      <input type="text" id="asrPrompt" class="grow" placeholder="任意。短い単語のみ（例：せんせい 順番 危ない）。長い文は書き起こしに紛れます" oninput="persistAsr()">
+      <input type="text" id="asrPrompt" class="grow" placeholder="空欄を推奨。ここに入れた言葉に引っぱられ、聞き取れない音がその言葉の文に化けることがあります" oninput="persistAsr()">
     </div>
     <div class="kb-row">
       <label style="align-self:flex-start;padding-top:9px;">修正の学習<br><span style="font-size:9.5px;color:var(--text3)">誤り→正しい</span></label>
@@ -566,6 +566,34 @@ function recount(){const hit=segments.filter(s=>s.danger).length;document.getEle
 
 /* Whisperの幻聴ループ（同じ語の連呼）＋英語幻聴を検出・除去 */
 function hasJapanese(t){return /[\u3040-\u30ff\u3400-\u9fff\uff66-\uff9f]/.test(t||'');}
+/* \u301010/10\u8ffd\u52a0\u3011Whisper\u306e\u4f5c\u308a\u8a71\u30922\u7a2e\u985e\u3001\u81ea\u52d5\u3067\u9664\u53bb\u3059\u308b
+   \u2460 \u300cA. \u30a8\u30ec\u30f3\u30b8\u30ab\u30fc B. \u30a8\u30ec\u30f3\u30b8\u30ab\u30fc C. \u30d1\u30c3\u30ab\u30fc\u300d\u306e\u3088\u3046\u306b\u3001A. B. C. \u3068\u9078\u629e\u80a2\u306e\u3088\u3046\u306b\u4e26\u3079\u305f\u884c
+      \uff08\u805e\u304d\u53d6\u308c\u306a\u3044\u77ed\u3044\u58f0\u304c\u7d9a\u304f\u3068\u3001Whisper\u304c\u8a66\u9a13\u554f\u984c\u306e\u3088\u3046\u306a\u5f62\u306b\u4f5c\u308a\u4e0a\u3052\u3066\u3057\u307e\u3046\uff09
+   \u2461 \u307b\u307c\u7121\u97f3\u306e\u533a\u9593\u306b\u4ed8\u3044\u305f\u767a\u8a00\uff08\u4f8b\uff1a1:20\u301c1:28\u304c\u7121\u97f3\u306a\u306e\u306b\u300c\u5e73\u5b89\u3078\u300d\uff09
+      \u58f0\u306e\u9ad8\u3055\u30fb\u97f3\u91cf\u306e\u89e3\u6790\u7d50\u679c\uff08acoustic\uff09\u3092\u4f7f\u3044\u3001\u305d\u306e\u6642\u9593\u306b\u97f3\u3089\u3057\u3044\u97f3\u304c0.15\u79d2\u3082\u306a\u3051\u308c\u3070\u4f5c\u308a\u8a71\u3068\u307f\u306a\u3059 */
+const LIST_HALLU_RE=/(?:^|[\s\u3000\u3001\u3002,])[A-E\uff21-\uff25][\.\uff0e]\s*/g;
+function isListHallucination(t){const m=(t||'').match(LIST_HALLU_RE);return !!(m&&m.length>=2);}
+const SILENT_MIN_SOUND_SEC=0.15;
+function soundSecIn(st,en){
+  if(!acoustic||!acoustic.n)return null;
+  const h=acoustic.hop;if(!(en>st))en=st+1;
+  const k0=Math.max(0,Math.floor(st/h)),k1=Math.min(acoustic.n,Math.ceil(en/h));
+  if(k1<=k0)return null;
+  const thr=Math.min(-58,acoustic.base-6); // \u666e\u6bb5\u306e\u97f3\u91cf\u3088\u308a\u3055\u3089\u306b\u5c0f\u3055\u3044\uff1d\u307b\u307c\u7121\u97f3
+  let c=0;for(let k=k0;k<k1;k++)if(acoustic.db[k]>thr)c++;
+  return c*h;
+}
+function dropSuspicious(segs){
+  let nList=0,nSilent=0;
+  const out=segs.filter(s=>{
+    if(isListHallucination(s.text)){nList++;log('  \u26a0 \u9078\u629e\u80a2\u5f62\u5f0f\u306e\u4f5c\u308a\u8a71\u3092\u9664\u53bb: '+String(s.text).slice(0,24),'err');return false;}
+    const snd=soundSecIn(s.start,s.end);
+    if(snd!=null&&snd<SILENT_MIN_SOUND_SEC){nSilent++;log('  \u26a0 \u307b\u307c\u7121\u97f3\u306e\u533a\u9593\uff08'+fmt(s.start)+'\uff09\u306b\u4ed8\u3044\u305f\u767a\u8a00\u3092\u9664\u53bb: '+String(s.text).slice(0,24),'err');return false;}
+    return true;
+  });
+  if(nList||nSilent)log('\ud83e\uddf9 \u4f5c\u308a\u8a71\u306e\u7591\u3044\u3092\u9664\u53bb\uff1a\u9078\u629e\u80a2\u5f62\u5f0f'+nList+'\u4ef6\uff0f\u7121\u97f3\u533a\u9593'+nSilent+'\u4ef6','ok');
+  return out;
+}
 function cleanTranscript(segs){
   const norm=x=>(x||'').replace(/[\s、。「」！？!?,.\u3000]/g,'');
   if(!segs.length)return {segs,halluc:false,englishHalluc:false};
@@ -612,6 +640,15 @@ function importCorrections(){
     const m=l.split(/→|->/);
     if(m.length>=2){const from=m[0].trim(),to=m.slice(1).join('→').trim();if(from)next.push({from,to});}
   });
+  // 欄にない学習は消える仕組みのため、消える件数があれば確認する
+  const removed=corrections.filter(c=>!next.find(x=>x.from===c.from));
+  if(removed.length){
+    const ok=confirm('登録すると、今の学習'+corrections.length+'件のうち'+removed.length+'件が消えます。\n'
+      +'（例：'+removed.slice(0,3).map(c=>c.from).join('、')+(removed.length>3?' ほか':'')+'）\n\n'
+      +'消してよければ「OK」を押してください。\n'
+      +'消したくない場合は「キャンセル」を押し、欄を空にしてから設定を開き直すか、画面下の「学習○件」を押すと、今の学習が欄に表示されます。');
+    if(!ok){log('学習の登録を取り消しました（学習は変更していません）');return;}
+  }
   corrections=next;persistCorrections();
   log('修正を'+corrections.length+'件に更新しました','ok');
   toast('修正を'+corrections.length+'件に更新しました');
@@ -685,7 +722,15 @@ let _toastT;
 function toast(m){const el=document.getElementById('toast');if(!el)return;el.textContent=m;el.classList.add('show');clearTimeout(_toastT);_toastT=setTimeout(()=>el.classList.remove('show'),1900);}
 
 /* ---- keys ---- */
-function toggleKeys(){document.getElementById('keybar').classList.toggle('show');}
+function toggleKeys(){
+  const kb=document.getElementById('keybar');kb.classList.toggle('show');
+  // 設定を開いたとき、修正の欄が空なら今の学習を表示しておく
+  // （空のまま書いて「登録」を押すと、それまでの学習が消えてしまうため）
+  if(kb.classList.contains('show')){
+    const ta=document.getElementById('bulkCorr');
+    if(ta&&!ta.value.trim()&&corrections.length)ta.value=corrections.map(c=>c.from+'→'+c.to).join('\n');
+  }
+}
 function saveKeys(){
   const o=document.getElementById('openaiKey').value.trim(),a=document.getElementById('anthropicKey').value.trim();
   if(o)localStorage.setItem('vm_openai_key',o);
@@ -908,11 +953,15 @@ async function transcribeFile(file,onProgress){
   // 大きい物音（ドア・椅子の音など）があるだけで、その窓全体（=会話部分すべて）の増幅率が
   // その1回の音に合わせて低く抑えられてしまい、肝心の小さい声がほとんど持ち上がらなかった。
   // 窓を90秒に縮めることで、遠くにある1回の大きい音が他の区間の増幅を道連れにしにくくなる。
-  const CH=90; // 16kHz・16bit・モノラルWAVで 90秒 ≒ 2.9MB（25MB上限に対し十分小さい）
+  // 【10/10変更】区間を90秒→約12秒に短縮。
+  //   90秒だと、Whisperが前の部分の聞き取り結果を引きずり、「A.エレンジカー B.…」のような
+  //   作り話が連鎖する／返ってくる時刻が数秒ずれる、という問題があったため。
+  //   区切りは機械的に12秒ごとではなく、8〜16秒の範囲で一番静かな瞬間を選ぶ（言葉の途中で切らないため）。
+  const STREAM_CH=90; // 巨大ファイル用の動画再生方式は、区切りを細かくすると時間がかかるため従来どおり
   log('🎞 音声を抽出します（元ファイル '+_mb(file.size)+'）。動画はそのまま送らず、16kHzモノラルWAVに変換・分割してから送信します','ok');
   if(file.size>HUGE_FILE_BYTES){
     log('🎞 ファイルサイズが大きい（'+(file.size/1024/1024/1024).toFixed(2)+'GB）ため、最初から動画再生方式で音声を抽出します','ok');
-    return await transcribeFileStreaming(file,onProgress,CH);
+    return await transcribeFileStreaming(file,onProgress,STREAM_CH);
   }
   const ctx=new (window.AudioContext||window.webkitAudioContext)();
   let ab;
@@ -920,41 +969,66 @@ async function transcribeFile(file,onProgress){
   catch(e){
     ctx.close();
     log('⚠ 音声デコードに失敗したため、動画再生方式に切り替えて音声を抽出します','err');
-    return await transcribeFileStreaming(file,onProgress,CH);
+    return await transcribeFileStreaming(file,onProgress,STREAM_CH);
   }
-  ctx.close();await vaPrepare(ab);const dur=ab.duration,n=Math.ceil(dur/CH);let all=[];
+  ctx.close();await vaPrepare(ab);const dur=ab.duration;
+  const plan=planChunks(dur);const n=plan.length;
   log('🔊 コンプレッサー＋ノーマライズで小さい声を持ち上げます','ok');
-  if(n<=1){
-    stat('🎙 文字起こし中…');
-    const {blob:wav,gain,rms}=await renderChunkWav(ab,0,dur,16000);
-    if(rms<SILENCE_RMS_THRESHOLD){log('🔇 ほぼ無音のためスキップ（音量:'+rms.toFixed(4)+'）','ok');onProgress&&onProgress([]);return [];}
-    if(gain>1.05)log('  音量を約'+gain.toFixed(1)+'倍に','ok');
-    log('  音声抽出完了：'+_mb(file.size)+' → '+_mb(wav.size)+'（WAV 16kHz）');
-    const segs=await whisperBlob(wav,'c0.wav',0);
-    onProgress&&onProgress(segs);
-    return segs;
-  }
-  log('⚙ 長尺のため16kHzに圧縮して'+n+'分割（1区間 約'+_mb(CH*16000*2)+'）');
-  let failed=0,attempted=0,netStreak=0;
-  for(let i=0;i<n;i++){
-    const st=i*CH,len=Math.min(CH,dur-st);
-    stat('🎙 文字起こし '+(i+1)+'/'+n+'…');log('  チャンク'+(i+1)+'/'+n+' 変換中');
-    const {blob:wav,gain,rms}=await renderChunkWav(ab,st,len,16000);
-    if(rms<SILENCE_RMS_THRESHOLD){log('  🔇 ほぼ無音のためスキップ（音量:'+rms.toFixed(4)+'）','ok');continue;}
-    if(gain>1.05)log('  音量を約'+gain.toFixed(1)+'倍に','ok');
-    attempted++;
-    try{
-      const segs=await whisperBlob(wav,'c'+i+'.wav',st);all=all.concat(segs);onProgress&&onProgress(all);netStreak=0;
-    }catch(e){
-      // キー無効・残高不足などは全チャンク共通で失敗するため中断。それ以外はこの区間だけ飛ばして続行
-      if(isFatalApiError(e))throw e;
-      failed++;log('  ⚠ チャンク'+(i+1)+'/'+n+'（'+fmt(st)+'〜）の文字起こしに失敗したため飛ばします','err');
-      if(e.network){netStreak++;if(netStreak>=2){const x=new ApiError('OpenAIへの通信が続けて失敗したため中断しました。'+_networkHint('OpenAI'),{api:'OpenAI',status:0,fatal:true});throw x;}}
+  log('⚙ 16kHzに変換し、静かな瞬間で区切って'+n+'区間（1区間 約'+ASR_CHUNK.TARGET+'秒）に分けて送ります（同時に'+ASR_CHUNK.PARALLEL+'区間ずつ）');
+  const results=new Array(n);
+  let failed=0,attempted=0,netStreak=0,skipped=0,done=0,next=0,fatal=null;
+  const flat=()=>{let a=[];for(let i=0;i<n;i++)if(results[i])a=a.concat(results[i]);return a;};
+  async function worker(){
+    while(!fatal){
+      const i=next++;if(i>=n)return;
+      const {st,len}=plan[i];
+      try{
+        const {blob:wav,rms}=await renderChunkWav(ab,st,len,16000);
+        if(rms<SILENCE_RMS_THRESHOLD){skipped++;results[i]=[];}
+        else{
+          attempted++;
+          results[i]=await whisperBlob(wav,'c'+i+'.wav',st);netStreak=0;
+        }
+      }catch(e){
+        // キー無効・残高不足などは全区間共通で失敗するため中断。それ以外はこの区間だけ飛ばして続行
+        if(isFatalApiError(e)){fatal=e;return;}
+        failed++;results[i]=[];log('  ⚠ 区間'+(i+1)+'/'+n+'（'+fmt(st)+'〜）の文字起こしに失敗したため飛ばします','err');
+        if(e.network){netStreak++;if(netStreak>=3){fatal=new ApiError('OpenAIへの通信が続けて失敗したため中断しました。'+_networkHint('OpenAI'),{api:'OpenAI',status:0,fatal:true});return;}}
+      }
+      done++;stat('🎙 文字起こし '+done+'/'+n+'…');
+      onProgress&&onProgress(flat());
     }
   }
+  const ws=[];for(let k=0;k<Math.min(ASR_CHUNK.PARALLEL,n);k++)ws.push(worker());
+  await Promise.all(ws);
+  if(fatal)throw fatal;
+  if(skipped)log('  🔇 ほぼ無音の'+skipped+'区間は送らずにスキップしました','ok');
   if(failed)log('⚠ 文字起こしに失敗した区間が'+failed+'/'+attempted+'あります（上のログを確認）','err');
   if(failed&&failed===attempted){const x=new Error('すべての区間で文字起こしに失敗しました（上のログに原因を表示しています）');x.logged=true;throw x;}
+  const all=flat();all.sort((a,b)=>a.start-b.start);
   return all;
+}
+/* 文字起こしの区切り方：約12秒ごと。ただし8〜16秒の範囲で一番静かな瞬間（0.2秒平均）で区切る */
+const ASR_CHUNK={TARGET:12,MIN:8,MAX:16,PARALLEL:3};
+function planChunks(dur){
+  const out=[];let st=0;
+  while(dur-st>ASR_CHUNK.MAX){
+    let cut=st+ASR_CHUNK.TARGET;
+    if(acoustic&&acoustic.n){
+      const h=acoustic.hop,W=Math.max(1,Math.round(0.2/h));
+      const k0=Math.floor((st+ASR_CHUNK.MIN)/h),k1=Math.min(acoustic.n-W,Math.floor((st+ASR_CHUNK.MAX)/h));
+      let best=Infinity;
+      for(let k=k0;k<=k1;k++){
+        let s=0;for(let j=0;j<W;j++)s+=acoustic.db[k+j];
+        // 同じくらい静かなら12秒に近い方を選ぶ（わずかな差で端に寄りすぎないように）
+        const score=s/W+Math.abs((k+W/2)*h-(st+ASR_CHUNK.TARGET))*0.3;
+        if(score<best){best=score;cut=(k+W/2)*h;}
+      }
+    }
+    out.push({st,len:cut-st});st=cut;
+  }
+  out.push({st,len:dur-st});
+  return out;
 }
 
 /* 巨大ファイル用フォールバック：ファイル全体を一度にメモリへ載せてデコードするのではなく、
@@ -1272,6 +1346,13 @@ async function analyze(){
     if(!segments.length){
       log('（幻聴除去後、有効な発話が残りませんでした。モデルを切り替えても改善しない場合は、音声が非常に不明瞭な可能性があります）','err');
       stat('⚠ 有効な発話が検出できませんでした','var(--red)');
+      document.getElementById('reBtn').disabled=false;running=false;btn.disabled=false;btn.textContent='▶ 解析開始';return;
+    }
+    // 1.4) 作り話の除去（「A.〇〇 B.〇〇」形式／ほぼ無音の区間に付いた発言）
+    segments=dropSuspicious(segments);
+    if(!segments.length){
+      log('（作り話の除去後、有効な発話が残りませんでした）','err');
+      stat('⚠ 有効な発話が検出できませんでした','var(--red)');renderFeed();
       document.getElementById('reBtn').disabled=false;running=false;btn.disabled=false;btn.textContent='▶ 解析開始';return;
     }
     log('📝 文字起こし '+segments.length+'セグメント','ok');
