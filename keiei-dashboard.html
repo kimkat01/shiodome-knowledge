@@ -229,7 +229,7 @@ html.law-y .header{box-shadow:0 2px 8px rgba(67,160,71,.3);}
 <div class="footer-note">
   ※ 施設型給付費の基本分単価のみによる概算です。処遇改善等加算・賃借料加算等は含まれていません。<br>
   ※ 職員配置の「最低必要数」は国の配置基準（0歳3:1、1・2歳6:1、3歳20:1、4・5歳30:1）による算出です。<br>
-  ※ しおどめ保育園稲城・認定こども園しおどめの森・しおどめ保育園つくばのカードは新しい形式（月次報告書の実績・国の新基準：3歳15:1、4・5歳25:1）です。<br>
+  ※ しおどめ保育園稲城・認定こども園しおどめの森・しおどめ保育園つくば・ふれあいしおどめ保育園のカードは新しい形式（月次報告書の実績・国の新基準：3歳15:1、4・5歳25:1）です。<br>
   ※ データがない園（白カード）は、データが揃い次第このダッシュボードに反映します。
 </div>
 </main>
@@ -275,13 +275,13 @@ const PARKS=[
    staffTotal:35, staffDesc:'正規19・非正規15',age0:0,age1:20,age2:20,age3:40,age4:39,age5:41,hasData:true,
    // ★新カード（v3）。出典：施設別月次報告書R08-06（事業活動収支月報・人件費支出月報の当月欄。人件費は教員＋職員、管理経費は教育研究経費＋管理経費）、
    //   コドモン園児一覧（6/30時点。誕生日空欄の24名はクラスで年齢判定）・職員一覧・6月度勤務実績（5/16〜6/15）。定員168名
-   //   国基準（新基準）：1・2歳39名→7、3歳38名→3、4・5歳79名→4＝14名。保育職員＝クラス担任・主任・副主任・保育補助（資格なしのサポート・子育て支援員は別）
+   //   国基準（新基準）：1・2歳39名→7、3歳38名→3、4・5歳79名→4＝14名。保育職員＝クラス担任・主任・副主任・保育補助・サポート（保育士資格あり）。子育て支援員は別
    v3:{ order:['k'], months:{
      k:{ label:'令和8年6月 確定', kind:'k',
          income:16536580, labor:10895012, admin:3062748, interest:782392,
-         enrolled:156, base:14, staff:17, fte:16.2, fteNote:'保育職員・6月度勤務実績',
-         staffNote:'園長・調理・事務・サポート等を除く', extraNote:'ほかにサポート 7名（5.4名）・子育て支援員 2名（1.3名）',
-         staffAll:'全職員 34名（保育17・サポート7・支援員2・調理4・栄養士1・運転手1・事務1・園長1）',
+         enrolled:156, base:14, staff:24, fte:21.6, fteNote:'保育職員・6月度勤務実績',
+         staffNote:'園長・調理・事務・支援員等を除く', extraNote:'ほかに子育て支援員 2名（1.3名）',
+         staffAll:'全職員 34名（保育24・支援員2・調理4・栄養士1・運転手1・事務1・園長1）',
          expRows:[['人件費（教員＋職員）'],['本俸',5050820],['期末手当',0],['その他の手当',1698591],['所定福利費',885535],['兼務（非常勤）',3260066],
                   ['管理経費・利息'],['賃借料',787815],['給食費',784394],['報酬委託手数料',411082],['光熱水費',334665],['公租公課',200000],
                   ['その他の管理経費',544792],['借入金利息',782392]],
@@ -310,7 +310,25 @@ const PARKS=[
   {id:'g10', label:'ふれあいしおどめ保育園',       sub:'茨城県守谷市・15/100地域', mult:1.15, capacity:90,
    staffTotal:32, staffDesc:'正規13・非正規19',age0:3,age1:15,age2:16,age3:18,age4:18,age5:18,hasData:true,
    hasInvoice:true, invoiceIncome:10142940, invoiceMonth:'2026年09月', invoiceUrl:'https://drive.google.com/file/d/1VPn8cI5yfZOKKXC8puT9D0cBCGey3msh/view',
-   invoiceRows:{amt0:814300, amt12:4949150, amt35:4379490}},
+   invoiceRows:{amt0:814300, amt12:4949150, amt35:4379490},
+   // ★新カード（v3）。出典：施設別月次報告書R08-06（当月欄）、園児マスタ（6/30時点の在籍＝入園日で判定）、職員マスタ、コドモン6月度勤務実績（5/16〜6/15）
+   //   国基準（新基準）：0歳1名→1、1・2歳30名→5、3歳18名→2、4・5歳35名→2＝10名。保育職員は園長・調理・事務・子育て支援員・育休3名を除く（6月在籍の退職者を含む）
+   v3:{ order:['k','s'], months:{
+     k:{ label:'令和8年6月 確定', kind:'k',
+         income:10180015, labor:6893019, admin:1902222, interest:31817,
+         enrolled:84, base:10, staff:21, fte:15.3, fteNote:'保育職員・6月度勤務実績',
+         staffNote:'園長・調理・事務・支援員を除く', extraNote:'ほかに子育て支援員 2名（1.4名）',
+         staffAll:'全職員 34名（保育21・支援員2・調理5・事務1・園長1・育休3）',
+         expRows:[['人件費'],['本俸',2902854],['期末手当',0],['その他の手当',537276],['所定福利費',473330],['兼務職員（非常勤）',2966657],['退職金',12902],
+                  ['管理経費・利息'],['給食費',518029],['修繕費',450010],['賃借料',398750],['光熱水費',177441],['報酬委託手数料',118370],
+                  ['その他の管理経費',239622],['借入金利息',31817]],
+         incRows:[['保育給付費',9642990],['補助活動収入',345580],['雑収入',191445]] },
+     s:{ label:'令和8年9月 速報', kind:'s',
+         income:10142940, incomeSrc:'給付費請求書',
+         enrolled:84, base:10, staff:21, fte:15.3, fteNote:'保育職員・6月の値（9月分は未反映）',
+         staffNote:'園長・調理・事務・支援員を除く', extraNote:'ほかに子育て支援員 2名（1.4名）',
+         staffAll:'全職員 34名（保育21・支援員2・調理5・事務1・園長1・育休3）※6月時点',
+         provisional:true } } }},
   {id:'g03', label:'しおどめ保育園 八潮駅北',      sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:null,
    staffTotal:0,staffDesc:'',age0:0,age1:0,age2:0,age3:0,age4:0,age5:0,hasData:false},
   {id:'g04', label:'しおどめ保育園 京急蒲田駅前',  sub:'東京都大田区・1級地（+20%）', mult:1.20, capacity:null,
@@ -418,7 +436,7 @@ function v3Columns(v,base,label,max){
   max=max||30;
   const up=Math.round(base*V3_COEF*10)/10, Y0=105, K=90/max, none=(v==null), [col]=none?['']:v3Judge(v,base);
   const yB=Y0-base*K, yU=Y0-up*K, yV=none?Y0:Y0-Math.min(v,max)*K;
-  const vt=none?`<text x="110" y="100" text-anchor="middle" font-size="12" fill="var(--ink)">—</text>`:(v<up&&up-v<max/10)?`<text x="110" y="${yV+14}" text-anchor="middle" font-size="12" fill="#fff">${v}</text>`
+  const vt=none?`<text x="110" y="100" text-anchor="middle" font-size="12" fill="var(--ink)">—</text>`:(v<up&&up-v<max*0.15)?`<text x="110" y="${yV+14}" text-anchor="middle" font-size="12" fill="#fff">${v}</text>`
                          :`<text x="110" y="${yV-4}" text-anchor="middle" font-size="12" fill="var(--ink)">${v}</text>`;
   return `<svg viewBox="0 0 150 128" width="100%" role="img">
    <line x1="20" y1="15" x2="140" y2="15" stroke="var(--s2)"/><line x1="20" y1="105" x2="140" y2="105" stroke="var(--line)"/>
