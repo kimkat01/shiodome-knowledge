@@ -153,6 +153,44 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 @media(max-width:900px){.summary-grid{grid-template-columns:repeat(2,1fr)}.settings-grid{grid-template-columns:1fr}}
 </style>
 <style>
+/* ===== 新カード（v3）2026-10：収入・支出・収支残＋運営の指標4つ（つくば園から適用） ===== */
+.park-card.v3{--ink:#000;--line:#80869a;--s2:#eef0f7;--c-labor:#4169e1;--c-nonreg:#9db1f0;--c-admin:#a9adbb;--c-int:#c28a1e;
+  --c-profit:#3f9a4b;--c-base:#80869a;--c-ok:#9fe1cb;--c-over:#ef9f27;--c-ng:#e24b4a;--c-mark:#000;
+  --v-warn:#9a6a08;--v-warn-soft:#fbf2dc;--v-good:#2f7a3a;--v-good-soft:#e5f2e7;border-color:var(--line);color:var(--ink)}
+.v3 .park-card-head{border-bottom-color:var(--line)}
+.v3 .park-card-sub,.v3 .sm{font-size:12px;color:var(--ink)}
+.v3 select{font-size:13px;padding:3px 6px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)}
+.v3 .tag{display:inline-block;font-size:12px;white-space:nowrap;padding:0 5px;border-radius:4px;margin-top:4px}
+.v3 .t-sok{background:var(--v-warn-soft);color:var(--v-warn)} .v3 .t-kak{background:var(--v-good-soft);color:var(--v-good)}
+.v3 .t-src{background:var(--accent-light);color:var(--accent)}
+.v3 .sec{font-size:12px;font-weight:700;margin:14px 0 6px} .v3 .sec:first-child{margin-top:0}
+.v3 .m3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.v3 .mb{background:var(--s2);border-radius:8px;padding:7px 8px}
+.v3 .mv{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.35}
+.v3 .wait{color:#7a83a0} .v3 .pos{color:var(--v-good)} .v3 .neg{color:var(--accent2)}
+.v3 .stack{display:flex;height:10px;border-radius:5px;overflow:hidden;margin-top:8px;background:var(--s2)}
+.v3 .lg{display:flex;flex-wrap:wrap;gap:2px 10px;font-size:12px;margin-top:4px}
+.v3 .lg i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.v3 .lg span{white-space:nowrap}
+.v3 .k4{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.v3 .kb{border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column}
+.v3 .kb svg{display:block;margin-top:2px}
+.v3 .kh{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.v3 .kv{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
+.v3 .kf{font-size:12px;text-align:center;margin-top:auto}
+.v3 .kf.l{text-align:left;margin-top:2px}
+.v3 .klg{font-size:12px;margin-top:6px}
+.v3 .note{font-size:12px;margin-top:6px}
+.v3 .fold{margin-top:12px;border-top:1px solid var(--line);padding-top:4px}
+.v3 details{padding:4px 0} .v3 summary{font-size:13px;cursor:pointer}
+.v3 .tb{width:100%;border-collapse:collapse;font-size:12px;margin-top:4px;font-variant-numeric:tabular-nums}
+.v3 .tb th{font-weight:400;text-align:right;border-bottom:1px solid var(--line);padding:2px 0}
+.v3 .tb th:first-child,.v3 .tb td:first-child{text-align:left}
+.v3 .tb td{padding:2px 0;border-bottom:1px solid var(--line);text-align:right}
+.v3 .tb tr.grp td{border-bottom:none;padding-top:6px}
+.v3 .inv{display:inline-block;margin-top:6px;font-size:12px;color:#fff;text-decoration:none;background:var(--accent);border-radius:20px;padding:2px 10px}
+</style>
+<style>
 /* ★ 社会福祉法人雄雅会（園コード Y〜）から開いたときは緑テーマ＋雄雅会3園版（2026-09） */
 html.law-y{ --accent:#43a047; --accent-light:#e8f5e9; }
 html.law-y .header{box-shadow:0 2px 8px rgba(67,160,71,.3);}
@@ -170,41 +208,9 @@ html.law-y .header{box-shadow:0 2px 8px rgba(67,160,71,.3);}
 
 <main class="main">
 
-<!-- サマリー -->
-<div class="section-label">法人全体サマリー</div>
-<div class="summary-grid">
-  <div class="metric-card accent">
-    <div class="metric-label">総在籍児童数（データあり園）</div>
-    <div class="metric-value" id="total-children">146</div>
-    <div class="metric-sub">定員充足率 <span id="total-rate">—</span>%</div>
-  </div>
-  <div class="metric-card">
-    <div class="metric-label">月次推計収入（データあり園）</div>
-    <div class="metric-value" id="total-income">—</div>
-    <div class="metric-sub">施設型給付費（基本分）</div>
-  </div>
-  <div class="metric-card">
-    <div class="metric-label">推計人件費</div>
-    <div class="metric-value" id="total-labor">—</div>
-    <div class="metric-sub">収入の <span id="labor-pct-label">70</span>%</div>
-  </div>
-  <div class="metric-card">
-    <div class="metric-label">推計収支差</div>
-    <div class="metric-value" id="total-surplus">—</div>
-    <div class="metric-sub">収入 − 人件費 − その他経費</div>
-  </div>
-</div>
-
 <!-- 園スライダー -->
 <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
   <span>園別詳細</span>
-  <span class="r3-row" style="margin:0">
-    3歳児基準：
-    <select class="select-inline" id="r3-mode" onchange="update()">
-      <option value="25">25対1（基準）</option>
-      <option value="20">20対1（改善加算）</option>
-    </select>
-  </span>
 </div>
 
 <div class="slider-outer">
@@ -220,91 +226,10 @@ html.law-y .header{box-shadow:0 2px 8px rgba(67,160,71,.3);}
   </div>
 </div>
 
-<!-- 収支バー -->
-<div class="section-label">収支バランス（データあり園合計）</div>
-<div class="balance-card">
-  <div class="balance-bar-row">
-    <div class="balance-bar-label">収入</div>
-    <div class="balance-bar-bg"><div class="balance-bar-fill bar-income" style="width:100%"></div></div>
-    <div class="balance-bar-val" id="bval-income">—</div>
-  </div>
-  <div class="balance-bar-row">
-    <div class="balance-bar-label">人件費</div>
-    <div class="balance-bar-bg"><div class="balance-bar-fill bar-labor" id="bar-labor" style="width:70%"></div></div>
-    <div class="balance-bar-val" id="bval-labor">—</div>
-  </div>
-  <div class="balance-bar-row">
-    <div class="balance-bar-label">その他経費</div>
-    <div class="balance-bar-bg"><div class="balance-bar-fill bar-other" id="bar-other" style="width:15%"></div></div>
-    <div class="balance-bar-val" id="bval-other">—</div>
-  </div>
-  <div class="balance-bar-row" style="margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--border)">
-    <div class="balance-bar-label" style="font-weight:500">収支差</div>
-    <div class="balance-bar-bg"><div class="balance-bar-fill" id="bar-surplus" style="width:15%"></div></div>
-    <div class="balance-bar-val" id="bval-surplus" style="font-weight:700">—</div>
-  </div>
-</div>
-
-<!-- 設定 -->
-<div class="section-label">設定（単価・経費率の調整）</div>
-<div class="settings-card">
-  <div class="settings-grid">
-    <div>
-      <div class="settings-group-title">基本分単価（月額・地域区分反映前）</div>
-      <div class="slider-row">
-        <span class="slider-lbl">0歳児</span>
-        <input type="range" min="200000" max="400000" step="5000" value="293000" id="r0" oninput="update()">
-        <span class="slider-val" id="v0">293,000円</span>
-      </div>
-      <div class="slider-row">
-        <span class="slider-lbl">1・2歳児</span>
-        <input type="range" min="80000" max="200000" step="5000" value="132000" id="r12" oninput="update()">
-        <span class="slider-val" id="v12">132,000円</span>
-      </div>
-      <div class="slider-row">
-        <span class="slider-lbl">3〜5歳児</span>
-        <input type="range" min="50000" max="150000" step="5000" value="79000" id="r35" oninput="update()">
-        <span class="slider-val" id="v35">79,000円</span>
-      </div>
-      <div class="settings-note">
-        ※ 地域区分加算は各園ごとに自動計算します。<br>
-        ※ 基本分単価のみ。処遇改善加算等は含みません。
-      </div>
-    </div>
-    <div>
-      <div class="settings-group-title">経費率（収入に対する割合）</div>
-      <div class="slider-row">
-        <span class="slider-lbl wide">人件費率（実績）</span>
-        <input type="range" min="50" max="90" step="1" value="70" id="rlabor" oninput="update()">
-        <span class="slider-val" id="vlabor">70%</span>
-      </div>
-      <div class="slider-row">
-        <span class="slider-lbl wide">その他経費率</span>
-        <input type="range" min="5" max="30" step="1" value="15" id="rother" oninput="update()">
-        <span class="slider-val" id="vother">15%</span>
-      </div>
-      <div class="settings-group-title" style="margin-top:1rem">適正職員数の計算</div>
-      <div class="slider-row">
-        <span class="slider-lbl wide">目標人件費率</span>
-        <input type="range" min="50" max="90" step="1" value="70" id="rtarget-labor" oninput="update()">
-        <span class="slider-val" id="vtarget-labor">70%</span>
-      </div>
-      <div class="slider-row">
-        <span class="slider-lbl wide">職員1人あたり月額</span>
-        <input type="range" min="150000" max="450000" step="10000" value="270000" id="rstaff-cost" oninput="update()">
-        <span class="slider-val" id="vstaff-cost">27万円</span>
-      </div>
-      <div class="settings-note">
-        ※ 適正上限 ＝ 園収入 × 目標人件費率 ÷ 1人あたり月額<br>
-        ※ 緑：適正範囲　黄：上限超え　赤：基準割れ
-      </div>
-    </div>
-  </div>
-</div>
-
 <div class="footer-note">
   ※ 施設型給付費の基本分単価のみによる概算です。処遇改善等加算・賃借料加算等は含まれていません。<br>
-  ※ 職員配置の「最低必要数」は国の配置基準（0歳3:1、1-2歳6:1、4-5歳30:1、3歳は上部セレクトで切替）による算出です。<br>
+  ※ 職員配置の「最低必要数」は国の配置基準（0歳3:1、1・2歳6:1、3歳20:1、4・5歳30:1）による算出です。<br>
+  ※ しおどめ保育園稲城・つくばのカードは新しい形式（月次報告書の実績・国の新基準：3歳15:1、4・5歳25:1）です。<br>
   ※ データがない園（白カード）は、データが揃い次第このダッシュボードに反映します。
 </div>
 </main>
@@ -331,14 +256,44 @@ const PARKS=[
    mult:1.15, capacity:150,
    staffTotal:58, staffDesc:'正規30・非正規28',
    age0:15,age1:20,age2:25,age3:30,age4:30,age5:27,
-   hasData:true},
+   hasData:true,
+   // ★新カード（v3）。出典：施設別月次報告書R08-06（当月欄）、園児マスタ（6/30時点の在籍＝入園日で判定）、職員マスタ
+   //   国基準（新基準）：0歳15名→5、1・2歳44名→8、3歳30名→2、4・5歳57名→3＝18名。
+   //   保育職員は加配（役職「パート加」）・園長・調理・事務・産休を除く。常勤換算はコドモン6月度勤務実績（5/16〜6/15）。退職者（6月在籍）を含む
+   v3:{ order:['k'], months:{
+     k:{ label:'令和8年6月 確定', kind:'k',
+         income:22762001, labor:14799020, admin:4026774, interest:137219,
+         enrolled:146, base:18, staff:32, fte:25.8, fteNote:'保育職員・6月度勤務実績',
+         staffNote:'園長・調理・事務・加配を除く', extraNote:'ほかに加配 19名・常勤換算15.2名',
+         staffAll:'全職員 59名（保育32・加配19・調理5・事務1・園長1・産休1）',
+         expRows:[['人件費'],['本俸',6646280],['期末手当',0],['その他の手当',837270],['所定福利費',906165],['兼務職員（非常勤）',6409305],
+                  ['管理経費・利息'],['給食費',1001078],['賃借料',987497],['光熱水費',690397],['報酬委託手数料',684689],['消耗品費',452371],
+                  ['その他の管理経費',210742],['借入金利息',137219]],
+         incRows:[['保育給付費',16738670],['地方公共団体補助金',5120501],['補助活動収入',515250],['雑収入',387580]] } } }},
   // 2〜14: データなし（園名のみ）
   {id:'g02', label:'認定こども園 しおどめの森',    sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:165,
    staffTotal:35, staffDesc:'正規19・非正規15',age0:0,age1:20,age2:20,age3:40,age4:39,age5:41,hasData:true},
   {id:'g11', label:'しおどめ保育園つくば',         sub:'茨城県つくば市・16/100地域', mult:1.10, capacity:90,
    staffTotal:26, staffDesc:'正規17・非正規9',age0:0,age1:14,age2:18,age3:20,age4:20,age5:17,hasData:true,
    hasInvoice:true, invoiceIncome:10545140, invoiceMonth:'2026年09月', invoiceUrl:'https://drive.google.com/file/d/1qwo654V_NcHF1bm9GnUomDwfZ3LWHncp/view',
-   invoiceRows:{amt0:0, amt12:5786914, amt35:4758226}},
+   invoiceRows:{amt0:0, amt12:5786914, amt35:4758226},
+   // ★新カード（v3）。月ごとのデータ。k＝確定（経理の月次報告書）、s＝速報（給付費請求書＋コドモン）
+   //   出典：施設別月次報告書R08-06（事業活動収支月報・人件費支出月報の当月欄）、コドモン6月登降園記録・6月度勤務実績（5/16〜6/15）、職員マスタ
+   //   国基準は新基準（0歳3:1・1・2歳6:1・3歳15:1・4・5歳25:1）。適正上限＝国基準×1.8。常勤換算＝正規1.0＋非正規の実働時間÷168時間（保育職員のみ）
+   v3:{ order:['k','s'], months:{
+     k:{ label:'令和8年6月 確定', kind:'k',
+         income:11243428, labor:7125575, admin:3792999, interest:48319,
+         enrolled:89, base:10, staff:19, fte:17.5, fteNote:'保育職員・6月度勤務実績',
+         staffAll:'全職員 26名（保育19・調理4・事務1・園長1・産休1）',
+         expRows:[['人件費'],['本俸',4142046],['期末手当',0],['その他の手当',790724],['所定福利費',610950],['兼務職員（非常勤）',1581855],
+                  ['管理経費・利息'],['消耗品費',1814178],['給食費',661164],['賃借料',427918],['報酬委託手数料',332386],['光熱水費',304584],
+                  ['その他の管理経費',252769],['借入金利息',48319]],
+         incRows:[['保育給付費',10467440],['補助活動収入',517120],['雑収入',258868]] },
+     s:{ label:'令和8年9月 速報', kind:'s',
+         income:10545140, incomeSrc:'給付費請求書',
+         enrolled:89, base:10, staff:19, fte:17.5, fteNote:'保育職員・6月の値（9月分は未反映）',
+         staffAll:'全職員 26名（保育19・調理4・事務1・園長1・産休1）※6月時点',
+         provisional:true } } }},
   {id:'g10', label:'ふれあいしおどめ保育園',       sub:'茨城県守谷市・15/100地域', mult:1.15, capacity:90,
    staffTotal:32, staffDesc:'正規13・非正規19',age0:3,age1:15,age2:16,age3:18,age4:18,age5:18,hasData:true,
    hasInvoice:true, invoiceIncome:10142940, invoiceMonth:'2026年09月', invoiceUrl:'https://drive.google.com/file/d/1VPn8cI5yfZOKKXC8puT9D0cBCGey3msh/view',
@@ -430,6 +385,99 @@ function actualBlock(p){
   </table>`:''}`;
 }
 
+// ===== 新カード（v3）=====
+const V3_COEF=1.8, V3_LABOR_TARGET=70;   // 適正上限＝国基準×1.8／人件費率の目安70%
+const V3C=2*Math.PI*40;
+function v3Donut(pct,color,center,mark){
+  const dash=(pct==null?0:V3C*Math.min(pct,100)/100).toFixed(1);
+  let tick='';
+  if(mark!=null){ const a=(mark/100*360-90)*Math.PI/180, c=Math.cos(a), s=Math.sin(a);
+    tick=`<line x1="${(75+31*c).toFixed(1)}" y1="${(58+31*s).toFixed(1)}" x2="${(75+49*c).toFixed(1)}" y2="${(58+49*s).toFixed(1)}" stroke="var(--c-mark)" stroke-width="2.5"/>`; }
+  return `<svg viewBox="0 0 150 106" width="100%" role="img">
+   <circle cx="75" cy="58" r="40" fill="none" stroke="var(--s2)" stroke-width="13"/>
+   <circle cx="75" cy="58" r="40" fill="none" stroke="${color}" stroke-width="13" stroke-dasharray="${dash} ${V3C.toFixed(1)}" transform="rotate(-90 75 58)"/>
+   ${tick}<text x="75" y="64" text-anchor="middle" font-size="18" font-weight="700" fill="var(--ink)">${center}</text></svg>`;
+}
+function v3Judge(v,base){ const up=Math.round(base*V3_COEF*10)/10;
+  return v<base?['var(--c-ng)','国基準を下回る']:v<=up?['var(--c-labor)','適正範囲内']:['var(--c-over)',`適正を${Math.round((v-up)*10)/10}名超え`]; }
+function v3Scale(m){ const up=m.base*V3_COEF; return Math.max(30, Math.ceil(Math.max(up, m.staff||0, m.fte||0)*1.1/10)*10); }
+function v3Columns(v,base,label,max){
+  max=max||30;
+  const up=Math.round(base*V3_COEF*10)/10, Y0=105, K=90/max, none=(v==null), [col]=none?['']:v3Judge(v,base);
+  const yB=Y0-base*K, yU=Y0-up*K, yV=none?Y0:Y0-Math.min(v,max)*K;
+  const vt=none?`<text x="110" y="100" text-anchor="middle" font-size="12" fill="var(--ink)">—</text>`:(v<up&&up-v<max/10)?`<text x="110" y="${yV+14}" text-anchor="middle" font-size="12" fill="#fff">${v}</text>`
+                         :`<text x="110" y="${yV-4}" text-anchor="middle" font-size="12" fill="var(--ink)">${v}</text>`;
+  return `<svg viewBox="0 0 150 128" width="100%" role="img">
+   <line x1="20" y1="15" x2="140" y2="15" stroke="var(--s2)"/><line x1="20" y1="105" x2="140" y2="105" stroke="var(--line)"/>
+   <text x="16" y="19" text-anchor="end" font-size="12" fill="var(--ink)">${max}</text><text x="16" y="109" text-anchor="end" font-size="12" fill="var(--ink)">0</text>
+   <rect x="34" y="${yB}" width="36" height="${base*K}" fill="var(--c-base)"/>
+   <rect x="34" y="${yU}" width="36" height="${(up-base)*K}" fill="var(--c-ok)"/>
+   <text x="52" y="${base*K>=16?yB+15:yB-4}" text-anchor="middle" font-size="12" fill="${base*K>=16?'#fff':'var(--ink)'}">${base}</text>
+   <line x1="28" y1="${yU}" x2="134" y2="${yU}" stroke="var(--c-mark)" stroke-width="1.5" stroke-dasharray="4 3"/>
+   <text x="52" y="${yU-4}" text-anchor="middle" font-size="12" fill="var(--ink)">${up}</text>
+   ${none?'':`<rect x="92" y="${yV}" width="36" height="${(Y0-yV)}" fill="${col}"/>`}${vt}
+   <text x="52" y="123" text-anchor="middle" font-size="12" fill="var(--ink)">国基準</text>
+   <text x="110" y="123" text-anchor="middle" font-size="12" fill="var(--ink)">${label}</text></svg>`;
+}
+const v3Jtext=(v,base)=>{if(v==null)return `<div class="kf l" style="font-weight:700">勤務実績待ち</div>`;const [c,t]=v3Judge(v,base);return `<div class="kf l" style="color:${c==='var(--c-labor)'?'var(--ink)':c};font-weight:700">${t}</div>`;};
+const v3Man=v=>(Math.round(v/1000)/10).toLocaleString('ja-JP',{minimumFractionDigits:1})+'万';
+const v3Pct=(a,b)=>(a/b*100).toFixed(1);
+
+function v3Body(p,key){
+  const m=p.v3.months[key], conf=m.kind==='k';
+  const capPct=p.capacity?m.enrolled/p.capacity*100:null;
+  let money;
+  if(conf){
+    const exp=m.labor+m.admin+m.interest, bal=m.income-exp, w=x=>Math.max(0,x/m.income*100).toFixed(1)+'%';
+    money=`<div class="m3">
+     <div class="mb"><div class="sm">収入</div><div class="mv">${fmtM(m.income)}</div><span class="tag t-src">月次報告書</span></div>
+     <div class="mb"><div class="sm">支出</div><div class="mv">${fmtM(exp)}</div><span class="tag t-src">月次報告書</span></div>
+     <div class="mb"><div class="sm">収支残</div><div class="mv ${bal>=0?'pos':'neg'}">${bal>=0?'+':'−'}${fmtM(Math.abs(bal))}</div><span class="sm">収支残率 ${v3Pct(bal,m.income)}%</span></div>
+    </div>
+    <div class="stack"><div style="width:${w(m.labor)};background:var(--c-labor)"></div><div style="width:${w(m.admin)};background:var(--c-admin)"></div><div style="width:${w(m.interest)};background:var(--c-int)"></div><div style="width:${w(bal)};background:var(--c-profit)"></div></div>
+    <div class="lg"><span><i style="background:var(--c-labor)"></i>人件費 ${v3Pct(m.labor,m.income)}%</span><span><i style="background:var(--c-admin)"></i>管理経費 ${v3Pct(m.admin,m.income)}%</span><span><i style="background:var(--c-int)"></i>利息</span><span><i style="background:var(--c-profit)"></i>収支残</span></div>`;
+  } else {
+    money=`<div class="m3">
+     <div class="mb"><div class="sm">収入</div><div class="mv">${fmtM(m.income)}</div><span class="tag t-src">${m.incomeSrc}</span></div>
+     <div class="mb"><div class="sm">支出</div><div class="mv wait">経理待ち</div></div>
+     <div class="mb"><div class="sm">収支残</div><div class="mv wait">—</div></div>
+    </div>
+    <div class="note">支出・収支残は、経理の月次報告書が届くと表示されます</div>
+    ${(isHonbuUnlocked()&&p.invoiceUrl)?`<a class="inv" href="${p.invoiceUrl}" target="_blank" rel="noopener">📄 請求書を開く</a>`:''}`;
+  }
+  const lab=conf?m.labor/m.income*100:null, mx=v3Scale(m);
+  const kpi=`<div class="k4">
+   <div class="kb"><div class="kh"><span class="sm">定員充足度</span></div>
+     ${v3Donut(capPct,'var(--c-profit)',capPct==null?'—':Math.round(capPct)+'%')}<div class="kf">${m.enrolled} / ${p.capacity||'—'}名</div></div>
+   <div class="kb"><div class="kh"><span class="sm">人件費率</span></div>
+     ${v3Donut(lab,'var(--c-labor)',lab==null?'—':lab.toFixed(1)+'%',V3_LABOR_TARGET)}
+     <div class="kf">${lab==null?'経理待ち':(lab<=V3_LABOR_TARGET?`目安${V3_LABOR_TARGET}%（黒線）以内`:`目安${V3_LABOR_TARGET}%（黒線）超え`)}</div></div>
+   <div class="kb"><div class="kh"><span class="sm">保育士の配置</span><span class="kv">${m.staff}名</span></div>
+     ${v3Columns(m.staff,m.base,'保育',mx)}${v3Jtext(m.staff,m.base)}<div class="kf l">${m.staffNote||'園長・調理・事務を除く'}</div></div>
+   <div class="kb"><div class="kh"><span class="sm">常勤換算</span><span class="kv">${m.fte==null?'—':m.fte+'名'}</span></div>
+     ${v3Columns(m.fte,m.base,'常勤換算',mx)}${v3Jtext(m.fte,m.base)}<div class="kf l">${m.fteNote}${m.extraNote?'<br>'+m.extraNote:''}</div></div>
+  </div><div class="klg">${m.staffAll}</div>`;
+  const rows=r=>r.map(x=>x.length===1?`<tr class="grp"><td colspan="2">${x[0]}</td></tr>`:`<tr><td>${x[0]}</td><td>${x[1]?v3Man(x[1]):'0'}</td></tr>`).join('');
+  const mon=m.label.replace(/^令和\d+年|\s.*$/g,'');
+  const fold=conf?`<div class="fold">
+   <details><summary>支出の内訳</summary><table class="tb"><tr><th>科目</th><th>${mon}</th></tr>${rows(m.expRows)}</table></details>
+   <details><summary>収入の内訳</summary><table class="tb"><tr><th>科目</th><th>${mon}</th></tr>${rows(m.incRows)}</table></details></div>`:'';
+  return `<div class="sec">① 収支（当月）</div>${money}<div class="sec">② 運営の指標</div>${kpi}${fold}`;
+}
+function v3Card(p){
+  const opts=p.v3.order.map(k=>`<option value="${k}">${p.v3.months[k].label}</option>`).join('');
+  return `<div class="park-card-head">
+    <div><div class="park-card-name">${p.label}</div><div class="park-card-sub">${p.sub.split('・')[0]}・定員${p.capacity}名</div></div>
+    <div style="text-align:right"><label class="sm" for="${p.id}-ms" style="display:block">表示する月</label>
+      <select id="${p.id}-ms" onchange="v3Show('${p.id}',this.value)">${opts}</select><div id="${p.id}-st"></div></div>
+  </div><div class="park-card-body" id="${p.id}-v3b"></div>`;
+}
+function v3Show(id,key){
+  const p=PARKS.find(x=>x.id===id); if(!p) return;
+  document.getElementById(id+'-v3b').innerHTML=v3Body(p,key);
+  document.getElementById(id+'-st').innerHTML=p.v3.months[key].kind==='k'?'<span class="tag t-kak">確定</span>':'<span class="tag t-sok">速報・経理待ち</span>';
+}
+
 // ===== カード生成 =====
 const VISIBLE_COUNT=3;  // ビューポートに表示するカード枚数
 const PER_VIEW=1;       // 1クリックで進むカード枚数
@@ -447,7 +495,10 @@ function buildCards(){
     const badgeClass=p.hasData?'badge-ok':'badge-empty';
     const badgeText=p.hasData?'データあり':'データ未登録';
 
-    if(p.hasData){
+    if(p.v3){
+      card.className='park-card v3';
+      card.innerHTML=v3Card(p);
+    } else if(p.hasData){
       card.innerHTML=`
       <div class="park-card-head">
         <div>
@@ -529,6 +580,7 @@ function buildCards(){
       </div>`;
     }
     track.appendChild(card);
+    if(p.v3) v3Show(p.id,p.v3.order[0]);
   });
 
   resizeViewport();
@@ -587,30 +639,21 @@ document.addEventListener('keydown',e=>{
 });
 
 // ===== 計算更新 =====
-function update(){
-  const r0   =+document.getElementById('r0').value;
-  const r12  =+document.getElementById('r12').value;
-  const r35  =+document.getElementById('r35').value;
-  const lRate=+document.getElementById('rlabor').value/100;
-  const oRate=+document.getElementById('rother').value/100;
-  const r3   =+document.getElementById('r3-mode').value;
-  const targetLaborRate=+document.getElementById('rtarget-labor').value/100;
-  const staffCost=+document.getElementById('rstaff-cost').value;
+// ★「設定」欄を廃止（2026-10）。旧形式のカードの推計に使う値は以下の固定値（変えるときはここを直す）
+const FIXED={ r0:293000, r12:132000, r35:79000,   // 基本分単価（月額・地域区分反映前）
+  laborRate:0.70, otherRate:0.15,                 // 推計用の人件費率・その他経費率
+  r3:20,                                          // 3歳児の配置基準（20:1）
+  targetLabor:0.70, staffCost:270000 };           // 目標人件費率／職員1人あたり月額
 
-  // スライダー表示
-  document.getElementById('v0').textContent   =r0.toLocaleString('ja-JP')+'円';
-  document.getElementById('v12').textContent  =r12.toLocaleString('ja-JP')+'円';
-  document.getElementById('v35').textContent  =r35.toLocaleString('ja-JP')+'円';
-  document.getElementById('vlabor').textContent=Math.round(lRate*100)+'%';
-  document.getElementById('vother').textContent=Math.round(oRate*100)+'%';
-  document.getElementById('labor-pct-label').textContent=Math.round(lRate*100);
-  document.getElementById('vtarget-labor').textContent=Math.round(targetLaborRate*100)+'%';
-  document.getElementById('vstaff-cost').textContent=Math.round(staffCost/10000)+'万円';
+function update(){
+  const r0=FIXED.r0, r12=FIXED.r12, r35=FIXED.r35;
+  const lRate=FIXED.laborRate, oRate=FIXED.otherRate, r3=FIXED.r3;
+  const targetLaborRate=FIXED.targetLabor, staffCost=FIXED.staffCost;
 
   let totInc=0,totLab=0,totOth=0,totCh=0;
 
   PARKS.forEach(p=>{
-    if(!p.hasData)return;
+    if(!p.hasData||p.v3)return;   // v3カードは v3Show() で描画
 
     const u0 =r0*p.mult, u12=r12*p.mult, u35=r35*p.mult;
     const total=p.age0+p.age1+p.age2+p.age3+p.age4+p.age5;
@@ -696,30 +739,6 @@ function update(){
     actualBar.className='staff-bar-fill '+barClass;
   });
 
-  // サマリー
-  const totSur=totInc-totLab-totOth;
-  document.getElementById('total-children').textContent=totCh;
-  document.getElementById('total-rate').textContent=totCh>0?'—':'—';
-  document.getElementById('total-income').textContent=fmtM(totInc);
-  document.getElementById('total-labor').textContent=fmtM(totLab);
-  const surEl=document.getElementById('total-surplus');
-  surEl.textContent=fmtM(totSur);
-  surEl.className='metric-value '+(totSur>=0?'positive':'negative');
-
-  document.getElementById('bval-income').textContent=fmtM(totInc);
-  document.getElementById('bval-labor').textContent=fmtM(totLab);
-  // 実績の園が混ざっても合うよう、比率は合計額から出す（推計だけの園ならスライダーの率と同じ）
-  const shL=totInc?totLab/totInc:lRate, shO=totInc?totOth/totInc:oRate;
-  document.getElementById('labor-pct-label').textContent=Math.round(shL*100);
-  document.getElementById('bval-other').textContent=fmtM(totOth);
-  document.getElementById('bval-surplus').textContent=fmtM(totSur);
-  document.getElementById('bval-surplus').style.color=totSur>=0?'var(--accent)':'var(--accent2)';
-  document.getElementById('bar-labor').style.width=Math.min(shL*100,100)+'%';
-  document.getElementById('bar-other').style.width=Math.min(shO*100,100)+'%';
-  const surPct=Math.max(0,(1-shL-shO)*100);
-  const surBar=document.getElementById('bar-surplus');
-  surBar.style.width=Math.min(surPct,100)+'%';
-  surBar.className='balance-bar-fill '+(totSur>=0?'bar-surplus-pos':'bar-surplus-neg');
 }
 
 // ===== 本部限定表示（請求書リンク）=====
