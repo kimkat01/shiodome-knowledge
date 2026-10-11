@@ -256,7 +256,7 @@ html.law-y .header{box-shadow:0 2px 8px rgba(67,160,71,.3);}
 // hasData:trueの園のみ数値計算に使用
 const PARKS=[
   // 1: 稲城（データあり）
-  {id:'inagi', kotei:'16/100', label:'しおどめ保育園稲城', sub:'東京都稲城市・3級地（+15%）',
+  {id:'inagi', kotei:'15/100', label:'しおどめ保育園稲城', sub:'東京都稲城市・3級地（+15%）',
    mult:1.15, capacity:150,
    staffTotal:58, staffDesc:'正規30・非正規28',
    age0:15,age1:20,age2:25,age3:30,age4:30,age5:27,
@@ -380,6 +380,7 @@ const PARKS=[
    staffTotal:0,staffDesc:'',age0:0,age1:0,age2:0,age3:0,age4:0,age5:0,hasData:false},
 ];
 
+// 公定価格（kotei）の地域区分：平成27年内閣府告示第49号 別表第一（こども家庭庁掲載）による。守谷15/100・八潮6/100は給付費請求書とも一致
 // ===== 社会福祉法人雄雅会（2026-09）=====
 // 雄雅会の園（?garden= の園コードが Y〜）から開いたときは、柴学園14園の数字を一切出さず、雄雅会3園だけにする。
 // データが届いたら、下の YUGA_PARKS の該当園に人数・職員数を入れて hasData:true にする。
