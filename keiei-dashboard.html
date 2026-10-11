@@ -229,7 +229,7 @@ html.law-y .header{box-shadow:0 2px 8px rgba(67,160,71,.3);}
 <div class="footer-note">
   ※ 施設型給付費の基本分単価のみによる概算です。処遇改善等加算・賃借料加算等は含まれていません。<br>
   ※ 職員配置の「最低必要数」は国の配置基準（0歳3:1、1・2歳6:1、3歳20:1、4・5歳30:1）による算出です。<br>
-  <span id="v3note">※ しおどめ保育園稲城・認定こども園しおどめの森・しおどめ保育園つくば・ふれあいしおどめ保育園のカードは新しい形式（月次報告書の実績・国の新基準：3歳15:1、4・5歳25:1）です。</span><br>
+  <span id="v3note">※ しおどめ保育園稲城・認定こども園しおどめの森・しおどめ保育園つくば・ふれあいしおどめ保育園・しおどめ保育園 春日部のカードは新しい形式（月次報告書の実績・国の新基準：3歳15:1、4・5歳25:1）です。</span><br>
   ※ データがない園（白カード）は、データが揃い次第このダッシュボードに反映します。
 </div>
 </main>
@@ -329,6 +329,20 @@ const PARKS=[
          staffNote:'園長・調理・事務・支援員を除く', extraNote:'ほかに子育て支援員 2名（1.4名）',
          staffAll:'全職員 34名（保育21・支援員2・調理5・事務1・園長1・育休3）※6月時点',
          provisional:true } } }},
+  {id:'g07', label:'しおどめ保育園 春日部',        sub:'埼玉県春日部市・その他（+0%）', mult:1.00, capacity:19,
+   staffTotal:13, staffDesc:'正規7・非正規6',age0:3,age1:8,age2:8,age3:0,age4:0,age5:0,hasData:true,
+   // ★新カード（v3）。出典：資金収支月報R08-06 春日部（事業活動収支月報・人件費支出月報の当月欄）、コドモン園児一覧（6/30時点）・職員一覧、6月度勤務実績（5/16〜6/15）
+   //   国基準（新基準）：0歳3名→1、1・2歳16名→3、小規模保育事業A型のため＋1＝5名
+   //   保育職員＝園長・事務・調理補助2名を除く9名。常勤換算＝正規5名×1.0＋パート4名の実働481h÷168h＝7.9
+   v3:{ order:['k'], months:{
+     k:{ label:'令和8年6月 確定', kind:'k',
+         income:5418838, labor:3490057, admin:810050, interest:0,
+         enrolled:19, base:5, staff:9, fte:7.9, fteNote:'保育職員・6月度勤務実績',
+         staffNote:'園長・事務・調理補助を除く（国基準は小規模A型の＋1名を含む）',
+         staffAll:'全職員 13名（保育9・調理補助2・事務1・園長1）',
+         expRows:[['人件費'],['本俸',1829030],['期末手当',0],['その他の手当',312600],['所定福利費',274892],['兼務職員（非常勤）',1073535],
+                  ['管理経費'],['賃借料',409541],['給食費',184678],['その他の管理経費',215831]],
+         incRows:[['保育給付費',4652430],['補助活動収入',690310],['雑収入',76098]] } } }},
   {id:'g03', label:'しおどめ保育園 八潮駅北',      sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:null,
    staffTotal:0,staffDesc:'',age0:0,age1:0,age2:0,age3:0,age4:0,age5:0,hasData:false},
   {id:'g04', label:'しおどめ保育園 京急蒲田駅前',  sub:'東京都大田区・1級地（+20%）', mult:1.20, capacity:null,
@@ -336,8 +350,6 @@ const PARKS=[
   {id:'g05', label:'しおどめ保育園 小規模認可',    sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:null,
    staffTotal:0,staffDesc:'',age0:0,age1:0,age2:0,age3:0,age4:0,age5:0,hasData:false},
   {id:'g06', label:'しおどめ保育園 江戸川中央',    sub:'東京都江戸川区・1級地（+20%）', mult:1.20, capacity:null,
-   staffTotal:0,staffDesc:'',age0:0,age1:0,age2:0,age3:0,age4:0,age5:0,hasData:false},
-  {id:'g07', label:'しおどめ保育園 春日部',        sub:'埼玉県春日部市・その他（+0%）', mult:1.00, capacity:null,
    staffTotal:0,staffDesc:'',age0:0,age1:0,age2:0,age3:0,age4:0,age5:0,hasData:false},
   {id:'g08', label:'しおどめ保育園 越谷',          sub:'埼玉県越谷市・5級地（+10%）', mult:1.10, capacity:null,
    staffTotal:0,staffDesc:'',age0:0,age1:0,age2:0,age3:0,age4:0,age5:0,hasData:false},
@@ -459,7 +471,7 @@ function v3Donut(pct,color,center,mark){
 }
 function v3Judge(v,base){ const up=Math.round(base*V3_COEF*10)/10;
   return v<base?['var(--c-ng)','国基準を下回る']:v<=up?['var(--c-labor)','適正範囲内']:['var(--c-over)',`適正を${Math.round((v-up)*10)/10}名超え`]; }
-function v3Scale(m){ if(m.base==null) return 30; const up=m.base*V3_COEF; return Math.max(30, Math.ceil(Math.max(up, m.staff||0, m.fte||0)*1.1/10)*10); }
+function v3Scale(m){ if(m.base==null) return 30; const up=m.base*V3_COEF; return Math.max(up>=10?30:10, Math.ceil(Math.max(up, m.staff||0, m.fte||0)*1.1/10)*10); }
 function v3Columns(v,base,label,max){
   max=max||30;
   const up=Math.round(base*V3_COEF*10)/10, Y0=105, K=90/max, none=(v==null), [col]=none?['']:v3Judge(v,base);
