@@ -256,7 +256,7 @@ html.law-y .header{box-shadow:0 2px 8px rgba(67,160,71,.3);}
 // hasData:trueの園のみ数値計算に使用
 const PARKS=[
   // 1: 稲城（データあり）
-  {id:'inagi', label:'しおどめ保育園稲城', sub:'東京都稲城市・3級地（+15%）',
+  {id:'inagi', kotei:'16/100', label:'しおどめ保育園稲城', sub:'東京都稲城市・3級地（+15%）',
    mult:1.15, capacity:150,
    staffTotal:58, staffDesc:'正規30・非正規28',
    age0:15,age1:20,age2:25,age3:30,age4:30,age5:27,
@@ -275,7 +275,7 @@ const PARKS=[
                   ['その他の管理経費',210742],['借入金利息',137219]],
          incRows:[['保育給付費',16738670],['地方公共団体補助金',5120501],['補助活動収入',515250],['雑収入',387580]] } } }},
   // 2〜14: データなし（園名のみ）
-  {id:'g02', label:'認定こども園 しおどめの森',    sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:168,
+  {id:'g02', kotei:'6/100', label:'認定こども園 しおどめの森',    sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:168,
    staffTotal:35, staffDesc:'正規19・非正規15',age0:0,age1:20,age2:20,age3:40,age4:39,age5:41,hasData:true,
    // ★新カード（v3）。出典：施設別月次報告書R08-06（事業活動収支月報・人件費支出月報の当月欄。人件費は教員＋職員、管理経費は教育研究経費＋管理経費）、
    //   コドモン園児一覧（6/30時点。誕生日空欄の24名はクラスで年齢判定）・職員一覧・6月度勤務実績（5/16〜6/15）。定員168名
@@ -290,7 +290,7 @@ const PARKS=[
                   ['管理経費・利息'],['賃借料',787815],['給食費',784394],['報酬委託手数料',411082],['光熱水費',334665],['公租公課',200000],
                   ['その他の管理経費',544792],['借入金利息',782392]],
          incRows:[['施設型給付費',11806287],['保育料',1551900],['補助活動収入',2627790],['雑収入',539203],['その他',11400]] } } }},
-  {id:'g11', label:'しおどめ保育園つくば',         sub:'茨城県つくば市・16/100地域', mult:1.10, capacity:90,
+  {id:'g11', kotei:'16/100', label:'しおどめ保育園つくば',         sub:'茨城県つくば市・16/100地域', mult:1.10, capacity:90,
    staffTotal:26, staffDesc:'正規17・非正規9',age0:0,age1:14,age2:18,age3:20,age4:20,age5:17,hasData:true,
    hasInvoice:true, invoiceIncome:10545140, invoiceMonth:'2026年09月', invoiceUrl:'https://drive.google.com/file/d/1qwo654V_NcHF1bm9GnUomDwfZ3LWHncp/view',
    invoiceRows:{amt0:0, amt12:5786914, amt35:4758226},
@@ -311,7 +311,7 @@ const PARKS=[
          enrolled:89, base:10, staff:19, fte:17.5, fteNote:'保育職員・6月の値（9月分は未反映）',
          staffAll:'全職員 26名（保育19・調理4・事務1・園長1・産休1）※6月時点',
          provisional:true } } }},
-  {id:'g10', label:'ふれあいしおどめ保育園',       sub:'茨城県守谷市・15/100地域', mult:1.15, capacity:90,
+  {id:'g10', kotei:'15/100', label:'ふれあいしおどめ保育園',       sub:'茨城県守谷市・15/100地域', mult:1.15, capacity:90,
    staffTotal:32, staffDesc:'正規13・非正規19',age0:3,age1:15,age2:16,age3:18,age4:18,age5:18,hasData:true,
    hasInvoice:true, invoiceIncome:10142940, invoiceMonth:'2026年09月', invoiceUrl:'https://drive.google.com/file/d/1VPn8cI5yfZOKKXC8puT9D0cBCGey3msh/view',
    invoiceRows:{amt0:814300, amt12:4949150, amt35:4379490},
@@ -333,7 +333,7 @@ const PARKS=[
          staffNote:'園長・調理・事務・支援員を除く', extraNote:'ほかに子育て支援員 2名（1.4名）',
          staffAll:'全職員 34名（保育21・支援員2・調理5・事務1・園長1・育休3）※6月時点',
          provisional:true } } }},
-  {id:'g07', label:'しおどめ保育園 春日部',        sub:'埼玉県春日部市・その他（+0%）', mult:1.00, capacity:19,
+  {id:'g07', kotei:'6/100', label:'しおどめ保育園 春日部',        sub:'埼玉県春日部市・その他（+0%）', mult:1.00, capacity:19,
    staffTotal:13, staffDesc:'正規7・非正規6',age0:3,age1:8,age2:8,age3:0,age4:0,age5:0,hasData:true,
    // ★新カード（v3）。出典：資金収支月報R08-06 春日部（事業活動収支月報・人件費支出月報の当月欄）、コドモン園児一覧（6/30時点）・職員一覧、6月度勤務実績（5/16〜6/15）
    //   国基準（新基準）：0歳3名→1、1・2歳16名→3、小規模保育事業A型のため＋1＝5名
@@ -347,7 +347,7 @@ const PARKS=[
          expRows:[['人件費'],['本俸',1829030],['期末手当',0],['その他の手当',312600],['所定福利費',274892],['兼務職員（非常勤）',1073535],
                   ['管理経費'],['賃借料',409541],['給食費',184678],['その他の管理経費',215831]],
          incRows:[['保育給付費',4652430],['補助活動収入',690310],['雑収入',76098]] } } }},
-  {id:'g06', label:'しおどめ保育園 江戸川中央',    sub:'東京都江戸川区・1級地（+20%）', mult:1.20, capacity:19,
+  {id:'g06', kotei:'20/100', label:'しおどめ保育園 江戸川中央',    sub:'東京都江戸川区・1級地（+20%）', mult:1.20, capacity:19,
    staffTotal:12, staffDesc:'正規6・非正規6',age0:3,age1:8,age2:8,age3:0,age4:0,age5:0,hasData:true,
    // ★新カード（v3）。出典：資金収支月報R08-06 江戸川中央（事業活動収支月報・人件費支出月報の当月欄）、園児マスタ（現在の19名。10/1入園の松岡さんも6月在籍として扱う＝本部指示）、職員マスタ、6月度勤務実績（5/16〜6/15）
    //   国基準（新基準）：0歳3名→1、1・2歳16名→3、小規模保育事業A型のため＋1＝5名
@@ -390,7 +390,7 @@ const YUGA_PARKS=[
   // 八潮：園児＝6/30時点（コドモン園児一覧）。国基準（新基準）：0歳9名→3、1・2歳24名→4、3歳14名→1、4・5歳26名→2＝10名
   //   保育職員＝コドモン職員一覧より6月在籍者（10/5入職の1名を除く）から園長・栄養士・調理2名・保育補助1名を除いた19名（主任・派遣1名を含む）
 //   常勤換算＝コドモン6月度勤務実績（5/16〜6/15）：正規14名×1.0＋非正規・派遣5名の実働643.75h÷168h＝17.6。6月在籍の退職者1名（栄養士）は全職員に含む
-  {id:'y01', label:'八潮しおどめ保育園',     sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:75,
+  {id:'y01', kotei:'6/100', label:'八潮しおどめ保育園',     sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:75,
    staffTotal:25,staffDesc:'',age0:9,age1:12,age2:12,age3:14,age4:13,age5:13,hasData:true,
    v3:{ order:['k'], months:{
      k:{ label:'令和8年6月 確定', kind:'k', adminLabel:'事業費・事務費', intLabel:'利息等',
@@ -403,7 +403,7 @@ const YUGA_PARKS=[
   // 守谷：園児＝6/30時点（コドモン園児一覧）。国基準（新基準）：0歳4名→2、1・2歳29名→5、3歳13名→1、4・5歳35名→2＝10名
   //   保育職員＝職員マスタより6月在籍者（10/1入職・9/16入職の2名を除く）から園長・調理3名を除いた14名（看護師1名を含む）＋6月在籍の退職者1名（浅川）＝15名
 //   常勤換算＝コドモン6月度勤務実績（5/16〜6/15）：正規8名×1.0＋非正規7名（退職者含む）の実働786.75h÷168h＝12.7
-  {id:'y02', label:'守谷しおどめ保育園',     sub:'茨城県守谷市・15/100地域', mult:1.15, capacity:90,
+  {id:'y02', kotei:'15/100', label:'守谷しおどめ保育園',     sub:'茨城県守谷市・15/100地域', mult:1.15, capacity:90,
    staffTotal:19, staffDesc:'',age0:4,age1:12,age2:17,age3:13,age4:17,age5:18,hasData:true,
    v3:{ order:['k'], months:{
      k:{ label:'令和8年6月 確定', kind:'k', adminLabel:'事業費・事務費', intLabel:'利息等',
@@ -416,7 +416,7 @@ const YUGA_PARKS=[
   // なかよし：園児＝6/30時点（コドモン園児一覧。7/1・9/1入園の2名は含まない）。国基準（新基準）：0歳3名→1、1・2歳9名→2、3歳19名→2、4・5歳12名→1＝6名
   //   保育職員＝コドモン職員一覧より6月在籍者（10/1入職の1名を除く）から園長・栄養士・調理を除いた12名（主任を含む）＋6月在籍の退職者1名（延）＝13名
 //   常勤換算＝コドモン6月度勤務実績（5/16〜6/15）：正規9名×1.0＋非正規・退職者4名の実働462.25h÷168h＝11.8
-  {id:'y03', label:'しおどめなかよし保育園', sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:70,
+  {id:'y03', kotei:'6/100', label:'しおどめなかよし保育園', sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:70,
    staffTotal:16,staffDesc:'',age0:3,age1:5,age2:4,age3:19,age4:8,age5:4,hasData:true,
    v3:{ order:['k'], months:{
      k:{ label:'令和8年6月 確定', kind:'k', adminLabel:'事業費・事務費', intLabel:'利息等',
@@ -556,7 +556,7 @@ function v3Body(p,key){
 function v3Card(p){
   const opts=p.v3.order.map(k=>`<option value="${k}">${p.v3.months[k].label}</option>`).join('');
   return `<div class="park-card-head">
-    <div><div class="park-card-name">${p.label}</div><div class="park-card-sub">${p.sub.split('・')[0]}・定員${p.capacity||'—'}名</div></div>
+    <div><div class="park-card-name">${p.label}</div><div class="park-card-sub">${p.sub.split('・')[0]}・定員${p.capacity||'—'}名</div>${p.kotei?`<div class="park-card-sub">公定価格（${p.kotei}）</div>`:''}</div>
     <div style="text-align:right"><label class="sm" for="${p.id}-ms" style="display:block">表示する月</label>
       <select id="${p.id}-ms" onchange="v3Show('${p.id}',this.value)">${opts}</select><div id="${p.id}-st"></div></div>
   </div><div class="park-card-body" id="${p.id}-v3b"></div>`;
