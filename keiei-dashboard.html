@@ -52,6 +52,10 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .slide-btn-circle{background:var(--accent);color:#fff;border:1.5px solid var(--accent);border-radius:50%;width:38px;height:38px;cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s,filter .15s}
 .slide-btn-circle:hover:not(:disabled){filter:brightness(1.1)}
 .slide-btn-circle:disabled{opacity:.3;cursor:default}
+/* 丸矢印ボタン：画面の上下中央に固定（左右はカードの外側。狭い画面では画面端） */
+#btn-prev,#btn-next{position:fixed;top:50%;transform:translateY(-50%);z-index:50;width:44px;height:44px;font-size:22px;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+#btn-prev{left:max(6px,calc(50% - 600px - 50px))}
+#btn-next{right:max(6px,calc(50% - 600px - 50px))}
 .cards-viewport{overflow:hidden;border-radius:12px}
 .cards-track{display:flex;transition:transform .35s ease;will-change:transform}
 
