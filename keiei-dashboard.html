@@ -510,8 +510,8 @@ function v3Body(p,key){
    <div class="kb"><div class="kh"><span class="sm">定員充足度</span></div>
      ${v3Donut(capPct,'var(--c-profit)',capPct==null?'—':Math.round(capPct)+'%')}<div class="kf">${m.enrolled==null?'園児一覧待ち':m.enrolled+' / '+(p.capacity||'—')+'名'}</div></div>
    <div class="kb"><div class="kh"><span class="sm">人件費率</span></div>
-     ${v3Donut(lab,'var(--c-labor)',lab==null?'—':lab.toFixed(1)+'%',V3_LABOR_TARGET)}
-     <div class="kf">${lab==null?'経理待ち':(lab<=V3_LABOR_TARGET?`目安${V3_LABOR_TARGET}%（黒線）以内`:`目安${V3_LABOR_TARGET}%（黒線）超え`)}</div></div>
+     ${v3Donut(lab,(lab!=null&&lab>V3_LABOR_TARGET)?'var(--c-over)':'var(--c-labor)',lab==null?'—':lab.toFixed(1)+'%',V3_LABOR_TARGET)}
+     <div class="kf"${(lab!=null&&lab>V3_LABOR_TARGET)?' style="color:var(--c-over);font-weight:700"':''}>${lab==null?'経理待ち':(lab<=V3_LABOR_TARGET?`目安${V3_LABOR_TARGET}%（黒線）以内`:`目安${V3_LABOR_TARGET}%（黒線）超え`)}</div></div>
    <div class="kb"><div class="kh"><span class="sm">保育士の配置</span><span class="kv">${m.staff==null?'—':m.staff+'名'}</span></div>
      ${m.base==null?v3Wait('職員一覧待ち'):v3Columns(m.staff,m.base,'保育',mx)+v3Jtext(m.staff,m.base)}<div class="kf l">${m.staffNote||'園長・調理・事務を除く'}</div></div>
    <div class="kb"><div class="kh"><span class="sm">常勤換算</span><span class="kv">${m.fte==null?'—':m.fte+'名'}</span></div>
