@@ -259,6 +259,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:
 .edit-in{width:70%;background:var(--card2);border:1px solid var(--g2);color:var(--text);border-radius:8px;padding:5px 9px;font-size:13.5px;font-family:'Noto Sans JP';}
 .edit-in:focus{outline:none;}
 .edit-ok{margin-left:6px;background:var(--grad);border:none;color:#fff;font-weight:700;border-radius:8px;padding:5px 11px;cursor:pointer;font-size:12px;}
+.edit-hide{margin-left:4px;background:#fdecec;border:1px solid #f3b4b4;color:#c0392b;font-weight:700;border-radius:8px;padding:5px 9px;cursor:pointer;font-size:12px;}
 .edit-x{margin-left:4px;background:var(--card3);border:none;color:var(--text2);border-radius:8px;padding:5px 9px;cursor:pointer;font-size:12px;}
 .rebtn{background:var(--card2);border:1px solid var(--line2);color:var(--text2);border-radius:11px;padding:9px 14px;font-size:12.5px;cursor:pointer;transition:.14s;white-space:nowrap;}
 .rebtn:hover:not(:disabled){border-color:var(--g2);color:var(--text);}
@@ -322,6 +323,11 @@ body{font-family:'Noto Sans JP',sans-serif;background:
       <label style="align-self:flex-start;padding-top:9px;">修正の学習<br><span style="font-size:9.5px;color:var(--text3)">誤り→正しい</span></label>
       <textarea id="bulkCorr" class="bulk" placeholder="1行に1組（誤り→正しい）：&#10;だっていっぱいって→なんで引っ張ってんの？違うでしょ！&#10;面白いでしょ！→やめなさい！"></textarea>
       <button class="save-k" onclick="importCorrections()" style="align-self:flex-start;">登録</button>
+    </div>
+    <div class="kb-row">
+      <label style="align-self:flex-start;padding-top:9px;">表示しない言葉<br><span style="font-size:9.5px;color:var(--text3)">実際には言っていない</span></label>
+      <textarea id="hidePhrases" class="bulk" placeholder="1行に1つ。文字起こしに出ても表示しません（例）&#10;次回もお楽しみに&#10;本日はご覧いただきありがとうございます"></textarea>
+      <button class="save-k" onclick="importHidePhrases()" style="align-self:flex-start;">登録</button>
     </div>
   </div>
 
@@ -729,6 +735,8 @@ function toggleKeys(){
   if(kb.classList.contains('show')){
     const ta=document.getElementById('bulkCorr');
     if(ta&&!ta.value.trim()&&corrections.length)ta.value=corrections.map(c=>c.from+'→'+c.to).join('\n');
+    const hp=document.getElementById('hidePhrases');
+    if(hp&&!hp.value.trim()&&hidePhrases.length)hp.value=hidePhrases.join('\n');
   }
 }
 function saveKeys(){
@@ -875,9 +883,63 @@ const HALLUCINATION_PHRASES=[
   'Thank you for watching','Thanks for watching','Please subscribe','Like and subscribe',
   'See you soon','Bye bye','Bye-bye','I don\'t know why'
 ];
+/* 動画・放送の決まり文句のパターン（保育室では言われない言い回しに限定。
+   「ありがとうございました」「おしまい」「お楽しみにね」など、保育士が実際に言う言葉は含めない） */
+const HALLUCINATION_PATTERNS=[
+  /ご(視聴|覧|清聴).{0,14}ありがと/,          // ご覧いただきありがとうございます／ご視聴ありがとう…
+  /ご(視聴|覧)(いただき|頂き|くださり|下さり)/,  // 本日はご覧いただき…
+  /最後まで(ご覧|ご視聴|見て(いただ|頂|くださ|くれ))/,
+  /次回.{0,8}(お楽しみ|お会い|会いましょう|お届け|見て)/, // 次回もお楽しみに
+  /(次の|また次の)(動画|配信|回|放送)/,
+  /(また|それでは).{0,6}お会いしましょう/,
+  /チャンネル(登録|の登録)|高評価|グッドボタン|ベルマーク|通知(を)?オン|概要欄|コメント欄/,
+  /字幕/,
+  /お(送り|届け)(しました|いたしました)/,
+  /お聞きいただき|お聴きいただき|ご清聴/,
+  /この(動画|番組|配信)/
+];
+function _hnorm(t){return (t||'').normalize('NFKC').replace(/[\s、。,.!?！？「」『』（）()・…〜~♪]/g,'');}
+/* 利用者が「🚫 表示しない」にした言葉（このブラウザに保存） */
+let hidePhrases=[];
+try{hidePhrases=JSON.parse(localStorage.getItem('vm_hide_phrases')||'[]');if(!Array.isArray(hidePhrases))hidePhrases=[];}catch(e){hidePhrases=[];}
+function persistHidePhrases(){try{localStorage.setItem('vm_hide_phrases',JSON.stringify(hidePhrases));}catch(e){}}
 function isKnownHallucinationPhrase(t){
   if(!t)return false;
-  return HALLUCINATION_PHRASES.some(p=>t.includes(p));
+  if(HALLUCINATION_PHRASES.some(p=>t.includes(p)))return true;
+  const n=_hnorm(t);
+  if(!n)return false;
+  if(HALLUCINATION_PATTERNS.some(re=>re.test(n)))return true;
+  if(hidePhrases.some(h=>{const hn=_hnorm(h);return hn&&(n===hn||(hn.length>=4&&n.indexOf(hn)>=0));}))return true;
+  return false;
+}
+/* 画面に出ている発言から、作り話（決まり文句・表示しない言葉）を取り除く */
+function removeHallucinatedSegments(why){
+  const before=segments.length;
+  segments=segments.filter(s=>{
+    if(s.text&&isKnownHallucinationPhrase(s.text)){log('  ⚠ 定型幻聴フレーズを除去: '+s.text.slice(0,18),'err');return false;}
+    return !!(s.text&&s.text.trim());
+  });
+  const n=before-segments.length;
+  if(n&&why)log('🧹 '+why+'：'+n+'件の発言を表示から外しました','ok');
+  return n;
+}
+/* 1行だけ「今後表示しない」にする */
+function hideSegment(i){
+  const s=segments[i];if(!s)return;
+  const t=(s.text||'').trim();if(!t)return;
+  if(!hidePhrases.includes(t)){hidePhrases.push(t);persistHidePhrases();}
+  log('🚫 「'+t.slice(0,20)+'」を今後表示しない言葉に登録しました（⚙ 設定で取り消せます）','ok');
+  removeHallucinatedSegments('表示しない言葉');
+  renderFeed();if(typeof recount==='function')recount();
+  toast('今後この言葉は表示しません');
+}
+function importHidePhrases(){
+  const raw=document.getElementById('hidePhrases').value;
+  hidePhrases=raw.split('\n').map(l=>l.trim()).filter(Boolean);
+  persistHidePhrases();
+  const n=segments.length?removeHallucinatedSegments('表示しない言葉'):0;
+  if(n){renderFeed();if(typeof recount==='function')recount();}
+  log('表示しない言葉を'+hidePhrases.length+'件に更新しました','ok');toast('表示しない言葉を更新しました');
 }
 /* コンプレッサー（大きい音を穏やかに抑える）→ チャンクごとのピークでノーマライズ（小さい声を持ち上げる）
    外部ソフトの単純な「ノーマライズ」より静かなセリフを聞き取りやすくしつつ、歪みが出ないよう控えめな設定にしている */
@@ -1358,6 +1420,7 @@ async function analyze(){
     log('📝 文字起こし '+segments.length+'セグメント','ok');
     // 1.5) apply learned corrections
     const nFixed=applyCorrections(segments);
+    removeHallucinatedSegments('作り話の決まり文句');
     if(nFixed)log('✏ 学習した修正を'+nFixed+'箇所に適用','ok');
     renderFeed();
     document.getElementById('reBtn').disabled=false;
@@ -1476,12 +1539,13 @@ function editLine(i){
   const ln=document.querySelector('.ln[data-i="'+i+'"]');if(!ln)return;
   const cur=segments[i].text;
   const tx=ln.querySelector('.tx');
-  tx.innerHTML='<input class="edit-in" value="'+esc(cur).replace(/"/g,'&quot;')+'"><button class="edit-ok">保存</button><button class="edit-x">×</button>';
+  tx.innerHTML='<input class="edit-in" value="'+esc(cur).replace(/"/g,'&quot;')+'"><button class="edit-ok">保存</button><button class="edit-hide" title="この言葉は実際には言っていない。今後も表示しない">🚫 表示しない</button><button class="edit-x">×</button>';
   const inp=tx.querySelector('.edit-in');inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);
   const commit=()=>{const nv=inp.value.trim();saveCorrection(i,cur,nv);};
   inp.onclick=e=>e.stopPropagation();
   inp.onkeydown=e=>{e.stopPropagation();if(e.key==='Enter'){e.preventDefault();commit();}else if(e.key==='Escape'){renderFeed();}};
   tx.querySelector('.edit-ok').onclick=e=>{e.stopPropagation();commit();};
+  tx.querySelector('.edit-hide').onclick=e=>{e.stopPropagation();hideSegment(i);};
   tx.querySelector('.edit-x').onclick=e=>{e.stopPropagation();renderFeed();};
 }
 function saveCorrection(i,from,to){
@@ -1569,6 +1633,7 @@ function restoreAnalysis(data){
   if(typeof renderQueue==='function')renderQueue();
   duration=(data.media&&data.media.durationSec)||duration||(segments.length?segments[segments.length-1].end:0);
   document.getElementById('tlDur').textContent=fmtShort(duration);
+  removeHallucinatedSegments('作り話の決まり文句');
   renderFeed();drawTicks();recount();
   document.getElementById('reBtn').disabled=false;
   log('📂 保存済みの解析を読み込みました（検知'+segments.filter(s=>s.danger).length+'件）','ok');
