@@ -362,10 +362,10 @@ const PARKS=[
          expRows:[['人件費'],['本俸',1764345],['期末手当',0],['その他の手当',391550],['所定福利費',280084],['兼務職員（非常勤）',1057937],
                   ['管理経費'],['賃借料',622430],['給食費',105607],['その他の管理経費',218976]],
          incRows:[['保育給付費',5464950],['地方公共団体補助金',57500],['補助活動収入',1000],['雑収入',75950]] } } }},
-  {id:'g14', kotei:'6/100', label:'ふれあいしおどめ保育園八潮',   sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:57,
+  {id:'g14', kotei:'6/100', label:'ふれあいしおどめ保育園八潮',   sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:57, elastic:2,
    staffTotal:22, staffDesc:'正規15・非正規3・派遣4',age0:3,age1:8,age2:12,age3:12,age4:12,age5:12,hasData:true,
    // ★新カード（v3）。出典：施設別月次報告書R08-06 ふれあいしおどめ保育園八潮（p.78-80 人件費支出月報・事業活動収支月報の当月欄）、
-   //   コドモン園児一覧・職員一覧（2026-10-12取込）。園児は全員4/1以前の入園＝6/30時点も59名。定員57名は施設一覧の値（要確認）
+   //   コドモン園児一覧・職員一覧（2026-10-12取込）。園児は全員4/1以前の入園＝6/30時点も59名。定員57名＋弾力2名（本部確認済み）＝59名を充足度100%とする
    //   国基準（新基準）：0歳3名→1、1・2歳20名→4、3歳12名→1、4・5歳24名→1＝7名
    //   保育職員＝6月在籍者22名（7/2・9/1入職の3名を除く）から統括・調理2名・事務1名を除いた18名（主任・派遣4名を含む）
    //   ※コドモンCSVには退職者が含まれないため、6月在籍の退職者は未反映。常勤換算は6月度勤務実績CSVが届いたら入れる
@@ -539,7 +539,8 @@ const v3Pct=(a,b)=>(a/b*100).toFixed(1);
 
 function v3Body(p,key){
   const m=p.v3.months[key], conf=m.kind==='k';
-  const capPct=(p.capacity&&m.enrolled!=null)?m.enrolled/p.capacity*100:null;
+  // 弾力運用（p.elastic＝弾力で受け入れてよい人数）がある園は、定員＋弾力を100%として充足度を出す（2026-10 本部指示）
+  const capPct=(p.capacity&&m.enrolled!=null)?m.enrolled/(p.capacity+(p.elastic||0))*100:null;
   let money;
   if(conf){
     const exp=m.labor+m.admin+m.interest, bal=m.income-exp, den=Math.max(m.income,exp), w=x=>Math.max(0,x/den*100).toFixed(1)+'%';
@@ -562,7 +563,7 @@ function v3Body(p,key){
   const lab=conf?m.labor/m.income*100:null, mx=v3Scale(m);
   const kpi=`<div class="k4">
    <div class="kb"><div class="kh"><span class="sm">定員充足度</span></div>
-     ${v3Donut(capPct,'var(--c-profit)',capPct==null?'—':Math.round(capPct)+'%')}<div class="kf">${m.enrolled==null?'園児一覧待ち':m.enrolled+' / '+(p.capacity||'—')+'名'}</div></div>
+     ${v3Donut(capPct,'var(--c-profit)',capPct==null?'—':Math.round(capPct)+'%')}<div class="kf">${m.enrolled==null?'園児一覧待ち':m.enrolled+' / '+(p.capacity||'—')+'名'+(p.elastic?'（弾力'+p.elastic+'名）':'')}</div></div>
    <div class="kb"><div class="kh"><span class="sm">人件費率</span></div>
      ${v3Donut(lab,(lab!=null&&lab>V3_LABOR_TARGET)?'var(--c-over)':'var(--c-labor)',lab==null?'—':lab.toFixed(1)+'%',V3_LABOR_TARGET)}
      <div class="kf"${(lab!=null&&lab>V3_LABOR_TARGET)?' style="color:var(--c-over);font-weight:700"':''}>${lab==null?'経理待ち':(lab<=V3_LABOR_TARGET?`目安${V3_LABOR_TARGET}%（黒線）以内`:`目安${V3_LABOR_TARGET}%（黒線）超え`)}</div></div>
@@ -581,7 +582,7 @@ function v3Body(p,key){
 function v3Card(p){
   const opts=p.v3.order.map(k=>`<option value="${k}">${p.v3.months[k].label}</option>`).join('');
   return `<div class="park-card-head">
-    <div><div class="park-card-name">${p.label}</div><div class="park-card-sub">${p.sub.split('・')[0]}・定員${p.capacity||'—'}名</div>${p.kotei?`<div class="park-card-sub">公定価格（${p.kotei}）</div>`:''}</div>
+    <div><div class="park-card-name">${p.label}</div><div class="park-card-sub">${p.sub.split('・')[0]}・定員${p.capacity||'—'}名${p.elastic?'（弾力'+p.elastic+'名）':''}</div>${p.kotei?`<div class="park-card-sub">公定価格（${p.kotei}）</div>`:''}</div>
     <div style="text-align:right"><label class="sm" for="${p.id}-ms" style="display:block">表示する月</label>
       <select id="${p.id}-ms" onchange="v3Show('${p.id}',this.value)">${opts}</select><div id="${p.id}-st"></div></div>
   </div><div class="park-card-body" id="${p.id}-v3b"></div>`;
