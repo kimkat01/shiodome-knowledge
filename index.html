@@ -86,6 +86,69 @@
   .file-chip span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .p-file{margin-top:12px;}
 
+  /* ===== 複数添付・下書き（2026-10-14） ===== */
+  .nav-draft{display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin-top:8px; font:inherit; font-weight:700; font-size:14px;
+    color:var(--ink); background:#fff; border:1px solid var(--line); padding:11px; border-radius:999px; cursor:pointer;}
+  .nav-draft:hover{background:#f7f5fe;}
+  .draft-count{display:inline-block; min-width:20px; padding:1px 7px; border-radius:999px; background:#e0517a; color:#fff; font-size:11px; font-weight:700; line-height:18px; text-align:center;}
+  .draft-count[hidden]{display:none;}
+  .pm-head-r{display:flex; align-items:center; gap:8px;}
+  .pm-draft-link{display:inline-flex; align-items:center; gap:6px; font:inherit; font-size:13px; color:var(--ink); background:#f7f5fe; border:1px solid var(--line); border-radius:999px; padding:6px 12px; cursor:pointer;}
+  .pm-draft-link:hover{background:#f0edfd;}
+  .pm-btns{margin-left:auto; display:flex; gap:8px; align-items:center;}
+  .pm-btns .post-btn{margin-left:0;}
+  .draft-btn{font:inherit; font-weight:700; font-size:14px; color:var(--ink); background:#fff; border:1px solid var(--line); padding:10px 18px; border-radius:999px; cursor:pointer;}
+  .draft-btn:hover:not(:disabled){background:#f7f5fe;}
+  .draft-btn:disabled{opacity:.4; cursor:default;}
+  .att-list{display:none; grid-template-columns:repeat(auto-fill,minmax(96px,1fr)); gap:8px; margin-top:12px;}
+  .att-list.show{display:grid;}
+  .att-tile{position:relative; aspect-ratio:1/1; border-radius:12px; overflow:hidden; background:#f7f5fe; border:1px solid var(--line);}
+  .att-tile img{width:100%; height:100%; object-fit:cover; display:block;}
+  .att-tile.file{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:8px; text-align:center;}
+  .att-fi{font-size:26px;}
+  .att-fn{font-size:11px; color:var(--ink); word-break:break-all; line-height:1.3; max-height:3.9em; overflow:hidden;}
+  .att-rm{position:absolute; top:4px; right:4px; width:24px; height:24px; border-radius:50%; background:rgba(20,10,40,.62); color:#fff; border:none; cursor:pointer; font-size:14px; line-height:1;}
+  .att-count{grid-column:1/-1; font-size:11px; color:var(--sub); text-align:right;}
+  .p-photos{display:grid; gap:6px; margin-top:12px;}
+  .p-photos.c1{grid-template-columns:1fr;}
+  .p-photos.c2{grid-template-columns:1fr 1fr;}
+  .p-photos.c3{grid-template-columns:1fr 1fr 1fr;}
+  .p-ph{display:block; padding:0; border:none; background:#f4f2fc; cursor:zoom-in; border-radius:14px; overflow:hidden;}
+  .p-photos.c1 .p-ph{border-radius:18px;}
+  .p-photos.c1 .p-ph img{max-width:100%; display:block;}
+  .p-photos.c2 .p-ph, .p-photos.c3 .p-ph{aspect-ratio:1/1;}
+  .p-photos.c2 .p-ph img, .p-photos.c3 .p-ph img{width:100%; height:100%; object-fit:cover; display:block;}
+  .draft-note{font-size:12px; color:var(--sub); margin:0 0 12px;}
+  .draft-list{display:flex; flex-direction:column; gap:12px;}
+  .draft-empty{font-size:14px; color:var(--sub); text-align:center; padding:28px 10px; line-height:1.8;}
+  .draft-item{border:1px solid var(--line); border-radius:16px; padding:14px 16px; background:#fbfbfe;}
+  .draft-meta{font-size:12px; color:var(--sub);}
+  .draft-text{font-size:15px; color:#000; line-height:1.6; margin-top:6px; white-space:pre-wrap; word-break:break-word; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden;}
+  .draft-noText{color:var(--sub);}
+  .draft-thumbs{display:flex; gap:6px; margin-top:8px; align-items:center;}
+  .draft-thumbs img{width:56px; height:56px; object-fit:cover; border-radius:10px; display:block;}
+  .draft-more{font-size:12px; color:var(--sub);}
+  .draft-files{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;}
+  .draft-files .file-chip{padding:6px 10px; font-size:12px;}
+  .draft-acts{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;}
+  .d-btn{font:inherit; font-size:13px; font-weight:700; padding:8px 14px; border-radius:999px; border:1px solid var(--line); background:#fff; color:var(--ink); cursor:pointer;}
+  .d-btn:hover{background:#f7f5fe;}
+  .d-btn.primary{background:var(--grad); color:#fff; border-color:transparent;}
+  .d-btn.primary:hover{filter:brightness(1.06); background:var(--grad);}
+  .d-btn.danger:hover{color:#d64550; background:rgba(214,69,80,.08);}
+  .d-btn:disabled{opacity:.5; cursor:default;}
+  .photo-view{position:fixed; inset:0; background:rgba(10,10,20,.88); z-index:10003; display:none; align-items:center; justify-content:center; padding:48px 64px;}
+  .photo-view.show{display:flex;}
+  .photo-view img{max-width:100%; max-height:100%; object-fit:contain; border-radius:8px;}
+  .pv-close{position:absolute; top:14px; right:18px; width:40px; height:40px; border-radius:50%; border:none; background:rgba(255,255,255,.16); color:#fff; font-size:22px; cursor:pointer;}
+  .pv-nav{position:absolute; top:50%; transform:translateY(-50%); width:48px; height:48px; border-radius:50%; border:none; background:rgba(255,255,255,.16); color:#fff; font-size:30px; line-height:1; cursor:pointer;}
+  .pv-nav.prev{left:12px;} .pv-nav.next{right:12px;}
+  .pv-nav[hidden]{display:none;}
+  .pv-close:hover,.pv-nav:hover{background:rgba(255,255,255,.28);}
+  .pv-foot{position:absolute; bottom:14px; left:0; right:0; display:flex; justify-content:center; gap:18px; color:#fff; font-size:13px;}
+  .pv-foot a{color:#fff;}
+  .pv-foot a[hidden]{display:none;}
+
   /* ===== フィード検索 ===== */
   .feed-toolbar{margin-bottom:14px;}
   .search-box{display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--line); border-radius:999px; padding:9px 16px; box-shadow:0 4px 14px rgba(90,70,190,.05);}
@@ -292,7 +355,12 @@ html.law-y .composer.drag-over{border-color:#43a047; box-shadow:0 0 0 3px rgba(6
 html.law-y .composer textarea::placeholder,
 html.law-y .search-box input::placeholder{color:#a9bcb0;}
 html.law-y .icon-btn,
-html.law-y .file-chip{background:#f3faf5;}
+html.law-y .file-chip,
+html.law-y .att-tile,
+html.law-y .pm-draft-link{background:#f3faf5;}
+html.law-y .nav-draft:hover,
+html.law-y .draft-btn:hover:not(:disabled),
+html.law-y .d-btn:hover{background:#f3faf5;}
 html.law-y .icon-btn:hover,
 html.law-y .search-clear,
 html.law-y .post-modal-close{background:#e3f3e7;}
@@ -522,6 +590,7 @@ if(HQ_MODE && !HQ_AUTHED) setTimeout(function(){ var el=document.getElementById(
       <svg viewBox="0 0 24 24"><path d="M12 2 3 6v6c0 5 4 8.5 9 10 5-1.5 9-5 9-10V6z"/><path d="M9 12l2 2 4-4"/></svg>危機管理対応状況</a>
 
     <button class="nav-post" id="navPost">＋ 投稿する</button>
+    <button class="nav-draft" id="navDraft">📝 下書き<span class="draft-count" hidden>0</span></button>
   </aside>
 
   <!-- ===== 中央：フィード ===== -->
@@ -592,7 +661,10 @@ if(HQ_MODE && !HQ_AUTHED) setTimeout(function(){ var el=document.getElementById(
   <div class="post-modal-card">
     <div class="post-modal-head">
       <h2 id="postModalTitle">投稿する</h2>
-      <button class="post-modal-close" onclick="closePostModal()">×</button>
+      <div class="pm-head-r">
+        <button class="pm-draft-link" id="pmDraftLink" title="保存した下書きの一覧を開く">📝 下書き一覧<span class="draft-count" hidden>0</span></button>
+        <button class="post-modal-close" onclick="closePostModal()" title="閉じる（書きかけは下書きに保存されます）">×</button>
+      </div>
     </div>
     <div class="me">
       <label for="who">投稿者</label>
@@ -601,10 +673,10 @@ if(HQ_MODE && !HQ_AUTHED) setTimeout(function(){ var el=document.getElementById(
     </div>
     <div class="composer" id="composer">
       <textarea id="body" placeholder="いまの共有を書く…（例：良かった保育の工夫、ヒヤリの気づき、質問など）"></textarea>
-      <div class="preview" id="preview"><button class="rm" id="rmImg" title="削除">×</button><img id="pvImg" alt="添付プレビュー"></div>
-      <div class="drop-hint">写真・Excel・PDFはここにドラッグ＆ドロップでも添付できます</div>
+      <div class="att-list" id="attList"></div>
+      <div class="drop-hint">写真・Excel・PDFは📎から、またはここにドラッグ＆ドロップで添付できます（まとめて最大10件・写真は複数枚OK）</div>
       <div class="comp-foot">
-        <input type="file" id="file" accept="image/*,.pdf,application/pdf,.xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.csv" hidden>
+        <input type="file" id="file" multiple accept="image/*,.pdf,application/pdf,.xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.csv" hidden>
         <button class="icon-btn" id="attach" title="ファイルを添付（写真・Excel・PDF）">📎</button>
         <div class="topics" id="topics">
           <span class="topic" data-t="お知らせ" role="button" aria-pressed="false">お知らせ</span>
@@ -612,10 +684,34 @@ if(HQ_MODE && !HQ_AUTHED) setTimeout(function(){ var el=document.getElementById(
           <span class="topic" data-t="ノウハウ" role="button" aria-pressed="false">ノウハウ</span>
           <span class="topic" data-t="できごと" role="button" aria-pressed="false">できごと</span>
         </div>
-        <button class="post-btn" id="postBtn" disabled>投稿</button>
+        <div class="pm-btns">
+          <button class="draft-btn" id="draftBtn" disabled title="投稿せずに保存して、あとで修正・投稿できます">下書き保存</button>
+          <button class="post-btn" id="postBtn" disabled>投稿</button>
+        </div>
       </div>
     </div>
   </div>
+</div>
+
+<!-- 下書き一覧モーダル（2026-10-14） -->
+<div class="post-modal-ov" id="draftModalOv" onclick="if(event.target===this)closeDrafts();">
+  <div class="post-modal-card">
+    <div class="post-modal-head">
+      <h2>下書き一覧</h2>
+      <button class="post-modal-close" onclick="closeDrafts()" title="閉じる">×</button>
+    </div>
+    <p class="draft-note">下書きはこのパソコン（ブラウザ）に保存されます。ほかの人やほかのパソコンからは見えません。</p>
+    <div class="draft-list" id="draftList"></div>
+  </div>
+</div>
+
+<!-- 写真の拡大表示 -->
+<div class="photo-view" id="photoView">
+  <button class="pv-close" id="pvClose" title="閉じる">×</button>
+  <button class="pv-nav prev" id="pvPrev" title="前の写真">‹</button>
+  <img id="pvBig" alt="写真" referrerpolicy="no-referrer">
+  <button class="pv-nav next" id="pvNext" title="次の写真">›</button>
+  <div class="pv-foot"><span id="pvCount"></span><a id="pvOrig" target="_blank" rel="noopener">元の写真を開く ↗</a></div>
 </div>
 
 <!-- トースト（製作中の通知） -->
@@ -627,7 +723,8 @@ if(HQ_MODE && !HQ_AUTHED) setTimeout(function(){ var el=document.getElementById(
     <h2>使い方ガイド</h2>
     <p class="g-sub">しおどめポータルサイトの基本的な使い方</p>
     <ol>
-      <li><b>投稿する：</b>左メニューの「＋投稿する」を押すと入力画面が開きます。投稿者・内容を入力し、トピック（お知らせ／質問／ノウハウ／できごと）を選んで「投稿」を押してください。写真だけでなく、Excel・PDFファイルも 📎 から添付できます。</li>
+      <li><b>投稿する：</b>左メニューの「＋投稿する」を押すと入力画面が開きます。投稿者・内容を入力し、トピック（お知らせ／質問／ノウハウ／できごと）を選んで「投稿」を押してください。写真は複数枚まとめて添付でき、Excel・PDFファイルも 📎 から添付できます（1投稿につき最大10件）。</li>
+      <li><b>下書き：</b>入力画面の「下書き保存」を押すと、投稿せずに保存できます（書きかけのまま閉じたときも自動で保存）。左メニューの「📝 下書き」から、あとで修正・投稿・削除ができます。下書きはこのパソコンにだけ保存されます。</li>
       <li><b>投稿を編集・削除する：</b>自分（ログイン中の人）の投稿には「編集」「削除」ボタンが表示されます。投稿は全園で共有され、1分ごとに自動で最新になります。</li>
       <li><b>フィードを検索する：</b>フィード上部の検索欄にキーワードを入力すると、該当する投稿だけに絞り込まれます。</li>
       <li><b>いいね：</b>♡を押すと「いいね」でき、誰がいいねしたかが投稿の下に表示されます。</li>
@@ -800,7 +897,7 @@ function loadFeed(silent){
   if(!FEED_LIVE) return Promise.resolve();
   return feedGet().then(d=>{
     // コメント入力中や投稿画面を開いているときは、打っている文字が消えないよう描き直さない
-    const typing = [...feed.querySelectorAll("[data-cin]")].some(i=>i.value.trim()) || document.getElementById("postModalOv").classList.contains("show");
+    const typing = [...feed.querySelectorAll("[data-cin]")].some(i=>i.value.trim()) || document.getElementById("postModalOv").classList.contains("show") || document.getElementById("draftModalOv").classList.contains("show");
     if(silent && (typing || feedBusy)) return;
     applyServer(d);
   }).catch(err=>{
@@ -859,6 +956,22 @@ function attachHtml(a){
   const dl = a.fileId ? `href="${esc(a.url)}" target="_blank" rel="noopener"` : `href="${a.url}" download="${esc(a.name||"添付ファイル")}"`;
   return `<div class="p-file"><a class="file-chip" ${dl}>${fileIcon(a.mime)} <span>${esc(a.name||"添付ファイル")}</span></a></div>`;
 }
+/* 投稿の添付一覧（新：imgs 配列／旧：img 1件） */
+function attsOf(p){ if(Array.isArray(p.imgs) && p.imgs.length) return p.imgs; return p.img ? [p.img] : []; }
+function attsHtml(p){
+  const list=attsOf(p); if(!list.length) return "";
+  const imgs=list.filter(a=>typeof a==="string"||a.kind==="image"), files=list.filter(a=>!(typeof a==="string"||a.kind==="image"));
+  let h="";
+  if(imgs.length){
+    const cols = imgs.length===1 ? 1 : (imgs.length===2||imgs.length===4) ? 2 : 3;
+    h += `<div class="p-photos c${cols}">` + imgs.map((a,i)=>{
+      const src = typeof a==="string" ? a : esc(a.url);
+      return `<button class="p-ph" data-pv="${esc(p.id)}" data-pi="${i}" title="写真を大きく見る"><img src="${src}" alt="添付写真${i+1}" loading="lazy" referrerpolicy="no-referrer"></button>`;
+    }).join("") + `</div>`;
+  }
+  h += files.map(attachHtml).join("");
+  return h;
+}
 function likeByHtml(p){
   const by = (p.likers||[]).map(l=>l.name);
   if(!by.length) return "";
@@ -884,7 +997,7 @@ function render(){
         ${p.topic?`<span class="chip">#${esc(p.topic)}</span>`:""}
       </div>
       ${p.body?`<div class="p-body">${esc(p.body)}</div>`:""}
-      ${attachHtml(p.img)}
+      ${attsHtml(p)}
       <div class="p-acts">
         <button class="act ${liked?'liked':''}" data-like="${esc(p.id)}">${liked?'♥':'♡'} <span>いいね${nLike?` ${nLike}`:''}</span></button>
         <button class="act" data-toggle="${esc(p.id)}">💬 <span>コメント${cm.length?` ${cm.length}`:''}</span></button>
@@ -915,109 +1028,298 @@ function renderHot(){
     </div>`).join("");
 }
 
-/* 投稿（モーダル） */
-const bodyEl=document.getElementById("body"), postBtn=document.getElementById("postBtn");
-let topic=null, attached=null, postEditId=null;
+/* ============================================================
+   投稿（モーダル）＋ 下書き ＋ 複数添付（2026-10-14）
+   ・添付は1投稿に最大10件（写真は自動で縮小）。写真が複数なら並べて表示し、押すと拡大
+   ・下書きはこのパソコンのブラウザ内（IndexedDB）に、ログインIDごとに保存
+     （ほかの人・ほかのパソコンからは見えません）
+   ============================================================ */
+const bodyEl=document.getElementById("body"), postBtn=document.getElementById("postBtn"), draftBtn=document.getElementById("draftBtn");
+let topic=null, atts=[], postEditId=null, draftId=null, postDirty=false;
+const MAX_ATTS = 10;
+const MAX_ATTACH_MB = 10;
+const MAX_TOTAL_MB = 35;
+
 document.getElementById("topics").addEventListener("click",e=>{
   const t=e.target.closest(".topic"); if(!t) return;
   const on=t.getAttribute("aria-pressed")==="true";
   document.querySelectorAll(".topic").forEach(x=>x.setAttribute("aria-pressed","false"));
   if(!on){ t.setAttribute("aria-pressed","true"); topic=t.dataset.t; } else { topic=null; }
+  postDirty = true;
 });
-function refreshPostBtn(){ postBtn.disabled = feedBusy || (bodyEl.value.trim()==="" && !attached); }
-bodyEl.addEventListener("input", refreshPostBtn);
+function hasContent(){ return bodyEl.value.trim()!=="" || atts.length>0; }
+function refreshPostBtn(){
+  postBtn.disabled = feedBusy || !hasContent();
+  draftBtn.disabled = !hasContent();
+}
+bodyEl.addEventListener("input", ()=>{ postDirty = true; refreshPostBtn(); });
 
-const MAX_ATTACH_MB = 10;
+/* ---------- 添付（複数） ---------- */
+const isImgAtt = a => typeof a==="string" || (a && a.kind==="image");
+const attUrl = a => typeof a==="string" ? a : a.url;
 const fileInput=document.getElementById("file");
 document.getElementById("attach").addEventListener("click",()=>fileInput.click());
-function showAttachPreview(){
-  const prev=document.getElementById("preview");
-  if(!attached){ prev.classList.remove("show"); prev.innerHTML=`<button class="rm" id="rmImg" title="削除">×</button><img id="pvImg" alt="添付プレビュー">`; return; }
-  const isImg = typeof attached==="string" || attached.kind==="image";
-  if(isImg){
-    const url = typeof attached==="string" ? attached : attached.url;
-    prev.innerHTML = `<button class="rm" id="rmImg" title="削除">×</button><img id="pvImg" alt="添付プレビュー" src="${esc(url)}" referrerpolicy="no-referrer">`;
-  } else {
-    prev.innerHTML = `<button class="rm" id="rmImg" title="削除">×</button><div class="file-chip">${fileIcon(attached.mime)} <span>${esc(attached.name||"添付ファイル")}</span></div>`;
-  }
-  prev.classList.add("show");
-  document.getElementById("rmImg").addEventListener("click",()=>{ attached=null; showAttachPreview(); refreshPostBtn(); });
+function renderAttList(){
+  const box=document.getElementById("attList");
+  if(!atts.length){ box.classList.remove("show"); box.innerHTML=""; return; }
+  box.innerHTML = atts.map((a,i)=> isImgAtt(a)
+    ? `<div class="att-tile"><img src="${esc(attUrl(a))}" alt="添付写真${i+1}" referrerpolicy="no-referrer"><button class="att-rm" data-ri="${i}" title="この添付を外す">×</button></div>`
+    : `<div class="att-tile file"><span class="att-fi">${fileIcon(a.mime)}</span><span class="att-fn">${esc(a.name||"添付ファイル")}</span><button class="att-rm" data-ri="${i}" title="この添付を外す">×</button></div>`
+  ).join("") + `<div class="att-count">${atts.length} / ${MAX_ATTS}件</div>`;
+  box.classList.add("show");
 }
-fileInput.addEventListener("change",()=>{
-  const f=fileInput.files[0]; if(!f) return;
-  handleAttachFile(f);
-  fileInput.value="";
+document.getElementById("attList").addEventListener("click",e=>{
+  const rm=e.target.closest("[data-ri]"); if(!rm) return;
+  atts.splice(Number(rm.dataset.ri),1); postDirty=true; renderAttList(); refreshPostBtn();
 });
-function handleAttachFile(f){
-  const isImage = f.type.startsWith("image/");
-  if(isImage){
-    resizeImage(f,1200,0.82).then(u=>{ attached={kind:"image", url:u, dataUrl:u, name:f.name.replace(/\.[^.]+$/,"")+".jpg", mime:"image/jpeg"}; showAttachPreview(); refreshPostBtn(); });
-  } else {
-    if(f.size > MAX_ATTACH_MB*1024*1024){ toast(`添付できるファイルは${MAX_ATTACH_MB}MBまでです`); return; }
-    const reader=new FileReader();
-    reader.onload=()=>{ attached={kind:"file", url:reader.result, dataUrl:reader.result, name:f.name, mime:f.type||""}; showAttachPreview(); refreshPostBtn(); };
-    reader.readAsDataURL(f);
+function readAsDataUrl(f){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=()=>rej(r.error); r.readAsDataURL(f); }); }
+async function handleAttachFiles(files){
+  const list=[...files];
+  if(!list.length) return;
+  let room = MAX_ATTS - atts.length;
+  if(room<=0){ toast(`添付は${MAX_ATTS}件までです`); return; }
+  if(list.length>room) toast(`添付は${MAX_ATTS}件までのため、${room}件だけ追加しました`);
+  for(const f of list.slice(0,room)){
+    try{
+      if(f.type.startsWith("image/")){
+        const u = await resizeImage(f,1200,0.82);
+        atts.push({kind:"image", url:u, dataUrl:u, name:f.name.replace(/\.[^.]+$/,"")+".jpg", mime:"image/jpeg"});
+      }else{
+        if(f.size > MAX_ATTACH_MB*1024*1024){ toast(`「${f.name}」は${MAX_ATTACH_MB}MBを超えるため添付できません`); continue; }
+        const u = await readAsDataUrl(f);
+        atts.push({kind:"file", url:u, dataUrl:u, name:f.name, mime:f.type||""});
+      }
+    }catch(err){ toast(`「${f.name}」を読み込めませんでした`); }
+    postDirty = true; renderAttList(); refreshPostBtn();
   }
 }
+fileInput.addEventListener("change",()=>{ const fs=[...fileInput.files]; fileInput.value=""; handleAttachFiles(fs); });
 const composerEl=document.getElementById("composer");
 ["dragenter","dragover"].forEach(ev=>composerEl.addEventListener(ev,e=>{ e.preventDefault(); e.stopPropagation(); composerEl.classList.add("drag-over"); }));
 ["dragleave","drop"].forEach(ev=>composerEl.addEventListener(ev,e=>{ e.preventDefault(); e.stopPropagation(); if(ev==="dragleave" && composerEl.contains(e.relatedTarget)) return; composerEl.classList.remove("drag-over"); }));
-composerEl.addEventListener("drop",e=>{
-  const f=e.dataTransfer.files && e.dataTransfer.files[0]; if(!f) return;
-  handleAttachFile(f);
-});
+composerEl.addEventListener("drop",e=>{ if(e.dataTransfer.files && e.dataTransfer.files.length) handleAttachFiles(e.dataTransfer.files); });
 function resizeImage(file,maxW,q){
-  return new Promise(res=>{ const img=new Image(), url=URL.createObjectURL(file);
+  return new Promise((res,rej)=>{ const img=new Image(), url=URL.createObjectURL(file);
     img.onload=()=>{ const s=Math.min(1,maxW/Math.max(img.width,img.height)), w=Math.round(img.width*s), h=Math.round(img.height*s);
       const cv=document.createElement("canvas"); cv.width=w; cv.height=h; cv.getContext("2d").drawImage(img,0,0,w,h);
-      URL.revokeObjectURL(url); res(cv.toDataURL("image/jpeg",q)); }; img.src=url; });
+      URL.revokeObjectURL(url); res(cv.toDataURL("image/jpeg",q)); };
+    img.onerror=()=>{ URL.revokeObjectURL(url); rej(new Error("image")); };
+    img.src=url; });
 }
 
-/* モーダル開閉 */
-function openPostModal(editPost){
+/* ---------- 下書きの保存場所（このブラウザの IndexedDB） ---------- */
+const DraftDB = (()=>{
+  let dbp=null;
+  function db(){
+    if(!dbp) dbp = new Promise((res,rej)=>{
+      if(!window.indexedDB) return rej(new Error("このブラウザでは下書きを保存できません"));
+      const r=indexedDB.open("shiodome-feed-drafts",1);
+      r.onupgradeneeded=()=>{ if(!r.result.objectStoreNames.contains("drafts")) r.result.createObjectStore("drafts",{keyPath:"id"}); };
+      r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error||new Error("下書きの保存場所を開けませんでした"));
+    });
+    return dbp;
+  }
+  function tx(mode,fn){
+    return db().then(d=>new Promise((res,rej)=>{
+      const t=d.transaction("drafts",mode), req=fn(t.objectStore("drafts"));
+      t.oncomplete=()=>res(req?req.result:undefined);
+      t.onerror=()=>rej(t.error||new Error("下書きを保存できませんでした"));
+      t.onabort=()=>rej(t.error||new Error("下書きを保存できませんでした（容量不足の可能性があります）"));
+    }));
+  }
+  return { all:()=>tx("readonly",s=>s.getAll()), put:d=>tx("readwrite",s=>s.put(d)), del:id=>tx("readwrite",s=>s.delete(id)) };
+})();
+function draftOwner(){ return me().loginId || "local"; }
+function myDrafts(){
+  return DraftDB.all().then(l=>(l||[]).filter(d=>d.owner===draftOwner()).sort((a,b)=>b.ts-a.ts)).catch(()=>[]);
+}
+function updateDraftCount(){
+  myDrafts().then(l=>{
+    const n=l.length;
+    document.querySelectorAll(".draft-count").forEach(el=>{ el.textContent=n; el.hidden = n===0; });
+  });
+}
+/* 今の入力内容を下書きに保存（新規投稿のときだけ） */
+function saveDraft(){
+  if(postEditId || !hasContent()) return Promise.resolve(false);
+  const rec = {
+    id: draftId || ("dr"+Date.now()+Math.floor(Math.random()*1000)),
+    owner: draftOwner(), ts: Date.now(),
+    body: bodyEl.value, topic,
+    atts: atts.filter(a=>a.dataUrl).map(a=>({kind:a.kind, dataUrl:a.dataUrl, name:a.name, mime:a.mime}))
+  };
+  return DraftDB.put(rec).then(()=>{ draftId=rec.id; postDirty=false; updateDraftCount(); return true; })
+    .catch(err=>{ toast(err.message||"下書きを保存できませんでした"); return false; });
+}
+
+/* ---------- 投稿モーダル開閉 ---------- */
+function fillComposer(d){
+  bodyEl.value = d.body||""; topic = d.topic||null;
+  atts = (d.atts||[]).map(a=>Object.assign({}, a, a.dataUrl?{url:a.dataUrl}:{}));
+  document.querySelectorAll(".topic").forEach(x=>x.setAttribute("aria-pressed", x.dataset.t===topic?"true":"false"));
+  renderAttList(); refreshPostBtn();
+}
+function openPostModal(editPost, draft){
   postEditId = editPost ? editPost.id : null;
-  document.getElementById("postModalTitle").textContent = editPost ? "投稿を編集" : "投稿する";
+  draftId = (!editPost && draft) ? draft.id : null;
+  document.getElementById("postModalTitle").textContent = editPost ? "投稿を編集" : draft ? "下書きの続きを書く" : "投稿する";
   postBtn.textContent = editPost ? "更新する" : "投稿";
+  draftBtn.hidden = !!editPost;
+  document.getElementById("pmDraftLink").hidden = !!editPost;
   if(editPost){
     who.value = editPost.code; myname.value = editPost.name;
-    bodyEl.value = editPost.body||""; topic = editPost.topic||null; attached = editPost.img||null;
+    fillComposer({body:editPost.body, topic:editPost.topic, atts:attsOf(editPost).map(a=>typeof a==="string"?{kind:"image",url:a}:Object.assign({},a))});
   } else {
     resetPoster();
-    bodyEl.value=""; topic=null; attached=null;
+    fillComposer(draft || {});
   }
-  document.querySelectorAll(".topic").forEach(x=>x.setAttribute("aria-pressed", x.dataset.t===topic?"true":"false"));
-  showAttachPreview();
-  refreshPostBtn();
+  postDirty = false;
   document.getElementById("postModalOv").classList.add("show");
   bodyEl.focus();
 }
-function closePostModal(){ document.getElementById("postModalOv").classList.remove("show"); }
-
-function attachPayload(){
-  if(!attached) return null;
-  if(attached.dataUrl) return {kind:attached.kind, dataUrl:attached.dataUrl, name:attached.name, mime:attached.mime};
-  return {keep:true};   // 編集で添付を変えていない
+/* 閉じるとき、書きかけの新規投稿は自動で下書きに残す */
+function closePostModal(skipAutoSave){
+  const ov=document.getElementById("postModalOv");
+  if(!ov.classList.contains("show")) return Promise.resolve();
+  const p = (!skipAutoSave && !postEditId && postDirty && hasContent())
+    ? saveDraft().then(ok=>{ if(ok) toast("書きかけの内容を下書きに保存しました"); })
+    : Promise.resolve();
+  ov.classList.remove("show");
+  return p;
 }
-postBtn.addEventListener("click",()=>{
+draftBtn.addEventListener("click",()=>{
+  saveDraft().then(ok=>{ if(!ok) return; closePostModal(true); toast("下書きに保存しました（左の「下書き」から続きを書けます）"); });
+});
+document.getElementById("pmDraftLink").addEventListener("click",()=>{ closePostModal().then(openDrafts); });
+
+/* ---------- 送信 ---------- */
+function attPayloads(list){
+  return list.map(a=> a.dataUrl ? {kind:a.kind, dataUrl:a.dataUrl, name:a.name, mime:a.mime} : {keep:true, fileId:a.fileId});
+}
+/* 改訂前のGASでも1件目は保存されるよう、旧形式（attach）も一緒に送る */
+function legacyAttach(list){
+  const a=list[0]; if(!a) return null;
+  return a.dataUrl ? {kind:a.kind, dataUrl:a.dataUrl, name:a.name, mime:a.mime} : {keep:true};
+}
+function totalMB(list){ return list.reduce((s,a)=>s+(a.dataUrl?a.dataUrl.length*0.75:0),0)/1024/1024; }
+/* 投稿・更新を送る（下書き一覧の「投稿する」からも使う） */
+function submitPost({body, topic:tp, atts:list, editId}){
   const o=findOrg(who.value), name=myname.value.trim()||"名無し";
-  const body=bodyEl.value.trim();
-  const afterDone = ()=>{ postEditId=null; closePostModal(); if(filter.type!=="all" && filter.type!=="notice" && filter.type!=="save") setFilter("all"); else render(); };
   if(!FEED_LIVE){
-    if(postEditId){ const p=posts.find(x=>String(x.id)===String(postEditId)); if(p){ p.code=o.code; p.name=name; p.org=o.org; p.topic=topic; p.body=body; p.img=attached; } }
-    else posts.push({ id:"d"+Date.now(), code:o.code, name, org:o.org, loginId:"-", topic, ts:Date.now(), body, img:attached, likers:[], comments:[] });
-    afterDone(); return;
+    const img=list[0]||null;
+    if(editId){ const p=posts.find(x=>String(x.id)===String(editId)); if(p){ Object.assign(p,{code:o.code, name, org:o.org, topic:tp, body, img, imgs:list}); } }
+    else posts.push({ id:"d"+Date.now(), code:o.code, name, org:o.org, loginId:"-", topic:tp, ts:Date.now(), body, img, imgs:list, likers:[], comments:[] });
+    return Promise.resolve();
   }
-  const label = postBtn.textContent;
-  postBtn.disabled = true; postBtn.textContent = attached&&attached.dataUrl ? "送信中…（添付を保存しています）" : "送信中…";
-  const req = postEditId ? runAction("update", {id:postEditId, body, topic, attach:attachPayload()}, "投稿を更新しました")
-                         : runAction("create", {body, topic, attach:attachPayload()}, "投稿しました");
-  req.then(afterDone).catch(()=>{}).finally(()=>{ postBtn.textContent = label; refreshPostBtn(); });
+  if(totalMB(list) > MAX_TOTAL_MB) { toast(`添付の合計が大きすぎます（${MAX_TOTAL_MB}MBまで）。ファイルを減らしてください`); return Promise.reject(new Error("too big")); }
+  const data = {body, topic:tp, attaches:attPayloads(list), attach:legacyAttach(list)};
+  return editId ? runAction("update", Object.assign({id:editId}, data), "投稿を更新しました")
+                : runAction("create", data, "投稿しました");
+}
+function afterPosted(){ if(filter.type!=="all" && filter.type!=="notice" && filter.type!=="save") setFilter("all"); else render(); }
+postBtn.addEventListener("click",()=>{
+  const label = postBtn.textContent, usedDraft = draftId;
+  postBtn.disabled = true; draftBtn.disabled = true;
+  postBtn.textContent = atts.some(a=>a.dataUrl) ? "送信中…（添付を保存しています）" : "送信中…";
+  submitPost({body:bodyEl.value.trim(), topic, atts:atts.slice(), editId:postEditId})
+    .then(()=>{
+      if(usedDraft) DraftDB.del(usedDraft).then(updateDraftCount).catch(()=>{});
+      postEditId=null; draftId=null; postDirty=false;
+      closePostModal(true); afterPosted();
+    })
+    .catch(()=>{})
+    .finally(()=>{ postBtn.textContent = label; refreshPostBtn(); });
+});
+
+/* ---------- 下書き一覧画面 ---------- */
+function fmtDT(ts){ const d=new Date(ts); return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,"0")}`; }
+function renderDrafts(){
+  const box=document.getElementById("draftList");
+  return myDrafts().then(list=>{
+    if(!list.length){ box.innerHTML=`<div class="draft-empty">下書きはありません。<br>投稿画面の「下書き保存」で、書きかけの投稿をここに残せます。</div>`; return; }
+    box.innerHTML = list.map(d=>{
+      const imgs=(d.atts||[]).filter(a=>a.kind==="image"), files=(d.atts||[]).filter(a=>a.kind!=="image");
+      const meta=[`${fmtDT(d.ts)} 保存`, d.topic?`#${esc(d.topic)}`:"", imgs.length?`写真${imgs.length}枚`:"", files.length?`ファイル${files.length}件`:""].filter(Boolean).join("　");
+      return `<div class="draft-item" data-did="${esc(d.id)}">
+        <div class="draft-meta">${meta}</div>
+        <div class="draft-text">${d.body&&d.body.trim()?esc(d.body):'<span class="draft-noText">（本文なし）</span>'}</div>
+        ${imgs.length?`<div class="draft-thumbs">${imgs.slice(0,5).map(a=>`<img src="${esc(a.dataUrl)}" alt="">`).join("")}${imgs.length>5?`<span class="draft-more">＋${imgs.length-5}</span>`:""}</div>`:""}
+        ${files.length?`<div class="draft-files">${files.map(a=>`<span class="file-chip">${fileIcon(a.mime)} <span>${esc(a.name||"添付ファイル")}</span></span>`).join("")}</div>`:""}
+        <div class="draft-acts">
+          <button class="d-btn" data-dopen="${esc(d.id)}">✎ 開いて修正</button>
+          <button class="d-btn primary" data-dpost="${esc(d.id)}">投稿する</button>
+          <button class="d-btn danger" data-ddel="${esc(d.id)}">🗑 削除</button>
+        </div>
+      </div>`;
+    }).join("");
+  });
+}
+function openDrafts(){
+  renderDrafts().then(()=>document.getElementById("draftModalOv").classList.add("show"));
+}
+function closeDrafts(){ document.getElementById("draftModalOv").classList.remove("show"); }
+document.getElementById("draftList").addEventListener("click",e=>{
+  const b=e.target.closest("[data-dopen],[data-dpost],[data-ddel]"); if(!b) return;
+  const id=b.dataset.dopen||b.dataset.dpost||b.dataset.ddel;
+  myDrafts().then(list=>{
+    const d=list.find(x=>x.id===id); if(!d){ renderDrafts(); return; }
+    if(b.dataset.dopen){ closeDrafts(); openPostModal(null, d); return; }
+    if(b.dataset.ddel){
+      if(!confirm("この下書きを削除します。よろしいですか？（元に戻せません）")) return;
+      DraftDB.del(id).then(()=>{ updateDraftCount(); renderDrafts(); toast("下書きを削除しました"); });
+      return;
+    }
+    if(b.dataset.dpost){
+      if(!(d.body&&d.body.trim()) && !(d.atts||[]).length){ toast("本文も添付もない下書きは投稿できません"); return; }
+      if(!confirm("この下書きを投稿します。よろしいですか？")) return;
+      resetPoster();
+      b.disabled = true; b.textContent = "送信中…";
+      submitPost({body:(d.body||"").trim(), topic:d.topic||null, atts:(d.atts||[]).map(a=>Object.assign({url:a.dataUrl},a)), editId:null})
+        .then(()=>DraftDB.del(id)).then(()=>{ updateDraftCount(); closeDrafts(); afterPosted(); })
+        .catch(()=>{ b.disabled=false; b.textContent="投稿する"; });
+    }
+  });
+});
+document.getElementById("navDraft").addEventListener("click", openDrafts);
+document.addEventListener("keydown",e=>{
+  if(e.key!=="Escape") return;
+  if(document.getElementById("photoView").classList.contains("show")) return;
+  closeDrafts(); closePostModal();
+});
+updateDraftCount();
+
+/* ---------- 写真の拡大表示（複数枚は ◀ ▶ で切り替え） ---------- */
+let pvList=[], pvIdx=0;
+function showPhotoView(){
+  const a=pvList[pvIdx]; if(!a) return;
+  document.getElementById("pvBig").src = attUrl(a);
+  document.getElementById("pvCount").textContent = pvList.length>1 ? `${pvIdx+1} / ${pvList.length}` : "";
+  const orig=document.getElementById("pvOrig");
+  if(a.view){ orig.href=a.view; orig.hidden=false; } else orig.hidden=true;
+  document.getElementById("pvPrev").hidden = document.getElementById("pvNext").hidden = pvList.length<2;
+  document.getElementById("photoView").classList.add("show");
+}
+function openPhotoView(postId, idx){
+  const p=findPost(postId); if(!p) return;
+  pvList = attsOf(p).filter(isImgAtt); pvIdx = idx||0; showPhotoView();
+}
+function closePhotoView(){ document.getElementById("photoView").classList.remove("show"); }
+function stepPhoto(n){ if(pvList.length<2) return; pvIdx=(pvIdx+n+pvList.length)%pvList.length; showPhotoView(); }
+document.getElementById("pvPrev").addEventListener("click",e=>{ e.stopPropagation(); stepPhoto(-1); });
+document.getElementById("pvNext").addEventListener("click",e=>{ e.stopPropagation(); stepPhoto(1); });
+document.getElementById("pvClose").addEventListener("click",closePhotoView);
+document.getElementById("photoView").addEventListener("click",e=>{ if(e.target.id==="photoView") closePhotoView(); });
+document.addEventListener("keydown",e=>{
+  if(!document.getElementById("photoView").classList.contains("show")) return;
+  if(e.key==="Escape") closePhotoView(); else if(e.key==="ArrowLeft") stepPhoto(-1); else if(e.key==="ArrowRight") stepPhoto(1);
 });
 who.addEventListener("change", ()=>{ if(!FEED_LIVE) render(); });
 myname.addEventListener("input", ()=>{ if(!FEED_LIVE) render(); });
 
 /* いいね・コメント・編集・削除 */
 feed.addEventListener("click",e=>{
+  const pv=e.target.closest("[data-pv]");
+  if(pv){ openPhotoView(pv.dataset.pv, Number(pv.dataset.pi)||0); return; }
   const like=e.target.closest("[data-like]");
   if(like){
     const p=findPost(like.dataset.like); if(!p) return;
