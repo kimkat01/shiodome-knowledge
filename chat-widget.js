@@ -35,6 +35,7 @@
   /* 送り主に出す短い園名：「しおどめ保育園」などを除く（例：しおどめ保育園八潮駅北→八潮駅北、守谷しおどめ保育園→守谷） */
   function shortName(name) {
     var n = String(name || '');
+    if (n === 'ふれあいしおどめ保育園') return 'ふれあい守谷';   // 八潮のふれあいと区別するため
     if (/しおどめ保育園/.test(n)) n = n.replace('しおどめ保育園', '');
     else if (/^認定こども園/.test(n)) n = n.replace(/^認定こども園/, '');
     else n = n.replace('しおどめ', '').replace('保育園', '');
