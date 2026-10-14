@@ -13,7 +13,7 @@
    ★ CHAT_GAS_URL が空のあいだは、ボタンも何も表示しない（準備中）
    ============================================================ */
 (function () {
-  var CHAT_GAS_URL = '';   // ← GAS「しおどめチャット」をデプロイしたら /exec のURLをここに貼る
+  var CHAT_GAS_URL = 'https://script.google.com/macros/s/AKfycbzFS-2kyU8tOqqa7obTsn475IoPxqtF8U-mmIbkfTe0WL2FUyNhhr-pMf7Cex6eFyF7/exec';   // ← GAS「しおどめチャット」をデプロイしたら /exec のURLをここに貼る
 
   var POLL_SUMMARY_MS = 30000;   // 未読の確認間隔
   var POLL_ROOM_MS = 8000;       // 部屋を開いているときの更新間隔
