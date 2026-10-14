@@ -199,8 +199,39 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 html.law-y{ --accent:#43a047; --accent-light:#e8f5e9; }
 html.law-y .header{box-shadow:0 2px 8px rgba(67,160,71,.3);}
 </style>
+<style>
+/* ★ データ時点の注意ポップアップ（2026-10）。開くたびに毎回表示。「確認しました」で閉じる
+   月が変わったら、下の本文（id="notice-month"）の「6月時点」を書き換える */
+#notice-ov{position:fixed;inset:0;background:rgba(20,22,40,.42);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px}
+#notice-ov.hide{display:none}
+.notice-card{background:#fff;border-radius:12px;width:100%;max-width:440px;padding:28px 28px 24px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.notice-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.notice-icon{width:36px;height:36px;border-radius:50%;background:#FFD93D;display:flex;align-items:center;justify-content:center;color:#412402;flex-shrink:0}
+.notice-title{font-size:18px;font-weight:700;color:var(--text-primary)}
+.notice-card p{font-size:16px;line-height:1.8;color:var(--text-primary)}
+.notice-card p.l1{margin-bottom:8px}
+.notice-card p.l2{margin-bottom:22px}
+.notice-red{color:#D32F2F;font-weight:700}
+.notice-btn{width:100%;height:44px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+.notice-btn:hover{filter:brightness(1.1)}
+</style>
 </head>
 <body>
+
+<!-- ★ データ時点の注意ポップアップ（2026-10） -->
+<div id="notice-ov" role="dialog" aria-modal="true" aria-labelledby="notice-title">
+  <div class="notice-card">
+    <div class="notice-head">
+      <div class="notice-icon" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <div class="notice-title" id="notice-title">注意</div>
+    </div>
+    <p class="l1">このデータは<span class="notice-red" id="notice-month">6月時点</span>のデータになります。</p>
+    <p class="l2">支出データが揃い次第、アップデートとなります。</p>
+    <button type="button" class="notice-btn" id="notice-ok" onclick="closeNotice()">確認しました</button>
+  </div>
+</div>
 
 <header class="header">
   <div>
@@ -238,6 +269,17 @@ html.law-y .header{box-shadow:0 2px 8px rgba(67,160,71,.3);}
 </div>
 </main>
 
+<script>
+// ===== データ時点の注意ポップアップ（2026-10）=====
+// 開くたびに毎回表示。「確認しました」ボタン・Enter・Escで閉じる。表示中は←→キーでのスライドを止める
+function isNoticeOpen(){ const o=document.getElementById('notice-ov'); return !!o && !o.classList.contains('hide'); }
+function closeNotice(){ const o=document.getElementById('notice-ov'); if(o) o.classList.add('hide'); }
+document.addEventListener('keydown',e=>{
+  if(!isNoticeOpen()) return;
+  if(e.key==='Escape'||e.key==='Enter'){ e.preventDefault(); closeNotice(); }
+});
+(function(){ try{ const b=document.getElementById('notice-ok'); if(b) b.focus(); }catch(e){} })();
+</script>
 <script src="https://kimkat01.github.io/staff-dashboard/gardens.js"></script>
 <script>
 // 社会福祉法人雄雅会（園コード Y〜）から開かれたときは緑テーマ（html.law-y）。?garden が無いときは今までどおりの色
@@ -766,8 +808,9 @@ function goTo(i, animate=true){
 
 function slide(dir){ goTo(curIdx+dir); }
 
-// キーボード操作
+// キーボード操作（注意ポップアップが開いている間は動かさない）
 document.addEventListener('keydown',e=>{
+  if(isNoticeOpen())return;
   if(e.key==='ArrowLeft')slide(-1);
   if(e.key==='ArrowRight')slide(1);
 });
