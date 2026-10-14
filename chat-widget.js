@@ -124,7 +124,7 @@
     fab.title = cfg.side === 'honbu' ? '園長とのチャット' : '本部とのチャット';
     fab.innerHTML = '💬<span class="sdc-badge" id="sdcFabBadge" hidden>0</span>';
     fab.onclick = function () { state.open ? close() : open(); };
-    if (cfg.showFab === false) fab.style.display = 'none';
+    if (cfg.showFab === false) fab.style.display = 'none';   // メニューやカードから開くときは💬ボタンを出さない
 
     var panel = document.createElement('div');
     panel.className = 'sdc-panel'; panel.id = 'sdcPanel';
@@ -145,6 +145,7 @@
 
     document.body.appendChild(fab);
     document.body.appendChild(panel);
+    if (cfg.showFab === false) panel.style.bottom = '22px';
 
     $('sdcClose').onclick = close;
     $('sdcBack').onclick = function () { state.room = null; renderList(); loadSummary(); };
@@ -181,6 +182,7 @@
       el.textContent = total > 99 ? '99+' : (total || '');
       el.style.display = total ? '' : 'none';
     });
+    if (typeof cfg.onUnread === 'function') { try { cfg.onUnread(total); } catch (e) {} }
   }
 
   function loadSummary() {
@@ -364,7 +366,8 @@
        user: function(){ return {loginId, name}; },
        accent: '#3a63d8',           // ボタン・自分の吹き出しの色
        badgeIds: ['menuBadgeId'],   // 未読数を一緒に出す要素のid（省略可）
-       showFab: true                // 右下の💬ボタンを出すか
+       showFab: true,               // 右下の💬ボタンを出すか（false＝メニューやカードから ShiodomeChat.open() で開く）
+       onUnread: function(n){}      // 未読数が変わるたびに呼ばれる（省略可）
      })
      ShiodomeChat.open()            // メニューなどから開くとき
   */

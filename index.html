@@ -43,12 +43,20 @@
   .nav-item svg{width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.7;}
   .nav-item:hover{background:#fff;}
   .nav-item.active{background:#fff; font-weight:700; box-shadow:0 4px 14px rgba(90,70,190,.06);}
+  /* 2026-10-14：「投稿する」は白地に青罫。もとの塗りつぶしデザインは「本部とのチャット」ボタン（.nav-chat）に */
   .nav-post{
     display:block; width:100%; margin-top:12px; text-align:center; font-weight:700; font-size:15px;
+    color:#3d6fe0; background:#fff; border:2px solid #4f8ef0; padding:11px; border-radius:999px; cursor:pointer;
+  }
+  .nav-post:hover{background:#f2f6ff;}
+  .nav-chat{
+    display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin-top:8px; font:inherit; font-weight:700; font-size:15px;
     color:#fff; background:var(--grad); border:none; padding:13px; border-radius:999px; cursor:pointer;
     box-shadow:0 8px 20px rgba(96,86,220,.28);
   }
-  .nav-post:hover{filter:brightness(1.06);}
+  .nav-chat:hover{filter:brightness(1.06);}
+  .nav-chat .chat-count{display:inline-block; min-width:20px; padding:1px 7px; border-radius:999px; background:#e0322c; color:#fff; font-size:11px; font-weight:800; line-height:18px; text-align:center; box-shadow:0 0 0 2px #fff;}
+  .nav-chat .chat-count:empty{display:none;}
 
   /* ===== 中央カラム ===== */
   .col-center{flex:1; min-width:0; max-width:920px;}
@@ -345,8 +353,10 @@ html.law-y{
 }
 html.law-y body{background:linear-gradient(180deg,var(--bg1) 0%,var(--bg2) 55%,#eef7f1 100%);}
 html.law-y .c-head{background:rgba(232,245,236,.86);}
-html.law-y .nav-post,
+html.law-y .nav-chat,
 html.law-y .guide-btn{box-shadow:0 8px 20px rgba(67,160,71,.26);}
+html.law-y .nav-post{color:#2e8f5a; border-color:#43a047;}
+html.law-y .nav-post:hover{background:#f3faf5;}
 html.law-y .post-btn{box-shadow:0 6px 16px rgba(67,160,71,.26);}
 html.law-y .post.mine{box-shadow:0 8px 22px rgba(67,160,71,.12);}
 html.law-y .nav-item.active,
@@ -588,12 +598,11 @@ if(HQ_MODE && !HQ_AUTHED) setTimeout(function(){ var el=document.getElementById(
       <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>文字起こし</a>
     <a class="tool-item" href="https://kimkat01.github.io/anpi/anpi_admin.html" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24"><path d="M12 2 3 6v6c0 5 4 8.5 9 10 5-1.5 9-5 9-10V6z"/><path d="M9 12l2 2 4-4"/></svg>危機管理対応状況</a>
-    <!-- 本部とのチャット（2026-10）：園⇔本部の1対1。中身は chat-widget.js。GAS未設定のあいだは非表示 -->
-    <a class="tool-item" id="chatLink" href="#" style="display:none" onclick="if(window.ShiodomeChat)ShiodomeChat.open();return false;">
-      <svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg><span id="chatLinkLabel">本部とのチャット</span><span class="nav-badge" id="chatBadge"></span></a>
 
     <button class="nav-post" id="navPost">＋ 投稿する</button>
     <button class="nav-draft" id="navDraft">📝 下書き<span class="draft-count" hidden>0</span></button>
+    <!-- 本部とのチャット（2026-10）：園⇔本部の1対1。中身は chat-widget.js。GAS未設定のあいだは非表示 -->
+    <button class="nav-chat" id="navChat" style="display:none" onclick="if(window.ShiodomeChat)ShiodomeChat.open();">💬 <span id="chatLinkLabel">本部とのチャット</span><span class="chat-count" id="chatBadge"></span></button>
   </aside>
 
   <!-- ===== 中央：フィード ===== -->
@@ -1794,7 +1803,7 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
   if(HQ_MODE){
     // 本部モード：全園の部屋を見られる。園を選んで表示しているときは、その園の部屋を最初に開く
     ok = ShiodomeChat.init({ side:'honbu', defaultGarden: HQ_VIEW ? HQ_VIEW.code : null,
-      user:function(){ return { loginId:'honbu', name:'' }; }, accent:accent, badgeIds:['chatBadge'] });
+      user:function(){ return { loginId:'honbu', name:'' }; }, accent:accent, badgeIds:['chatBadge'], showFab:false });
     document.getElementById('chatLinkLabel').textContent = '園長とのチャット';
   }else if(KB_LOGIN){
     var honbu = (typeof isHonbuUser==='function') && isHonbuUser();
@@ -1803,10 +1812,10 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
       garden: { code: GARDEN_INFO.code, name: GARDEN_INFO.name },
       fixedGarden: honbu ? GARDEN_INFO.code : null,   // 本部アカウントで園の画面に入ったときは、その園の部屋だけ
       user: function(){ var m = me(); return { loginId: m.loginId, name: m.name }; },
-      accent: accent, badgeIds: ['chatBadge']
+      accent: accent, badgeIds: ['chatBadge'], showFab: false   // 左メニューの「本部とのチャット」ボタンから開く
     });
   }
-  if(ok) document.getElementById('chatLink').style.display = '';
+  if(ok) document.getElementById('navChat').style.display = '';
 })();
 </script>
 </body>
