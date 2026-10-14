@@ -588,6 +588,9 @@ if(HQ_MODE && !HQ_AUTHED) setTimeout(function(){ var el=document.getElementById(
       <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>文字起こし</a>
     <a class="tool-item" href="https://kimkat01.github.io/anpi/anpi_admin.html" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24"><path d="M12 2 3 6v6c0 5 4 8.5 9 10 5-1.5 9-5 9-10V6z"/><path d="M9 12l2 2 4-4"/></svg>危機管理対応状況</a>
+    <!-- 本部とのチャット（2026-10）：園⇔本部の1対1。中身は chat-widget.js。GAS未設定のあいだは非表示 -->
+    <a class="tool-item" id="chatLink" href="#" style="display:none" onclick="if(window.ShiodomeChat)ShiodomeChat.open();return false;">
+      <svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg><span id="chatLinkLabel">本部とのチャット</span><span class="nav-badge" id="chatBadge"></span></a>
 
     <button class="nav-post" id="navPost">＋ 投稿する</button>
     <button class="nav-draft" id="navDraft">📝 下書き<span class="draft-count" hidden>0</span></button>
@@ -1779,6 +1782,31 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
   $('kbgPw').addEventListener('keydown', function(e){ if(e.key === 'Enter') kbgLogin(); });
   $('kbgNew2').addEventListener('keydown', function(e){ if(e.key === 'Enter') kbgChange(); });
   if(!KB_LOGIN) setTimeout(function(){ $('kbgId').focus(); }, 50);
+})();
+</script>
+<!-- ===== 本部とのチャット（2026-10）：kimkat01/shiodome-knowledge の chat-widget.js ===== -->
+<script src="https://kimkat01.github.io/shiodome-knowledge/chat-widget.js"></script>
+<script>
+(function(){
+  if(!window.ShiodomeChat || !ShiodomeChat.enabled || !GARDEN) return;
+  var accent = document.documentElement.classList.contains('law-y') ? '#2e9e6b' : '#5b6cf0';
+  var ok = false;
+  if(HQ_MODE){
+    // 本部モード：全園の部屋を見られる。園を選んで表示しているときは、その園の部屋を最初に開く
+    ok = ShiodomeChat.init({ side:'honbu', defaultGarden: HQ_VIEW ? HQ_VIEW.code : null,
+      user:function(){ return { loginId:'honbu', name:'' }; }, accent:accent, badgeIds:['chatBadge'] });
+    document.getElementById('chatLinkLabel').textContent = '園長とのチャット';
+  }else if(KB_LOGIN){
+    var honbu = (typeof isHonbuUser==='function') && isHonbuUser();
+    ok = ShiodomeChat.init({
+      side: honbu ? 'honbu' : 'garden',
+      garden: { code: GARDEN_INFO.code, name: GARDEN_INFO.name },
+      fixedGarden: honbu ? GARDEN_INFO.code : null,   // 本部アカウントで園の画面に入ったときは、その園の部屋だけ
+      user: function(){ var m = me(); return { loginId: m.loginId, name: m.name }; },
+      accent: accent, badgeIds: ['chatBadge']
+    });
+  }
+  if(ok) document.getElementById('chatLink').style.display = '';
 })();
 </script>
 </body>
