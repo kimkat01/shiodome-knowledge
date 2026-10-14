@@ -100,7 +100,7 @@
       '.sdc-m.mine .row{flex-direction:row-reverse}' +
       '.sdc-m .bub{padding:9px 12px;border-radius:16px;background:#fff;color:#000;white-space:pre-wrap;word-break:break-word;line-height:1.55;box-shadow:0 1px 2px rgba(20,30,70,.08)}' +
       '.sdc-m.mine .bub{background:var(--sdc-accent);color:#fff;border-bottom-right-radius:4px}' +
-      '.sdc-m:not(.mine) .bub{border-bottom-left-radius:4px}' +
+      '.sdc-m:not(.mine) .bub{background:#dbe8ff;border-bottom-left-radius:4px}' +
       '.sdc-m .meta{font-size:11px;color:#7b81a0;white-space:nowrap;display:flex;flex-direction:column;align-items:flex-end;gap:1px}' +
       '.sdc-m:not(.mine) .meta{align-items:flex-start}' +
       '.sdc-del{border:none;background:none;color:#9aa0b8;cursor:pointer;font-size:11px;padding:0;visibility:hidden}' +
