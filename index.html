@@ -402,6 +402,8 @@ html.law-y .kb-logout:hover{background:#e6f2ea;}
   </div>
 </div>
 <script src="https://kimkat01.github.io/staff-dashboard/gardens.js"></script>
+<!-- 利用状況（アクセスログ）の送信（2026-10）：左メニューのツールを開いたときに本部へ記録を送る -->
+<script src="https://kimkat01.github.io/staff-dashboard/access-log.js"></script>
 <script>
 var GARDEN_INFO = (typeof gardenFromUrl === 'function') ? gardenFromUrl() : null; // {key, name, code}
 // ★ 本部モード（2026-10）：?garden=honbu で開くと「本部」として表示する（本部ダッシュボードからのリンク用）
@@ -1815,6 +1817,50 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
     });
   }
   if(ok) document.getElementById('navChat').style.display = '';
+})();
+</script>
+<script>
+/* ============================================================
+   利用状況（アクセスログ・2026-10）
+   ・園長ダッシュボードにログインした人が、左メニューのツールを開いたら本部に記録する
+   ・ログインした時点も「ホーム」として記録（30分に1回まで）
+   ・本部用の画面（?garden=honbu）と本部アカウント（ID 9xxx・権限「本部」）は記録しない
+   ・送信の中身は access-log.js（kimkat01/staff-dashboard）
+   ============================================================ */
+(function(){
+  function current(){
+    if(typeof HQ_MODE !== 'undefined' && HQ_MODE) return null;
+    var s = null;
+    try{ s = kbReadLogin(); }catch(e){}
+    if(!s || !s.loginId) return null;
+    if(s.role === '本部' || /^9\d{3}$/.test(String(s.loginId))) return null;
+    return s;
+  }
+  function kbLog(tool){
+    var s = current();
+    if(!s || !tool || !window.ShiodomeLog) return;
+    ShiodomeLog.send({ dash:'園長', garden:GARDEN, loginId:s.loginId, name:s.name || '', role:s.role || '', tool:tool });
+  }
+  window.kbLog = kbLog;
+
+  var nav = document.querySelector('.col-left');
+  if(nav){
+    nav.addEventListener('click', function(e){
+      var a = e.target.closest && e.target.closest('a.tool-item');
+      if(!a) return;
+      var c = a.cloneNode(true);
+      Array.prototype.forEach.call(c.querySelectorAll('.nav-badge, svg'), function(x){ x.parentNode.removeChild(x); });
+      kbLog(c.textContent.replace(/\s+/g, ' ').trim());
+    }, true);
+  }
+
+  // ログイン画面から入ったとき
+  if(typeof window.kbgEnter === 'function'){
+    var enter = window.kbgEnter;
+    window.kbgEnter = function(){ var r = enter.apply(this, arguments); kbLog('ホーム'); return r; };
+  }
+  // すでにログイン済みで開いたとき
+  kbLog('ホーム');
 })();
 </script>
 </body>
