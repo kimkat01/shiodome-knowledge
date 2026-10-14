@@ -32,6 +32,14 @@
     var g = gardens().filter(function (x) { return x.code === code; })[0];
     return g ? g.name : code;
   }
+  /* 送り主に出す短い園名：「しおどめ保育園」などを除く（例：しおどめ保育園八潮駅北→八潮駅北、守谷しおどめ保育園→守谷） */
+  function shortName(name) {
+    var n = String(name || '');
+    if (/しおどめ保育園/.test(n)) n = n.replace('しおどめ保育園', '');
+    else if (/^認定こども園/.test(n)) n = n.replace(/^認定こども園/, '');
+    else n = n.replace('しおどめ', '').replace('保育園', '');
+    return n.replace(/^[\s　]+|[\s　]+$/g, '') || String(name || '');
+  }
   function user() { var u = (cfg.user && cfg.user()) || {}; return { loginId: String(u.loginId || ''), name: String(u.name || '') }; }
   function honbuName() { try { return localStorage.getItem(NAME_KEY) || ''; } catch (e) { return ''; } }
   function pad(n) { return (n < 10 ? '0' : '') + n; }
@@ -282,10 +290,10 @@
       var mine = m.side === cfg.side;                 // 自分の側（園側／本部側）が送ったもの
       var right = m.side === 'honbu';                 // 2026-10-14：本部の話は、園長・本部どちらの画面でも右に出す
       var canDel = mine && m.loginId === u.loginId;
-      // 送り主の表示：本部側＝「本部・名前」／園側＝「園名・名前」（園側で名前が「本部」のときは園名だけ）
+      // 送り主の表示：本部側＝「本部・名前」／園側＝「短い園名・名前」（例：八潮駅北・山田）（園側で名前が「本部」のときは園名だけ）
       var who = m.side === 'honbu'
         ? (/本部/.test(m.name || '') ? m.name : '本部' + (m.name ? '・' + m.name : ''))
-        : (m.gardenName || gardenName(m.garden)) + (m.name && !/本部/.test(m.name) ? '・' + m.name : '');
+        : shortName(m.gardenName || gardenName(m.garden)) + (m.name && !/本部/.test(m.name) ? '・' + m.name : '');
       html += '<div class="sdc-m' + (right ? ' mine' : '') + '">' +
         '<div class="who">' + esc(who) + '</div>' +
         '<div class="row"><div class="bub">' + esc(m.text) + '</div>' +
