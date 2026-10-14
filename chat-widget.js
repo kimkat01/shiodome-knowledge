@@ -95,7 +95,7 @@
       '.sdc-m .meta{font-size:11px;color:#7b81a0;white-space:nowrap;display:flex;flex-direction:column;align-items:flex-end;gap:1px}' +
       '.sdc-m:not(.mine) .meta{align-items:flex-start}' +
       '.sdc-del{border:none;background:none;color:#9aa0b8;cursor:pointer;font-size:11px;padding:0;visibility:hidden}' +
-      '.sdc-m.mine:hover .sdc-del{visibility:visible}' +
+      '.sdc-m:hover .sdc-del{visibility:visible}' +
       '.sdc-del:hover{color:#e5383b}' +
       '.sdc-empty{padding:40px 20px;text-align:center;color:#7b81a0;font-size:14px;line-height:1.8}' +
       '.sdc-foot{border-top:1px solid #e6e9f2;background:#fff;padding:8px 10px}' +
@@ -279,10 +279,11 @@
     state.msgs.forEach(function (m) {
       var day = fmtDay(m.ts);
       if (day !== lastDay) { html += '<div class="sdc-day"><span>' + esc(day) + '</span></div>'; lastDay = day; }
-      var mine = m.side === cfg.side;
+      var mine = m.side === cfg.side;                 // 自分の側（園側／本部側）が送ったもの
+      var right = m.side === 'honbu';                 // 2026-10-14：本部の話は、園長・本部どちらの画面でも右に出す
       var canDel = mine && m.loginId === u.loginId;
       var who = m.side === 'honbu' ? (/本部/.test(m.name || '') ? m.name : '本部' + (m.name ? '・' + m.name : '')) : (m.name || gardenName(m.garden));
-      html += '<div class="sdc-m' + (mine ? ' mine' : '') + '">' +
+      html += '<div class="sdc-m' + (right ? ' mine' : '') + '">' +
         '<div class="who">' + esc(who) + '</div>' +
         '<div class="row"><div class="bub">' + esc(m.text) + '</div>' +
         '<div class="meta">' + (mine && state.otherRead >= m.ts ? '<span>既読</span>' : '') + '<span>' + fmtTime(m.ts) + '</span>' +
