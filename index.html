@@ -1806,11 +1806,11 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
       user:function(){ return { loginId:'honbu', name:'' }; }, accent:accent, badgeIds:['chatBadge'], showFab:false });
     document.getElementById('chatLinkLabel').textContent = '園長とのチャット';
   }else if(KB_LOGIN){
-    var honbu = (typeof isHonbuUser==='function') && isHonbuUser();
+    // 2026-10-14：園の画面（?garden=園キー）から送ったものは、本部アカウント（ID 9始まり等）でログインしていても「その園」として扱う
+    //   本部として話すときは、本部ダッシュボードの「園長とのチャット」カードか、ポータルサイト本部用（?garden=honbu）を使う
     ok = ShiodomeChat.init({
-      side: honbu ? 'honbu' : 'garden',
+      side: 'garden',
       garden: { code: GARDEN_INFO.code, name: GARDEN_INFO.name },
-      fixedGarden: honbu ? GARDEN_INFO.code : null,   // 本部アカウントで園の画面に入ったときは、その園の部屋だけ
       user: function(){ var m = me(); return { loginId: m.loginId, name: m.name }; },
       accent: accent, badgeIds: ['chatBadge'], showFab: false   // 左メニューの「本部とのチャット」ボタンから開く
     });
