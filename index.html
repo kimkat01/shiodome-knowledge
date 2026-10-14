@@ -1854,6 +1854,10 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
     }, true);
   }
 
+  // 本部とのチャット（左メニュー下のボタン）は「しおどめチャット」として記録
+  var chatBtn = document.getElementById('navChat');
+  if(chatBtn) chatBtn.addEventListener('click', function(){ kbLog('しおどめチャット'); }, true);
+
   // ログイン画面から入ったとき
   if(typeof window.kbgEnter === 'function'){
     var enter = window.kbgEnter;
