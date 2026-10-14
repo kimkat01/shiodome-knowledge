@@ -282,7 +282,10 @@
       var mine = m.side === cfg.side;                 // 自分の側（園側／本部側）が送ったもの
       var right = m.side === 'honbu';                 // 2026-10-14：本部の話は、園長・本部どちらの画面でも右に出す
       var canDel = mine && m.loginId === u.loginId;
-      var who = m.side === 'honbu' ? (/本部/.test(m.name || '') ? m.name : '本部' + (m.name ? '・' + m.name : '')) : (m.name || gardenName(m.garden));
+      // 送り主の表示：本部側＝「本部・名前」／園側＝「園名・名前」（園側で名前が「本部」のときは園名だけ）
+      var who = m.side === 'honbu'
+        ? (/本部/.test(m.name || '') ? m.name : '本部' + (m.name ? '・' + m.name : ''))
+        : (m.gardenName || gardenName(m.garden)) + (m.name && !/本部/.test(m.name) ? '・' + m.name : '');
       html += '<div class="sdc-m' + (right ? ' mine' : '') + '">' +
         '<div class="who">' + esc(who) + '</div>' +
         '<div class="row"><div class="bub">' + esc(m.text) + '</div>' +

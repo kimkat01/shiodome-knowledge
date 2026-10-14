@@ -1811,7 +1811,8 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
     ok = ShiodomeChat.init({
       side: 'garden',
       garden: { code: GARDEN_INFO.code, name: GARDEN_INFO.name },
-      user: function(){ var m = me(); return { loginId: m.loginId, name: m.name }; },
+      // 本部用IDでログインしているときは名前（＝「本部」）を送らず、園名だけで表示する
+      user: function(){ var m = me(); return { loginId: m.loginId, name: (typeof isHonbuUser==='function' && isHonbuUser()) ? '' : m.name }; },
       accent: accent, badgeIds: ['chatBadge'], showFab: false   // 左メニューの「本部とのチャット」ボタンから開く
     });
   }
