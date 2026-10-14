@@ -600,7 +600,6 @@ if(HQ_MODE && !HQ_AUTHED) setTimeout(function(){ var el=document.getElementById(
       <svg viewBox="0 0 24 24"><path d="M12 2 3 6v6c0 5 4 8.5 9 10 5-1.5 9-5 9-10V6z"/><path d="M9 12l2 2 4-4"/></svg>危機管理対応状況</a>
 
     <button class="nav-post" id="navPost">＋ 投稿する</button>
-    <button class="nav-draft" id="navDraft">📝 下書き<span class="draft-count" hidden>0</span></button>
     <!-- 本部とのチャット（2026-10）：園⇔本部の1対1。中身は chat-widget.js。GAS未設定のあいだは非表示 -->
     <button class="nav-chat" id="navChat" style="display:none" onclick="if(window.ShiodomeChat)ShiodomeChat.open();">💬 <span id="chatLinkLabel">本部とのチャット</span><span class="chat-count" id="chatBadge"></span></button>
   </aside>
@@ -736,7 +735,7 @@ if(HQ_MODE && !HQ_AUTHED) setTimeout(function(){ var el=document.getElementById(
     <p class="g-sub">しおどめポータルサイトの基本的な使い方</p>
     <ol>
       <li><b>投稿する：</b>左メニューの「＋投稿する」を押すと入力画面が開きます。投稿者・内容を入力し、トピック（お知らせ／質問／ノウハウ／できごと）を選んで「投稿」を押してください。写真は複数枚まとめて添付でき、Excel・PDFファイルも 📎 から添付できます（1投稿につき最大10件）。</li>
-      <li><b>下書き：</b>入力画面の「下書き保存」を押すと、投稿せずに保存できます（書きかけのまま閉じたときも自動で保存）。左メニューの「📝 下書き」から、あとで修正・投稿・削除ができます。下書きはこのパソコンにだけ保存されます。</li>
+      <li><b>下書き：</b>入力画面の「下書き保存」を押すと、投稿せずに保存できます（書きかけのまま閉じたときも自動で保存）。「＋投稿する」で開いた画面の右上「📝 下書き一覧」から、あとで修正・投稿・削除ができます。下書きはこのパソコンにだけ保存されます。</li>
       <li><b>投稿を編集・削除する：</b>自分（ログイン中の人）の投稿には「編集」「削除」ボタンが表示されます。投稿は全園で共有され、1分ごとに自動で最新になります。</li>
       <li><b>フィードを検索する：</b>フィード上部の検索欄にキーワードを入力すると、該当する投稿だけに絞り込まれます。</li>
       <li><b>いいね：</b>♡を押すと「いいね」でき、誰がいいねしたかが投稿の下に表示されます。</li>
@@ -1200,7 +1199,7 @@ function closePostModal(skipAutoSave){
   return p;
 }
 draftBtn.addEventListener("click",()=>{
-  saveDraft().then(ok=>{ if(!ok) return; closePostModal(true); toast("下書きに保存しました（左の「下書き」から続きを書けます）"); });
+  saveDraft().then(ok=>{ if(!ok) return; closePostModal(true); toast("下書きに保存しました（「＋投稿する」→「下書き一覧」から続きを書けます）"); });
 });
 document.getElementById("pmDraftLink").addEventListener("click",()=>{ closePostModal().then(openDrafts); });
 
@@ -1292,7 +1291,6 @@ document.getElementById("draftList").addEventListener("click",e=>{
     }
   });
 });
-document.getElementById("navDraft").addEventListener("click", openDrafts);
 document.addEventListener("keydown",e=>{
   if(e.key!=="Escape") return;
   if(document.getElementById("photoView").classList.contains("show")) return;
