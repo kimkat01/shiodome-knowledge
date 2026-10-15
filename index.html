@@ -174,7 +174,7 @@
   .post-modal-close{border:none; background:#f0edfd; color:var(--sub); width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:15px; line-height:1;}
   .like-by{font-size:11px; color:var(--sub); margin-top:8px; padding:0 2px; line-height:1.5;}
 
-  .feed{display:flex; flex-direction:column; gap:20px;}
+  .feed{display:flex; flex-direction:column; gap:20px; overflow-anchor:none;}
   .post{background:var(--card); border:1px solid var(--line); border-radius:22px; padding:18px 20px; box-shadow:0 6px 20px rgba(90,70,190,.05); animation:rise .3s ease both;}
   .post.mine{background:var(--grad-soft); border-color:transparent; box-shadow:0 8px 22px rgba(96,86,220,.12);}
   @keyframes rise{from{opacity:0; transform:translateY(7px)} to{opacity:1; transform:none}}
@@ -871,7 +871,11 @@ const DEMO_POSTS = (()=>{
 })();
 /* 表示順：実際の投稿（新しい順）→ ダミー（新しい順） */
 const byNew = (a,b)=>b.ts-a.ts;
-function allPosts(){ return [...posts.slice().sort(byNew), ...DEMO_POSTS.slice().sort(byNew)]; }
+/* 2026-10：本番GASの読み込みが終わるまではダミーを出さない（読み込み中にダミーだけが表示されて止まって見えるのを防ぐ） */
+function allPosts(){
+  if(FEED_LIVE && !feedLoaded) return [];
+  return [...posts.slice().sort(byNew), ...DEMO_POSTS.slice().sort(byNew)];
+}
 function findPost(id){ return allPosts().find(x=>String(x.id)===String(id)); }
 
 function ago(ts){
@@ -901,7 +905,14 @@ function feedPost(action, data){
   return fetch(FEED_GAS_URL, {method:"POST", body:JSON.stringify(payload), redirect:"follow"})
     .then(r=>r.text()).then(t=>{ let d=null; try{ d=JSON.parse(t); }catch(e){} if(!d) throw new Error("サーバーの応答を読み取れませんでした"); if(!d.ok) throw new Error(d.message||"保存に失敗しました"); return d; });
 }
-function applyServer(d){ if(d && Array.isArray(d.posts)){ posts = d.posts; feedLoaded = true; render(); } }
+function applyServer(d){
+  if(d && Array.isArray(d.posts)){
+    const first = !feedLoaded;
+    posts = d.posts; feedLoaded = true; render();
+    // 初回の読み込み完了時は、フィードの一番上（最新の投稿）から表示する
+    if(first){ try{ window.scrollTo(0,0); feed.scrollTop = 0; }catch(e){} }
+  }
+}
 function loadFeed(silent){
   if(!FEED_LIVE) return Promise.resolve();
   return feedGet().then(d=>{
@@ -911,6 +922,7 @@ function loadFeed(silent){
     applyServer(d);
   }).catch(err=>{
     if(!silent) toast("フィードを読み込めませんでした："+(err.message||"通信エラー"));
+    if(!feedLoaded){ feedLoaded = true; render(); }   // 読み込めなかったときは「読み込み中…」のまま止まらないよう、表示を戻す
   });
 }
 function runAction(action, data, okMsg){
