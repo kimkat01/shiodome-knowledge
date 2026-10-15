@@ -860,21 +860,13 @@ let posts = [];
 const DEMO_POSTS = (()=>{
   const now = Date.now();
   return [
-    { id:"demo1", demo:true, code:"本部", name:"藤井", org:"hq", loginId:"-", topic:"お知らせ", ts: now-1000*60*35,
-      body:"来月の合同研修の日程が決まりました。詳細は近日中にナレッジボードに掲載します。各園、シフト調整のご準備をお願いします。",
-      img:null, likers:[{id:"x1",name:"中村"},{id:"x2",name:"高橋"},{id:"x3",name:"伊藤"}],
-      comments:[ {id:"dc1", code:"S03", name:"中村", org:"shiba", text:"了解しました！助かります。"} ] },
-    { id:"demo2", demo:true, code:"S07", name:"小林", org:"shiba", loginId:"-", topic:"ノウハウ", ts: now-1000*60*60*2,
+    { id:"demo2", demo:true, code:"S07", name:"小林ダミー", org:"shiba", loginId:"-", topic:"ノウハウ", ts: now-1000*60*60*2,
       body:"雨の日の室内遊び、新聞紙プールが大好評でした。片付けも子どもたちが競うように手伝ってくれて楽ちんでした🎉",
-      img:SAMPLE_IMG, likers:[{id:"x4",name:"渡辺"},{id:"x5",name:"小林"},{id:"x6",name:"佐藤"},{id:"x7",name:"田中"}],
+      img:SAMPLE_IMG, likers:[{id:"x4",name:"渡辺"},{id:"x5",name:"小林ダミー"},{id:"x6",name:"佐藤"},{id:"x7",name:"田中"}],
       comments:[
         {id:"dc2", code:"Y02", name:"渡辺", org:"yuga", text:"うちでもやってみます！新聞紙どのくらい用意しましたか？"},
-        {id:"dc3", code:"S07", name:"小林", org:"shiba", text:"45Lゴミ袋2つ分くらいで十分でした〜"}
+        {id:"dc3", code:"S07", name:"小林ダミー", org:"shiba", text:"45Lゴミ袋2つ分くらいで十分でした〜"}
       ] },
-    { id:"demo3", demo:true, code:"Y01", name:"高橋", org:"yuga", loginId:"-", topic:"質問", ts: now-1000*60*60*5,
-      body:"アレルギー対応の献立表、最新のひな形ってどこにありましたっけ？探しても見つからず…",
-      img:null, likers:[{id:"x8",name:"藤井"}],
-      comments:[ {id:"dc4", code:"本部", name:"藤井", org:"hq", text:"「申請ひな形」の中に上げ直しました。確認してみてください。"} ] },
   ];
 })();
 /* 表示順：実際の投稿（新しい順）→ ダミー（新しい順） */
