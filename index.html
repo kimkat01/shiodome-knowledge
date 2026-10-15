@@ -1615,11 +1615,26 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
       : '園を選ぶと、その園の有給チェッカー・規約マニュアルが開けます。';
     document.getElementById('hqView').style.display = 'block';
 
-    // 決裁申請・採用計画申請書は園長の申請フォームなので、本部モードでは常に隠す
-    hide('kessaiLink'); hide('saiyoLink');
+    // 2026-10-15：左メニューは各園と全く同じ並びで表示する。本部で使えない項目は隠さず、
+    //   グレー表示＋リンクなしにし、クリックすると「開けない理由」をポップアップで出す
+    var lock = function(id, reason){
+      var el = document.getElementById(id); if(!el) return;
+      el.classList.add('locked');
+      el.removeAttribute('href'); el.removeAttribute('target');
+      el.title = '本部画面では開けません';
+      el.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); alert(reason); }, true);
+    };
+    // 決裁申請・採用計画申請書は園長が本部へ申請するフォームなので、本部モードでは常に開けない
+    lock('kessaiLink', '「決裁申請」は園長が本部へ申請するためのフォームのため、本部画面からは開けません。\n\n届いた申請は、本部ダッシュボードの「決裁承認」から確認できます。');
+    lock('saiyoLink', '「採用計画申請書」は園長が本部へ申請するためのフォームのため、本部画面からは開けません。\n\n届いた申請は、本部ダッシュボードの「採用計画承認」から確認できます。');
     if(!HQ_VIEW){
-      // 園を選んでいないときは、園ごとのツールも隠す（月次収支・ヒヤリハット等は園指定なしのリンクのまま）
-      hide('uqLink'); hide('manualLink'); hide('kpLink');
+      // 園を選んでいないときは、園ごとのツールも開けない（月次収支・伝達くん等は園指定なしのリンクのまま）
+      var needGarden = function(name){
+        return '「' + name + '」は園ごとのツールのため、園を選んでいないと開けません。\n\n左上の「表示する園」で園を選ぶと開けるようになります。';
+      };
+      lock('uqLink', needGarden('有給チェッカー'));
+      lock('manualLink', needGarden('規約・マニュアル'));
+      lock('kpLink', needGarden('給食・駐車場'));
       return;
     }
     // 園を選んでいるときは、下の通常処理でその園のリンクに切り替える
@@ -1633,8 +1648,10 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
   // 月次収支レポート・決裁申請・採用計画申請書にも園を引き継ぐ（雄雅会の園は緑テーマ＋月次収支は雄雅会版になる）
   var gq = '?garden=' + GARDEN_INFO.key;
   document.getElementById('keieiLink').href  = 'https://kimkat01.github.io/shiodome-knowledge/keiei-dashboard.html' + gq;
-  document.getElementById('kessaiLink').href = 'kessai-shinsei.html' + gq;
-  document.getElementById('saiyoLink').href  = 'saiyo-shinsei.html' + gq;
+  if(!HQ_MODE){   // 本部モードでは決裁申請・採用計画申請書はリンクなし（上の lock のまま）
+    document.getElementById('kessaiLink').href = 'kessai-shinsei.html' + gq;
+    document.getElementById('saiyoLink').href  = 'saiyo-shinsei.html' + gq;
+  }
   document.getElementById('kpLink').href     = 'kp-list.html' + gq;
   document.getElementById('hiyariLink').href = 'https://kimkat01.github.io/hiyari-hatto2/' + gq;
 })();
