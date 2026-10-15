@@ -284,7 +284,9 @@
 /* 「製作中」タグ（AIモニタリング・経営情報） */
 .soon-tag{margin-left:auto;font-size:10px;font-weight:700;color:#8a8f9c;background:#eceef4;border-radius:999px;padding:2px 8px;letter-spacing:.02em;}
 /* 「NEW」赤丸タグ（更新したメニューに付ける。外すときは<span class="new-tag">NEW</span>を消すだけ） */
-.new-tag{margin-left:auto;display:inline-flex;align-items:center;justify-content:center;height:20px;padding:0 8px;border-radius:999px;background:#e0322c;color:#fff;font-size:10px;font-weight:800;letter-spacing:.04em;line-height:1;box-shadow:0 1px 3px rgba(224,50,44,.4);flex:none;}
+.new-tag{margin-left:auto;display:inline-flex;align-items:center;justify-content:center;height:20px;padding:0 8px;border-radius:999px;background:#e0322c;color:#fff;font-size:10px;font-weight:800;letter-spacing:.04em;line-height:1;box-shadow:0 1px 3px rgba(224,50,44,.4);flex:none;animation:newBlink 1.2s ease-in-out infinite;}
+@keyframes newBlink{0%,100%{opacity:1;}50%{opacity:.25;}}
+@media (prefers-reduced-motion:reduce){.new-tag{animation:none;}}
 /* 使い方ガイド ボタン */
 .guide-btn{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:52px;padding:11px 14px;border-radius:14px;text-decoration:none;font-size:14px;font-weight:700;color:#fff;background:var(--grad);box-shadow:0 8px 20px rgba(96,86,220,.24);transition:filter .12s;}
 .guide-btn:hover{filter:brightness(1.06);}
