@@ -10,6 +10,8 @@
   開き方：ナレッジボード（園長ダッシュボード）左メニューの「給食・駐車場」から ?garden=園キー 付きで開く
   データ：職員ダッシュボードの「きょうの給食／駐車場」ボタンの記録
           （スプレッドシート「給食駐車場記録」のGAS、action=list）
+  修正：2026-10-16〜 園長（と本部）だけ、回数や日付のマスをクリックして修正できる
+        （保存は同じGASの action=save。主任・事務は見るだけ）
   期間：連絡票と同じ 16日〜翌月15日
 -->
 <style>
@@ -65,8 +67,45 @@
   .msg{padding:40px 16px;text-align:center;color:var(--sub);font-size:15px;line-height:1.8;}
   .note{font-size:13px;color:var(--sub);line-height:1.7;margin:12px 2px;}
   #err{display:none;}
+  /* ---- 園長の修正（2026-10-16） ---- */
+  .edit-hint{display:none;background:#fff8e6;border:1px solid #f1d58a;border-radius:10px;padding:8px 12px;font-size:14px;font-weight:700;margin:0 0 10px;}
+  body.can-edit .edit-hint{display:block;}
+  body.can-edit td.tot,body.can-edit td.day:not(.fut){cursor:pointer;}
+  body.can-edit td.tot span.num{display:inline-block;min-width:30px;padding:2px 6px;border-radius:8px;border:1px dashed transparent;}
+  body.can-edit td.tot:hover span.num{border-color:currentColor;background:#fff;}
+  body.can-edit td.day:not(.fut):hover{background:var(--blue-pale);}
+  .ro-note{font-size:13px;color:var(--sub);margin:0 0 8px;}
+  .ed-scrim{position:fixed;inset:0;background:rgba(20,22,40,.42);display:none;align-items:center;justify-content:center;z-index:50;padding:16px;}
+  .ed-scrim.on{display:flex;}
+  .ed-card{background:#fff;border-radius:16px;width:min(760px,100%);max-height:calc(100vh - 32px);display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,.25);}
+  .ed-head{padding:16px 18px 10px;border-bottom:1px solid var(--line);}
+  .ed-head h2{margin:0;font-size:19px;}
+  .ed-head p{margin:4px 0 0;font-size:14px;color:var(--sub);}
+  .ed-tot{display:flex;gap:16px;margin-top:8px;font-size:15px;font-weight:800;}
+  .ed-body{padding:12px 18px;overflow:auto;}
+  .ed-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;}
+  .ed-wh{font-size:12px;font-weight:800;color:var(--sub);text-align:center;}
+  .ed-wh.sat{color:var(--sat)} .ed-wh.sun{color:var(--sun)}
+  .ed-day{border:1px solid var(--line);border-radius:10px;padding:5px 4px;text-align:center;background:#fff;}
+  .ed-day.blank{border:none;background:transparent;}
+  .ed-day.fut{background:#f3f3f3;opacity:.55;}
+  .ed-day.focus{outline:3px solid #f1b84a;}
+  .ed-day.changed{background:#fff8e6;}
+  .ed-d{font-size:13px;font-weight:800;margin-bottom:4px;}
+  .ed-d.sat{color:var(--sat)} .ed-d.sun{color:var(--sun)}
+  .ed-tg{display:flex;gap:4px;justify-content:center;}
+  .ed-tg button{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:#fff;color:#b5b9c2;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;padding:0;}
+  .ed-tg button.on.m{background:var(--meal-bg);color:var(--meal);border-color:var(--meal);}
+  .ed-tg button.on.p{background:var(--park-bg);color:var(--park);border-color:var(--park);}
+  .ed-tg button:disabled{cursor:default;}
+  .ed-foot{padding:12px 18px;border-top:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .ed-foot .info{flex:1;font-size:14px;color:var(--sub);font-weight:700;}
+  .btn.primary{background:var(--blue);border-color:var(--blue);color:#fff;}
+  .btn.primary:hover{background:var(--blue-dark);}
+  .btn:disabled{opacity:.5;cursor:default;}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1f2937;color:#fff;padding:10px 18px;border-radius:999px;font-size:14px;font-weight:700;display:none;z-index:60;}
   @media (max-width:600px){ .summary b{font-size:22px;} .ttl{font-size:16px;min-width:120px;} }
-  @media print{ header .home-btn,.bar .btn,.nav button{display:none;} .wrap{max-height:none;overflow:visible;box-shadow:none;} body{background:#fff;} }
+  @media print{ header .home-btn,.bar .btn,.nav button,.edit-hint,.ro-note{display:none;} .wrap{max-height:none;overflow:visible;box-shadow:none;} body{background:#fff;} }
 </style>
 <script src="https://kimkat01.github.io/staff-dashboard/gardens.js"></script>
 <script>
@@ -103,20 +142,42 @@
       <div><b id="sMeal" style="color:var(--meal)">-</b><span>🍚 給食 合計</span></div>
       <div><b id="sPark" style="color:var(--park)">-</b><span>🚗 駐車場 合計</span></div>
     </div>
+    <div class="edit-hint">✏️ 園長は、回数の数字や日付のマスをクリックすると記録を修正できます。</div>
+    <div class="ro-note" id="roNote" style="display:none">※ 記録の修正は園長のみできます（園長ダッシュボードにログインして開いてください）。</div>
     <div class="legend"><span><span class="m chip-m">給</span> 給食を食べた</span><span><span class="p chip-p">駐</span> 駐車場を使った</span><span>黄色＝今日</span></div>
     <div class="wrap" id="wrap"><div class="msg">読み込み中…</div></div>
     <p class="note">
       ・職員が職員ダッシュボード（シフト管理）の「きょうの給食／駐車場」で押した内容です。期間は連絡票と同じ16日〜翌月15日です。<br>
       ・一度でも「食べた」「使った」を押した職員が表示されます（押したことがない職員は表示されません）。<br>
-      ・この回数が月末の連絡票（給食・駐車場の回数）に使われます。記録の修正が必要なときは、本部にご連絡ください。
+      ・この回数が月末の連絡票（給食・駐車場の回数）に使われます。押し忘れ・押し間違いは園長がこの画面で修正できます。
     </p>
   </div>
 </main>
+
+<!-- 園長の修正画面（1人分の1ヶ月をカレンダーで直す） -->
+<div class="ed-scrim" id="edScrim">
+  <div class="ed-card" role="dialog" aria-modal="true" aria-labelledby="edTitle">
+    <div class="ed-head">
+      <h2 id="edTitle"></h2>
+      <p id="edSub"></p>
+      <div class="ed-tot"><span style="color:var(--meal)">🍚 給食 <span id="edM">0</span>回</span><span style="color:var(--park)">🚗 駐車場 <span id="edP">0</span>回</span></div>
+    </div>
+    <div class="ed-body"><div class="ed-grid" id="edGrid"></div></div>
+    <div class="ed-foot">
+      <div class="info" id="edInfo">「給」「駐」を押すと ON／OFF が切り替わります。</div>
+      <button class="btn" id="edCancel">キャンセル</button>
+      <button class="btn primary" id="edSave">保存する</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
 <script>
 var KP_ENDPOINT = "https://script.google.com/macros/s/AKfycbxov7LyccCioWBxq64G0XdgcI-IRscXzQYghWXl3Xc8hD-tK25l7o3Bfn7Fb636v8Bzeg/exec";
 var G = (typeof gardenFromUrl==='function') ? gardenFromUrl() : null;
 var OFS = 0, CACHE = {}, CUR = null;
 var W = ["日","月","火","水","木","金","土"];
+var EDITOR = null;   // 修正できる人（園長・本部）。それ以外は null＝見るだけ
+var EDIT_ROLES = ['園長','本部'];   // 修正できる権限（ログインマスタG列）
 
 function pad(n){ return ('0'+n).slice(-2); }
 function iso(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
@@ -142,6 +203,14 @@ if(!G){
   document.getElementById('next').onclick=function(){ if(OFS<0){ OFS++; draw(); } };
   document.getElementById('reload').onclick=function(){ delete CACHE[period(OFS).start]; draw(); };
   document.getElementById('csv').onclick=downloadCsv;
+  EDITOR = readEditor();
+  if(EDITOR) document.body.classList.add('can-edit');
+  else document.getElementById('roNote').style.display='block';
+  document.getElementById('wrap').addEventListener('click', onTableClick);
+  document.getElementById('edCancel').onclick=closeEditor;
+  document.getElementById('edSave').onclick=saveEditor;
+  document.getElementById('edScrim').addEventListener('click', function(e){ if(e.target.id==='edScrim') closeEditor(); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeEditor(); });
   draw();
 }
 
@@ -186,10 +255,11 @@ function render(p,d){
     h+='<th class="'+c+'">'+(x.getMonth()+1)+'/'+x.getDate()+'<br>'+W[w]+'</th>';
   });
   h+='</tr></thead><tbody>';
-  staff.forEach(function(s){
-    h+='<tr><td class="name">'+esc(s.name)+'</td><td class="tot tm">'+(s.meal||0)+'</td><td class="tot tp">'+(s.park||0)+'</td>';
+  staff.forEach(function(s,i){
+    h+='<tr><td class="name">'+esc(s.name)+'</td><td class="tot tm" data-i="'+i+'"><span class="num">'+(s.meal||0)+'</span></td><td class="tot tp" data-i="'+i+'"><span class="num">'+(s.park||0)+'</span></td>';
     ds.forEach(function(x){
       var k=iso(x), r=(s.days||{})[k]||{}, c='day'+(k===today?' today':k>today?' fut':'');
+      c+='" data-i="'+i+'" data-d="'+k;
       var inner=(r.meal?'<span class="m chip-m">給</span>':'')+(r.park?'<span class="p chip-p">駐</span>':'');
       h+='<td class="'+c+'"><div class="cell">'+inner+'</div></td>';
     });
@@ -198,6 +268,132 @@ function render(p,d){
   h+='</tbody></table>';
   wrap.innerHTML=h;
 }
+
+/* ============================================================
+   園長の修正（2026-10-16）
+   ・修正できるのは ログインマスタの権限「園長」の人 と 本部
+   ・園長ダッシュボードの左メニューから開いたときに渡される引き継ぎメモ（10分有効）で判定し、
+     このタブを閉じるまで有効。「ログインしたままにする」で入っている園長はそのログイン情報でも判定
+   ・保存は今までと同じGAS（action=save）。その日の給食・駐車場を両方まとめて上書きする
+   ============================================================ */
+function readEditor(){
+  var own='kp_auth__'+G.key, hk='kp_handoff__'+G.key, s=null;
+  try{
+    var h=JSON.parse(localStorage.getItem(hk)||'null');
+    localStorage.removeItem(hk);
+    if(h && h.exp>Date.now()) sessionStorage.setItem(own, JSON.stringify(h));
+  }catch(e){}
+  try{ s=JSON.parse(sessionStorage.getItem(own)||'null'); }catch(e){}
+  if(!s){
+    try{ var k=JSON.parse(localStorage.getItem('kb_encho_login__'+G.key)||'null');
+      if(k && (!k.exp || Date.now()<=k.exp)) s=k; }catch(e){}
+  }
+  if(!s) return null;
+  var ok = EDIT_ROLES.indexOf(s.role)>=0 || /^9\d{3}$/.test(String(s.loginId||''));
+  return ok ? s : null;
+}
+
+var ED=null;   // 編集中：{i, name, p, orig:{日付:{meal,park}}, cur:{...}}
+function onTableClick(e){
+  if(!EDITOR || !CUR) return;
+  var td=e.target.closest('td[data-i]'); if(!td) return;
+  if(td.classList.contains('fut')) return;
+  openEditor(+td.getAttribute('data-i'), td.getAttribute('data-d')||'');
+}
+function openEditor(i, focusDay){
+  var s=CUR.staff[i]; if(!s) return;
+  var orig={}, cur={};
+  days(CUR.p).forEach(function(x){ var k=iso(x), r=(s.days||{})[k]||{};
+    orig[k]={meal:r.meal?1:0, park:r.park?1:0}; cur[k]={meal:orig[k].meal, park:orig[k].park}; });
+  ED={i:i, name:s.name, p:CUR.p, orig:orig, cur:cur, focus:focusDay};
+  document.getElementById('edTitle').textContent=s.name+' さんの記録を修正';
+  document.getElementById('edSub').textContent=CUR.p.label+'（'+CUR.p.range+'）';
+  document.getElementById('edSave').disabled=false;
+  document.getElementById('edCancel').disabled=false;
+  drawEditor();
+  document.getElementById('edScrim').classList.add('on');
+  var f=document.querySelector('.ed-day.focus'); if(f) f.scrollIntoView({block:'nearest'});
+}
+function drawEditor(){
+  var today=iso(new Date()), ds=days(ED.p), h='';
+  W.forEach(function(w,j){ h+='<div class="ed-wh'+(j===6?' sat':j===0?' sun':'')+'">'+w+'</div>'; });
+  for(var b=0;b<ds[0].getDay();b++) h+='<div class="ed-day blank"></div>';
+  var m=0,pk=0,n=0;
+  ds.forEach(function(x){
+    var k=iso(x), c=ED.cur[k], o=ED.orig[k], fut=k>today, w=x.getDay();
+    var ch=(c.meal!==o.meal||c.park!==o.park); if(ch) n++;
+    m+=c.meal; pk+=c.park;
+    h+='<div class="ed-day'+(fut?' fut':'')+(ch?' changed':'')+(k===ED.focus?' focus':'')+'">'
+      +'<div class="ed-d'+(w===6?' sat':w===0?' sun':'')+'">'+(x.getMonth()+1)+'/'+x.getDate()+'</div>'
+      +'<div class="ed-tg">'
+      +'<button class="m'+(c.meal?' on':'')+'" data-k="'+k+'" data-f="meal"'+(fut?' disabled':'')+' title="給食">給</button>'
+      +'<button class="p'+(c.park?' on':'')+'" data-k="'+k+'" data-f="park"'+(fut?' disabled':'')+' title="駐車場">駐</button>'
+      +'</div></div>';
+  });
+  var g=document.getElementById('edGrid'); g.innerHTML=h;
+  g.querySelectorAll('button[data-k]').forEach(function(bt){
+    bt.onclick=function(){ var k=bt.getAttribute('data-k'), f=bt.getAttribute('data-f');
+      ED.cur[k][f]=ED.cur[k][f]?0:1; drawEditor(); };
+  });
+  document.getElementById('edM').textContent=m;
+  document.getElementById('edP').textContent=pk;
+  document.getElementById('edInfo').textContent = n ? ('変更 '+n+'日分（まだ保存していません）') : '「給」「駐」を押すと ON／OFF が切り替わります。';
+}
+function closeEditor(){
+  if(!ED) return;
+  if(document.getElementById('edSave').disabled && document.getElementById('edCancel').disabled) return; // 保存中は閉じない
+  var n=changedKeys().length;
+  if(n && !confirm('まだ保存していない変更が '+n+'日分あります。保存せずに閉じますか？')) return;
+  ED=null; document.getElementById('edScrim').classList.remove('on');
+}
+function changedKeys(){
+  return Object.keys(ED.cur).filter(function(k){ return ED.cur[k].meal!==ED.orig[k].meal || ED.cur[k].park!==ED.orig[k].park; }).sort();
+}
+function saveEditor(){
+  var ks=changedKeys();
+  if(!ks.length){ ED=null; document.getElementById('edScrim').classList.remove('on'); return; }
+  var sv=document.getElementById('edSave'), cc=document.getElementById('edCancel'), info=document.getElementById('edInfo');
+  sv.disabled=true; cc.disabled=true;
+  var done=0, failed=[];
+  function next(){
+    if(done>=ks.length) return finish();
+    var k=ks[done], c=ED.cur[k];
+    info.textContent='保存中… '+(done+1)+' / '+ks.length;
+    var url=KP_ENDPOINT+'?action=save&facility='+encodeURIComponent(G.key)+'&name='+encodeURIComponent(ED.name)
+      +'&date='+k+'&meal='+c.meal+'&park='+c.park
+      +'&by='+encodeURIComponent((EDITOR.name||EDITOR.role||'')+'（園長修正）')+'&_='+Date.now();
+    fetch(url).then(function(r){ return r.json(); }).then(function(d){
+      if(!d || !d.ok) throw new Error((d&&d.error)||'save failed');
+      ED.orig[k]={meal:c.meal, park:c.park};
+    }).catch(function(){ failed.push(k); }).then(function(){ done++; next(); });
+  }
+  function finish(){
+    applyToCache();
+    sv.disabled=false; cc.disabled=false;
+    if(failed.length){
+      drawEditor();
+      info.textContent='⚠ '+failed.length+'日分を保存できませんでした。もう一度「保存する」を押してください。';
+      return;
+    }
+    ED=null; document.getElementById('edScrim').classList.remove('on');
+    toast('保存しました（'+ks.length+'日分）');
+  }
+  next();
+}
+/* 保存できた分を一覧の表示にも反映する（読み直さずにすぐ見た目を更新） */
+function applyToCache(){
+  var s=CUR.staff[ED.i]; if(!s) return;
+  s.days=s.days||{}; var m=0,pk=0;
+  Object.keys(ED.orig).forEach(function(k){
+    var o=ED.orig[k];
+    if(o.meal||o.park) s.days[k]={meal:o.meal, park:o.park}; else delete s.days[k];
+    m+=o.meal; pk+=o.park;
+  });
+  s.meal=m; s.park=pk;
+  render(CUR.p, CACHE[CUR.p.start]||{staff:CUR.staff});
+}
+function toast(t){ var el=document.getElementById('toast'); el.textContent=t; el.style.display='block';
+  clearTimeout(toast._t); toast._t=setTimeout(function(){ el.style.display='none'; },2500); }
 
 function downloadCsv(){
   if(!CUR || !CUR.staff.length){ alert('保存できる記録がありません。'); return; }

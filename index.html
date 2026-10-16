@@ -1657,6 +1657,16 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
     document.getElementById('saiyoLink').href  = 'saiyo-shinsei.html' + gq;
   }
   document.getElementById('kpLink').href     = 'kp-list.html' + gq;
+  // 2026-10-16：給食・駐車場の一覧は「園長（と本部）だけ修正できる」。新しいタブにはログイン情報が
+  //   引き継がれないことがあるため、開く瞬間に誰が開いたかを10分だけ有効な引き継ぎメモとして渡す
+  document.getElementById('kpLink').addEventListener('click', function(){
+    try{
+      var s = HQ_MODE ? { loginId:'honbu', name:'本部', role:'本部' } : kbReadLogin();
+      if(!s) return;
+      localStorage.setItem('kp_handoff__' + GARDEN_INFO.key, JSON.stringify({
+        loginId:String(s.loginId||''), name:s.name||'', role:s.role||'', exp:Date.now() + 10*60000 }));
+    }catch(e){}
+  });
   document.getElementById('hiyariLink').href = 'https://kimkat01.github.io/hiyari-hatto2/' + gq;
 })();
 
