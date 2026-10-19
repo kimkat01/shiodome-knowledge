@@ -1754,6 +1754,20 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
 // 園長ログイン処理（2026-09）
 //   GAS：「PINマスタ_テンプレート」に紐づくWebアプリ（職員ダッシュボードと同じURL）
 // ============================================================
+// ログアウト（左メニュー下のボタン）。2026-10-19：本部用画面では下の処理が途中で終わり
+//   ボタンが効かなかったため、どの画面でも使えるようにここ（外側）で定義する
+window.kbLogout = function(){
+  if(HQ_MODE){   // 本部用画面はログインなしのため、本部ダッシュボードに戻る
+    if(!confirm('ポータルサイトを終了して、本部ダッシュボードに戻りますか？')) return;
+    location.href = 'https://kimkat01.github.io/honbu-dashboard/';
+    return;
+  }
+  if(!confirm('ログアウトしますか？')) return;
+  try{ localStorage.removeItem(KB_LOGIN_KEY); }catch(e){}
+  try{ sessionStorage.removeItem(KB_LOGIN_KEY); }catch(e){}
+  location.reload();
+};
+
 (function(){
   var AUTH_GAS_URL = 'https://script.google.com/macros/s/AKfycbwnTzHQ5XdHPPLdf9QnWJLA-Dc7oBIYzfr1MfFd-Uunyarw0QWc48WzzAme6hR1muBisg/exec';
   var PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[0-9])[a-z0-9]{8}$/;
@@ -1855,18 +1869,6 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
   window.kbgSkip = function(){
     alert('パスワードは変更されていません。\n次回も、今の仮パスワードでログインしてください。');
     kbgEnter();
-  };
-
-  window.kbLogout = function(){
-    if(HQ_MODE){   // 本部用画面はログインなしのため、本部ダッシュボードに戻る
-      if(!confirm('ポータルサイトを終了して、本部ダッシュボードに戻りますか？')) return;
-      location.href = 'https://kimkat01.github.io/honbu-dashboard/';
-      return;
-    }
-    if(!confirm('ログアウトしますか？')) return;
-    try{ localStorage.removeItem(KB_LOGIN_KEY); }catch(e){}
-    try{ sessionStorage.removeItem(KB_LOGIN_KEY); }catch(e){}
-    location.reload();
   };
 
   $('kbgId').addEventListener('keydown', function(e){ if(e.key === 'Enter') $('kbgPw').focus(); });
