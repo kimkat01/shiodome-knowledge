@@ -415,7 +415,8 @@ var GARDEN_INFO = (typeof gardenFromUrl === 'function') ? gardenFromUrl() : null
 //   ・本部用パスワード（HQ_PW）は現在オフ（HQ_GATE_ENABLED=false）。復活させる時は true にする
 //   ・左上のプルダウンで園を選ぶと、その園の園長ダッシュボードと同じ表示になる（URL：?garden=honbu&view=園キー）
 //     園を選ぶと、有給チェッカー・規約マニュアルのリンクと有給の承認待ち件数がその園のものになる
-//   ・決裁申請・採用計画申請書は園長が申請するフォームなので、本部モードでは常に隠す
+//   ・2026-10-19：本部の人もすべての園のメニューを全部見られるように、園を選んでいるときは
+//     決裁申請・採用計画申請書も含めて全メニューを開けるようにした（園を選んでいないときだけ園の選択を促す）
 //   ・本部モードでの投稿は、どの園を表示していても「本部」として投稿される
 var HQ_PW = 'honbu2026';   // ← 本部用パスワード（変更するときは本部ダッシュボードの PW も合わせる）
 var HQ_AUTH_KEY = 'kb_honbu_auth';
@@ -1616,7 +1617,7 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
     });
     document.getElementById('hqViewNote').textContent = HQ_VIEW
       ? 'この園の園長と同じ画面です。投稿は「本部」として行われます。'
-      : '園を選ぶと、その園の有給チェッカー・規約マニュアルが開けます。';
+      : '園を選ぶと、その園のメニューがすべて開けます。';
     document.getElementById('hqView').style.display = 'block';
 
     // 2026-10-15：左メニューは各園と全く同じ並びで表示する。本部で使えない項目は隠さず、
@@ -1628,9 +1629,6 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
       el.title = '本部画面では開けません';
       el.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); alert(reason); }, true);
     };
-    // 決裁申請・採用計画申請書は園長が本部へ申請するフォームなので、本部モードでは常に開けない
-    lock('kessaiLink', '「決裁申請」は園長が本部へ申請するためのフォームのため、本部画面からは開けません。\n\n届いた申請は、本部ダッシュボードの「決裁承認」から確認できます。');
-    lock('saiyoLink', '「採用計画申請書」は園長が本部へ申請するためのフォームのため、本部画面からは開けません。\n\n届いた申請は、本部ダッシュボードの「採用計画承認」から確認できます。');
     if(!HQ_VIEW){
       // 園を選んでいないときは、園ごとのツールも開けない（月次収支・伝達くん等は園指定なしのリンクのまま）
       var needGarden = function(name){
@@ -1639,6 +1637,8 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
       lock('uqLink', needGarden('有給チェッカー'));
       lock('manualLink', needGarden('規約・マニュアル'));
       lock('kpLink', needGarden('給食・駐車場'));
+      lock('kessaiLink', needGarden('決裁申請'));
+      lock('saiyoLink', needGarden('採用計画申請書'));
       return;
     }
     // 園を選んでいるときは、下の通常処理でその園のリンクに切り替える
@@ -1652,10 +1652,9 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
   // 月次収支レポート・決裁申請・採用計画申請書にも園を引き継ぐ（雄雅会の園は緑テーマ＋月次収支は雄雅会版になる）
   var gq = '?garden=' + GARDEN_INFO.key;
   document.getElementById('keieiLink').href  = 'https://kimkat01.github.io/shiodome-knowledge/keiei-dashboard.html' + gq;
-  if(!HQ_MODE){   // 本部モードでは決裁申請・採用計画申請書はリンクなし（上の lock のまま）
-    document.getElementById('kessaiLink').href = 'kessai-shinsei.html' + gq;
-    document.getElementById('saiyoLink').href  = 'saiyo-shinsei.html' + gq;
-  }
+  // 本部モードでも、園を選んでいれば決裁申請・採用計画申請書をその園として開ける（2026-10-19）
+  document.getElementById('kessaiLink').href = 'kessai-shinsei.html' + gq;
+  document.getElementById('saiyoLink').href  = 'saiyo-shinsei.html' + gq;
   document.getElementById('kpLink').href     = 'kp-list.html' + gq;
   // 2026-10-16：給食・駐車場の一覧は「園長（と本部）だけ修正できる」。新しいタブにはログイン情報が
   //   引き継がれないことがあるため、開く瞬間に誰が開いたかを10分だけ有効な引き継ぎメモとして渡す
