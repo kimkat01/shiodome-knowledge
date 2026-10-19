@@ -839,7 +839,7 @@ function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,m=>({'&':'&amp;',
 /* ログイン中の人（ログイン直後でも読めるよう毎回ストレージから取る） */
 function me(){
   // 本部モードはログインなしのため、共通ID「honbu」で投稿する（フィードを本番GASにつないだ後も投稿できるように）
-  if(typeof HQ_MODE!=="undefined" && HQ_MODE) return { loginId:"honbu", name:"", role:"本部" };
+  if(typeof HQ_MODE!=="undefined" && HQ_MODE) return { loginId:"honbu", name:"本部", role:"本部" };   // 2026-10-19：name を空→「本部」に（いいね・投稿が「名無し」になっていたため）
   const s = (typeof kbReadLogin==="function" ? kbReadLogin() : null) || {};
   return { loginId: String(s.loginId||""), name: s.name||"", role: s.role||"" };
 }
