@@ -596,7 +596,7 @@ if(HQ_MODE && !HQ_AUTHED) setTimeout(function(){ var el=document.getElementById(
     <a class="tool-item" id="kessaiLink" href="kessai-shinsei.html" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4"/><path d="M9 13l2 2 4-4"/></svg>決裁申請</a>
     <a class="tool-item" id="saiyoLink" href="saiyo-shinsei.html" target="_blank" rel="noopener">
-      <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>採用計画申請書</a>
+      <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>採用計画申請書<span class="nav-badge" id="saiyoBadge" title="本部の結果が出ています"></span></a>
     <!-- 給食・駐車場の記録一覧（2026-10-08）：職員がシフト管理で押した「食べた／使った」を園全員分・1ヶ月で見る -->
     <a class="tool-item" id="kpLink" href="kp-list.html" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 13h2M8 16h2M14 13h2M14 16h2"/></svg>給食・駐車場</a>
@@ -1705,6 +1705,42 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
   }
   loadYukyuBadge();
   setInterval(loadYukyuBadge, 60000); // 1分ごとに最新の承認待ち件数を反映
+})();
+
+// ============================================================
+// 採用計画申請書：本部の結果（可決・否決・採用決定・不採用）が出たら赤丸で知らせる（2026-10-19）
+//   ・採用申請のGASから、この園の採用前申請・応募者決裁のステータスを読む
+//   ・園長が採用申請の画面で「これまでの申請」を見ると、そのとき出ていた結果は「見た」ことになり赤丸が消える
+//     （見た記録はこのパソコンのブラウザに保存：saiyo_seen__園キー）
+//   ・本部モードでは出さない
+// ============================================================
+(function(){
+  var SAIYO_GAS = 'https://script.google.com/macros/s/AKfycbzccLc5Pb4u_SoH4QAjSZyWZBmpmoGSMowK8HShbxkdP6_9NjztdNqYT0pMb4XK6Z9cKA/exec';
+  if(!GARDEN_INFO || !GARDEN_INFO.code || HQ_MODE) return;
+  var DONE = /可決|否決|採用決定|不採用|承認|却下/;
+  function get(action){
+    return fetch(SAIYO_GAS + '?action=' + action + '&facility=' + encodeURIComponent(GARDEN_INFO.code) + '&t=' + Date.now())
+      .then(function(r){ return r.text(); })
+      .then(function(t){ var j = JSON.parse(t); if(j.result !== 'success') throw new Error(j.message); return j.items || []; });
+  }
+  function setBadge(n){ var el = document.getElementById('saiyoBadge'); if(el) el.textContent = n > 0 ? String(n) : ''; }
+  function load(){
+    Promise.all([get('listStage1'), get('listStage2')]).then(function(res){
+      var seen = {}; try{ seen = JSON.parse(localStorage.getItem('saiyo_seen__' + GARDEN_INFO.key) || '{}') || {}; }catch(e){}
+      var n = 0;
+      res[0].concat(res[1]).forEach(function(r){
+        var id = r['申請ID'] || r['決裁ID'], st = String(r['ステータス'] || '');
+        if(id && DONE.test(st) && seen[id] !== st) n++;
+      });
+      setBadge(n);
+    }).catch(function(){ setBadge(0); });
+  }
+  var last = 0;
+  function loadThrottled(){ if(Date.now() - last < 20000) return; last = Date.now(); load(); }
+  loadThrottled();
+  setInterval(loadThrottled, 300000);   // 5分ごと
+  // 採用申請の画面で結果を見て戻ってきたら、数え直す（20秒に1回まで）
+  window.addEventListener('focus', loadThrottled);
 })();
 </script>
 <script>
