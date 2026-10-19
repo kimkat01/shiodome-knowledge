@@ -666,7 +666,7 @@ gasGet('action=init&facility='+encodeURIComponent(FCODE)).then(it=>{
   if(it.children){
     const c=it.children;
     ['a0','a1','a2','a3','a4','a5'].forEach((k,i)=>{ if($(k).value==='') $(k).value=c['age'+i]; });
-    $('ages-note').textContent='園児マスタ（コドモン '+(c.asOf||'')+' 取り込み）から入れました。来月の入園予定などがあれば直してください';
+    $('ages-note').textContent='園児マスタ'+(c.asOf?'（コドモン '+c.asOf+' 取り込み）':'')+'から入れました。来月の入園予定などがあれば直してください';
   } else $('ages-note').textContent='この園の園児数はまだ園児マスタにありません。年齢別の人数を入力してください';
   if(it.fte!==null && it.fte!==undefined){ if($('fte').value==='') $('fte').value=it.fte; $('fte-note').textContent='職員マスタから入れました（保育士資格あり・保育業務専従の在職者の合計）'; }
   else $('fte-note').textContent='この園の常勤換算はまだ職員マスタにありません。保育士の常勤換算の合計を入力してください';
