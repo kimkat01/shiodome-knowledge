@@ -488,6 +488,10 @@ if(GARDEN && !HQ_MODE && !KB_LOGIN) document.write('<style>#appMain{display:none
   .kb-user b{font-weight:700;color:#242042}
   .kb-logout{border:1px solid #ddd;background:#fff;border-radius:6px;padding:4px 8px;font-size:12px;color:#555;cursor:pointer;white-space:nowrap;font-family:inherit}
   .kb-logout:hover{background:#eeecfa}
+  .nav-logout{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:10px;padding:10px 12px;
+    border:1px solid #ddd;border-radius:10px;background:#fff;color:#555;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+  .nav-logout:hover{background:#f6f5fc;color:#333}
+  .nav-logout svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 </style>
 <div id="kbGate">
   <div class="kbg-card" id="kbgCard">
@@ -575,7 +579,7 @@ if(HQ_MODE && !HQ_AUTHED) setTimeout(function(){ var el=document.getElementById(
     <div class="brand" style="cursor:default;">
       <span class="logo">し</span><span><b id="gardenName"></b><small>ナレッジボード</small></span>
     </div>
-    <div class="kb-user" id="kbUser" style="display:none"><span><b id="kbUserName"></b> さん</span><button class="kb-logout" onclick="kbLogout()">ログアウト</button></div>
+    <div class="kb-user" id="kbUser" style="display:none"><span><b id="kbUserName"></b> さん</span></div>
     <div class="hq-view" id="hqView" style="display:none">
       <label for="hqViewSel">表示する園</label>
       <select id="hqViewSel"></select>
@@ -609,6 +613,9 @@ if(HQ_MODE && !HQ_AUTHED) setTimeout(function(){ var el=document.getElementById(
     <button class="nav-post" id="navPost">＋ 投稿する</button>
     <!-- 本部とのチャット（2026-10）：園⇔本部の1対1。中身は chat-widget.js。GAS未設定のあいだは非表示 -->
     <button class="nav-chat" id="navChat" style="display:none" onclick="if(window.ShiodomeChat)ShiodomeChat.open();">💬 <span id="chatLinkLabel">本部とのチャット</span><span class="chat-count" id="chatBadge"></span></button>
+    <!-- ログアウト（2026-10-19）：ポータルサイトからログアウトする。本部用画面では本部ダッシュボードに戻る -->
+    <button class="nav-logout" id="navLogout" type="button" onclick="kbLogout()">
+      <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>ログアウト</button>
   </aside>
 
   <!-- ===== 中央：フィード ===== -->
@@ -1851,6 +1858,11 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
   };
 
   window.kbLogout = function(){
+    if(HQ_MODE){   // 本部用画面はログインなしのため、本部ダッシュボードに戻る
+      if(!confirm('ポータルサイトを終了して、本部ダッシュボードに戻りますか？')) return;
+      location.href = 'https://kimkat01.github.io/honbu-dashboard/';
+      return;
+    }
     if(!confirm('ログアウトしますか？')) return;
     try{ localStorage.removeItem(KB_LOGIN_KEY); }catch(e){}
     try{ sessionStorage.removeItem(KB_LOGIN_KEY); }catch(e){}
@@ -1863,6 +1875,16 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
   if(!KB_LOGIN) setTimeout(function(){ $('kbgId').focus(); }, 50);
 })();
 </script>
+<script>
+/* 左メニューのツールを開くとき、戻り先（このポータルのURL）を60秒だけ有効なメモとして残す。
+   開いたツールの「ログアウト」ボタン（portal-back.js）が、このURLに戻る（2026-10-19） */
+document.addEventListener('click', function(e){
+  var a = e.target && e.target.closest ? e.target.closest('.col-left a.tool-item') : null;
+  if(!a || a.classList.contains('locked')) return;
+  try{ localStorage.setItem('portal_back_handoff', JSON.stringify({ url: location.href, at: Date.now() })); }catch(err){}
+}, true);
+</script>
+
 <!-- ===== 本部とのチャット（2026-10）：kimkat01/shiodome-knowledge の chat-widget.js ===== -->
 <script src="https://kimkat01.github.io/shiodome-knowledge/chat-widget.js"></script>
 <script>
