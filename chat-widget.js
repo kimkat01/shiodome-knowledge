@@ -320,6 +320,8 @@
       action: 'send', garden: state.room, gardenName: gardenName(state.room), side: cfg.side,
       loginId: u.loginId, name: name, text: text
     }).then(function (d) {
+      // 利用状況：園長ダッシュボードからチャットを送った（2026-10-21）
+      if (cfg.side !== 'honbu' && window.kbLog) { try { window.kbLog('しおどめチャット', '投稿'); } catch (e) {} }
       ta.value = ''; autosize();
       state._forceBottom = true;
       applyRoom(d, true);

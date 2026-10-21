@@ -362,6 +362,7 @@ html.law-y button.primary{box-shadow:0 4px 14px rgba(67,160,71,.28);}
 </head>
 <body>
 <script src="https://kimkat01.github.io/staff-dashboard/gardens.js"></script>
+<script src="https://kimkat01.github.io/staff-dashboard/access-log.js"></script>
 <script>
 // 社会福祉法人雄雅会（園コード Y〜）から開かれたときは緑テーマ（html.law-y）。?garden が無いときは今までどおりの色
 (function(){ try{ var g=(typeof gardenFromUrl==='function')?gardenFromUrl():null;
@@ -830,7 +831,11 @@ document.getElementById('confirmSubmitBtn').addEventListener('click', async func
       body: JSON.stringify(payload)
     });
     const data = await res.json();
-    if(data.ok){ showDone(data.appNo); }
+    if(data.ok){
+      // 利用状況：決裁申請を送った（2026-10-21）
+      try{ if(window.ShiodomeLog) ShiodomeLog.post('園長', '決裁申請'); }catch(e){}
+      showDone(data.appNo);
+    }
     else { throw new Error(data.error || '送信に失敗しました'); }
   }catch(err){
     btn.disabled=false; btn.textContent='この内容で申請する';

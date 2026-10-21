@@ -937,7 +937,10 @@ function runAction(action, data, okMsg){
   if(!FEED_LIVE) return Promise.resolve(null);
   if(!me().loginId){ toast("ログイン情報がありません。ログインし直してください"); return Promise.reject(new Error("no login")); }
   feedBusy = true;
-  return feedPost(action, data).then(d=>{ feedBusy=false; applyServer(d); if(okMsg) toast(okMsg); return d; })
+  return feedPost(action, data).then(d=>{ feedBusy=false; applyServer(d); if(okMsg) toast(okMsg);
+    // 利用状況：フィードに投稿・更新・コメントした（2026-10-21）
+    if((action==="create"||action==="update"||action==="comment") && window.kbLog) window.kbLog("フィード", "投稿");
+    return d; })
     .catch(err=>{ feedBusy=false; toast(err.message||"保存に失敗しました"); throw err; });
 }
 
@@ -1923,17 +1926,19 @@ document.addEventListener('click', function(e){
    ============================================================ */
 (function(){
   function current(){
-    if(typeof HQ_MODE !== 'undefined' && HQ_MODE) return null;
+    if(typeof HQ_MODE !== 'undefined' && HQ_MODE){ if(window.ShiodomeLog && ShiodomeLog.forget) ShiodomeLog.forget('園長'); return null; }
     var s = null;
     try{ s = kbReadLogin(); }catch(e){}
     if(!s || !s.loginId) return null;
     if(s.role === '本部' || /^9\d{3}$/.test(String(s.loginId))) return null;
     return s;
   }
-  function kbLog(tool){
+  /* 2026-10-21：送信・投稿したときは kbLog('ツール名','投稿') で「投稿」として記録する。
+     別ページ（決裁申請・採用計画申請書・給食駐車場の一覧）は ShiodomeLog.post('園長', …) で記録する */
+  function kbLog(tool, act){
     var s = current();
     if(!s || !tool || !window.ShiodomeLog) return;
-    ShiodomeLog.send({ dash:'園長', garden:GARDEN, loginId:s.loginId, name:s.name || '', role:s.role || '', tool:tool });
+    ShiodomeLog.send({ dash:'園長', garden:GARDEN, loginId:s.loginId, name:s.name || '', role:s.role || '', tool:tool, act:act || '閲覧' });
   }
   window.kbLog = kbLog;
 

@@ -173,6 +173,7 @@ td{white-space:pre-wrap;word-break:break-word}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 <script src="https://kimkat01.github.io/staff-dashboard/gardens.js"></script>
+<script src="https://kimkat01.github.io/staff-dashboard/access-log.js"></script>
 <script>
 // 雄雅会（園コード Y〜）から開かれたときは緑テーマ
 (function(){ try{ var g=(typeof gardenFromUrl==='function')?gardenFromUrl():null;
@@ -522,7 +523,10 @@ function gasGet(q){
 function gasPost(action,data){
   return fetch(GAS_URL,{method:'POST',body:JSON.stringify({action,data}),redirect:'follow'}).then(r=>r.text()).then(t=>{
     let j=null; try{ j=JSON.parse(t); }catch(e){ throw new Error('送信先から正しい返事がありませんでした'); }
-    if(j.result!=='success') throw new Error(j.message||'送信に失敗しました'); return j.data; });
+    if(j.result!=='success') throw new Error(j.message||'送信に失敗しました');
+    // 利用状況：採用計画申請書を送った（2026-10-21）
+    if(/^submit/.test(action)){ try{ if(window.ShiodomeLog) ShiodomeLog.post('園長','採用計画申請書',GARDEN); }catch(e){} }
+    return j.data; });
 }
 
 /* ---------- 職種マスタ ---------- */

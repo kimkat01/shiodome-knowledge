@@ -108,6 +108,7 @@
   @media print{ header .home-btn,.bar .btn,.nav button,.edit-hint,.ro-note{display:none;} .wrap{max-height:none;overflow:visible;box-shadow:none;} body{background:#fff;} }
 </style>
 <script src="https://kimkat01.github.io/staff-dashboard/gardens.js"></script>
+<script src="https://kimkat01.github.io/staff-dashboard/access-log.js"></script>
 <script>
 (function(){ try{ var g=(typeof gardenFromUrl==='function')?gardenFromUrl():null;
   if(g && /^Y/.test(g.code||'')) document.documentElement.classList.add('law-y'); }catch(e){} })();
@@ -377,6 +378,8 @@ function saveEditor(){
     }
     ED=null; document.getElementById('edScrim').classList.remove('on');
     toast('保存しました（'+ks.length+'日分）');
+    // 利用状況：給食・駐車場を修正した（2026-10-21）
+    try{ if(window.ShiodomeLog) ShiodomeLog.post('園長', '給食・駐車場', G.name); }catch(e){}
   }
   next();
 }
