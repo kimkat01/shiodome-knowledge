@@ -190,6 +190,8 @@
   .time{font-size:11px; color:var(--sub);}
   .chip{margin-left:auto; font-size:11px; color:#6a5cd0; background:#efeafd; padding:3px 11px; border-radius:999px; font-weight:600;}
   .p-body{font-size:15px; line-height:1.7; margin:12px 2px 0; white-space:pre-wrap; word-break:break-word;}
+  .p-link{color:#3d6fe0; text-decoration:underline; word-break:break-all;}
+  .p-link:hover{color:#2850b8;}
   .p-photo{margin-top:12px;}
   .p-photo img{max-width:100%; border-radius:18px; display:block;}
   .p-acts{display:flex; gap:6px; margin-top:13px; padding-top:11px; border-top:1px solid rgba(120,110,180,.12);}
@@ -843,6 +845,14 @@ ORGS.forEach(o=>{ const opt=document.createElement("option"); opt.value=o.code; 
 const findOrg = code => ORGS.find(o=>o.code===code) || ORGS[0];
 const myname = document.getElementById("myname");
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+/* 2026-10-22：本文・コメント中の http(s):// で始まるURLをリンクにする（別タブで開く）。
+   esc() で安全化した後の文字列に対して使う。末尾の句読点・閉じ括弧はリンクに含めない */
+function linkify(escaped){
+  return escaped.replace(/https?:\/\/[^\s<>"'\u3000「」『』（）【】、。]+/g, u=>{
+    const m=u.match(/[).,!?;:]+$/); const tail=m?m[0]:""; const url=tail?u.slice(0,-tail.length):u;
+    return `<a class="p-link" href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>${tail}`;
+  });
+}
 
 /* ログイン中の人（ログイン直後でも読めるよう毎回ストレージから取る） */
 function me(){
@@ -1018,7 +1028,7 @@ function render(){
           <div class="p-meta"><span class="badge ${orgClass(p.org)}" title="${esc(gName)}">${esc(p.code)}</span><span class="time">${p.code!=="本部"?esc(gName)+"・":""}${ago(p.ts)}${p.updated&&p.updated-p.ts>60000?"（編集済み）":""}</span></div></div>
         ${p.topic?`<span class="chip">#${esc(p.topic)}</span>`:""}
       </div>
-      ${p.body?`<div class="p-body">${esc(p.body)}</div>`:""}
+      ${p.body?`<div class="p-body">${linkify(esc(p.body))}</div>`:""}
       ${attsHtml(p)}
       <div class="p-acts">
         <button class="act ${liked?'liked':''}" data-like="${esc(p.id)}">${liked?'♥':'♡'} <span>いいね${nLike?` ${nLike}`:''}</span></button>
@@ -1030,7 +1040,7 @@ function render(){
         ${cm.map(c=>`
           <div class="cmt"><div class="avatar" style="background:${orgColor(c.org)}">${esc(initial(c.name))}</div>
             <div class="cmt-bubble"><div class="cmt-name">${esc(c.name)}<span class="badge ${orgClass(c.org)}">${esc(c.code)}</span>${c.ts?`<span class="cmt-time">${ago(c.ts)}</span>`:""}${FEED_LIVE&&myId&&(c.loginId===myId||isHonbuUser())?`<button class="cmt-del" data-cdel="${esc(c.id)}" title="このコメントを削除">削除</button>`:""}</div>
-              <div class="cmt-text">${esc(c.text)}</div></div></div>`).join("")}
+              <div class="cmt-text">${linkify(esc(c.text))}</div></div></div>`).join("")}
         <div class="cmt-form"><input type="text" placeholder="コメントを書く…" data-cin="${esc(p.id)}"><button data-csend="${esc(p.id)}" disabled>送信</button></div>
       </div>`;
     feed.appendChild(el);
