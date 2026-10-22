@@ -865,18 +865,8 @@ const SAMPLE_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEB
 /* 実際の投稿（サーバーから取得）。ダミーとは別に持ち、常にダミーより上に並べる */
 let posts = [];
 /* ダミー投稿（見本として常に表示・保存はされない）。実際の投稿の下に並ぶ */
-const DEMO_POSTS = (()=>{
-  const now = Date.now();
-  return [
-    { id:"demo2", demo:true, code:"S07", name:"小林ダミー", org:"shiba", loginId:"-", topic:"ノウハウ", ts: now-1000*60*60*2,
-      body:"雨の日の室内遊び、新聞紙プールが大好評でした。片付けも子どもたちが競うように手伝ってくれて楽ちんでした🎉",
-      img:SAMPLE_IMG, likers:[{id:"x4",name:"渡辺"},{id:"x5",name:"小林ダミー"},{id:"x6",name:"佐藤"},{id:"x7",name:"田中"}],
-      comments:[
-        {id:"dc2", code:"Y02", name:"渡辺", org:"yuga", text:"うちでもやってみます！新聞紙どのくらい用意しましたか？"},
-        {id:"dc3", code:"S07", name:"小林ダミー", org:"shiba", text:"45Lゴミ袋2つ分くらいで十分でした〜"}
-      ] },
-  ];
-})();
+/* 2026-10-22：見本の「小林ダミー」投稿を削除（ダミーは表示しない） */
+const DEMO_POSTS = [];
 /* 表示順：実際の投稿（新しい順）→ ダミー（新しい順） */
 const byNew = (a,b)=>b.ts-a.ts;
 /* 2026-10：本番GASの読み込みが終わるまではダミーを出さない（読み込み中にダミーだけが表示されて止まって見えるのを防ぐ） */
