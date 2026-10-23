@@ -359,7 +359,10 @@ const PARKS=[
    invoiceRows:{amt0:814300, amt12:4949150, amt35:4379490},
    // ★新カード（v3）。出典：施設別月次報告書R08-06（当月欄）、園児マスタ（6/30時点の在籍＝入園日で判定）、職員マスタ、コドモン6月度勤務実績（5/16〜6/15）
    //   国基準（新基準）：0歳1名→1、1・2歳30名→5、3歳18名→2、4・5歳35名→2＝10名。保育職員は園長・調理・事務・子育て支援員・育休3名を除く（6月在籍の退職者を含む）
-   v3:{ order:['k','s'], months:{
+   //   7〜9月（2026-10-23追加）：収支＝LeySer資金収支推移表の月別欄（収入＝補助金＋付随事業＋受取利息＋雑収入、支出＝人件費＋管理経費＋借入金利息）、
+   //   在籍＝コドモン各月の登降園記録（7月84・8月86・9月88、園児マスタと一致）、職員＝各月度勤務実績＋職員マスタ（全日欠勤の栗原さんは保育職員から除外）
+   //   国基準：7月10名、8・9月11名（1・2歳31名→6）。6月確定の人件費は月次報告書の689万円のまま（LeySer推移表では716万円）
+   v3:{ order:['m9','m8','m7','k'], months:{
      k:{ label:'令和8年6月 確定', kind:'k',
          income:10180015, labor:6893019, admin:1902222, interest:31817,
          enrolled:84, base:10, staff:21, fte:15.3, fteNote:'保育職員・6月度勤務実績',
@@ -369,12 +372,27 @@ const PARKS=[
                   ['管理経費・利息'],['給食費',518029],['修繕費',450010],['賃借料',398750],['光熱水費',177441],['報酬委託手数料',118370],
                   ['その他の管理経費',239622],['借入金利息',31817]],
          incRows:[['保育給付費',9642990],['補助活動収入',345580],['雑収入',191445]] },
-     s:{ label:'令和8年9月 速報', kind:'s',
-         income:10142940, incomeSrc:'給付費請求書',
-         enrolled:84, base:10, staff:21, fte:15.3, fteNote:'保育職員・6月の値（9月分は未反映）',
-         staffNote:'園長・調理・事務・支援員を除く', extraNote:'ほかに子育て支援員 2名（1.4名）',
-         staffAll:'全職員 34名（保育21・支援員2・調理5・事務1・園長1・育休3）※6月時点',
-         provisional:true } } }},
+     m9:{ label:'令和8年9月', kind:'k', src:'LeySer推移表', tag:'経理入力中',
+         income:10495270, labor:6340646, admin:2077586, interest:31460,
+         enrolled:88, base:11, staff:20, fte:15.4, fteNote:'保育職員・9月度勤務実績（8/16〜9/15）',
+         staffNote:'園長・調理・事務・支援員・長期欠勤を除く', extraNote:'ほかに子育て支援員 1名（1.0名）',
+         staffAll:'全職員 32名（保育20・支援員1・調理5・事務1・園長1・育休産休3・長期欠勤1）', note:'9月は経理の入力途中の可能性があります（補助活動収入0円、10月欄に40万円計上あり）',
+         expRows:[['人件費'],['人件費支出',6340646],['管理経費・利息'],['管理経費支出',2077586],['借入金利息',31460]],
+         incRows:[['保育給付費（補助金収入）',10309250],['補助活動収入',0],['受取利息',0],['雑収入',186020]] },
+     m8:{ label:'令和8年8月 確定', kind:'k', src:'LeySer推移表',
+         income:10409821, labor:7438777, admin:1630523, interest:31579,
+         enrolled:86, base:11, staff:20, fte:15.2, fteNote:'保育職員・8月度勤務実績（7/16〜8/15）',
+         staffNote:'園長・調理・事務・支援員・長期欠勤を除く', extraNote:'ほかに子育て支援員 2名（1.0名）',
+         staffAll:'全職員 33名（保育20・支援員2・調理5・事務1・園長1・育休産休3・長期欠勤1）',
+         expRows:[['人件費'],['人件費支出',7438777],['管理経費・利息'],['管理経費支出',1630523],['借入金利息',31579]],
+         incRows:[['保育給付費（補助金収入）',9782880],['補助活動収入',352150],['受取利息',102097],['雑収入',172694]] },
+     m7:{ label:'令和8年7月 確定', kind:'k', src:'LeySer推移表',
+         income:10191644, labor:12303326, admin:1980674, interest:31698,
+         enrolled:84, base:10, staff:20, fte:15.3, fteNote:'保育職員・7月度勤務実績（6/16〜7/15）',
+         staffNote:'園長・調理・事務・支援員・長期欠勤を除く', extraNote:'ほかに子育て支援員 2名（1.5名）',
+         staffAll:'全職員 33名（保育20・支援員2・調理5・事務1・園長1・育休産休3・長期欠勤1）', note:'7月は夏の賞与の支給月のため、人件費が大きくなっています',
+         expRows:[['人件費'],['人件費支出',12303326],['管理経費・利息'],['管理経費支出',1980674],['借入金利息',31698]],
+         incRows:[['保育給付費（補助金収入）',9567660],['補助活動収入',436030],['受取利息',0],['雑収入',187954]] } } }},
   {id:'g07', kotei:'6/100', label:'しおどめ保育園 春日部',        sub:'埼玉県春日部市・その他（+0%）', mult:1.00, capacity:19,
    staffTotal:13, staffDesc:'正規7・非正規6',age0:3,age1:8,age2:8,age3:0,age4:0,age5:0,hasData:true,
    // ★新カード（v3）。出典：資金収支月報R08-06 春日部（事業活動収支月報・人件費支出月報の当月欄）、コドモン園児一覧（6/30時点）・職員一覧、6月度勤務実績（5/16〜6/15）
@@ -638,12 +656,12 @@ function v3Body(p,key){
   if(conf){
     const exp=m.labor+m.admin+m.interest, bal=m.income-exp, den=Math.max(m.income,exp), w=x=>Math.max(0,x/den*100).toFixed(1)+'%';
     money=`<div class="m3">
-     <div class="mb"><div class="sm">収入</div><div class="mv">${fmtM(m.income)}</div><span class="tag t-src">月次報告書</span></div>
-     <div class="mb"><div class="sm">支出</div><div class="mv">${fmtM(exp)}</div><span class="tag t-src">月次報告書</span></div>
+     <div class="mb"><div class="sm">収入</div><div class="mv">${fmtM(m.income)}</div><span class="tag t-src">${m.src||'月次報告書'}</span></div>
+     <div class="mb"><div class="sm">支出</div><div class="mv">${fmtM(exp)}</div><span class="tag t-src">${m.src||'月次報告書'}</span></div>
      <div class="mb"><div class="sm">収支残</div><div class="mv ${bal>=0?'pos':'neg'}">${bal>=0?'+':'−'}${fmtM(Math.abs(bal))}</div><span class="sm">収支残率 ${v3Pct(bal,m.income)}%</span></div>
     </div>
     <div class="stack"><div style="width:${w(m.labor)};background:var(--c-labor)"></div><div style="width:${w(m.admin)};background:var(--c-admin)"></div><div style="width:${w(m.interest)};background:var(--c-int)"></div><div style="width:${w(bal)};background:var(--c-profit)"></div></div>
-    <div class="lg"><span><i style="background:var(--c-labor)"></i>人件費 ${v3Pct(m.labor,m.income)}%</span><span><i style="background:var(--c-admin)"></i>${m.adminLabel||'管理経費'} ${v3Pct(m.admin,m.income)}%</span><span><i style="background:var(--c-int)"></i>${m.intLabel||'利息'}</span>${bal>=0?'<span><i style="background:var(--c-profit)"></i>収支残</span>':''}</div>${bal<0?'<div class="note">支出が収入を上回っています（帯は支出全体を100%として表示）</div>':''}`;
+    <div class="lg"><span><i style="background:var(--c-labor)"></i>人件費 ${v3Pct(m.labor,m.income)}%</span><span><i style="background:var(--c-admin)"></i>${m.adminLabel||'管理経費'} ${v3Pct(m.admin,m.income)}%</span><span><i style="background:var(--c-int)"></i>${m.intLabel||'利息'}</span>${bal>=0?'<span><i style="background:var(--c-profit)"></i>収支残</span>':''}</div>${bal<0?'<div class="note">支出が収入を上回っています（帯は支出全体を100%として表示）</div>':''}${m.note?`<div class="note">${m.note}</div>`:''}`;
   } else {
     money=`<div class="m3">
      <div class="mb"><div class="sm">収入</div><div class="mv">${fmtM(m.income)}</div><span class="tag t-src">${m.incomeSrc}</span></div>
@@ -683,7 +701,7 @@ function v3Card(p){
 function v3Show(id,key){
   const p=PARKS.find(x=>x.id===id); if(!p) return;
   document.getElementById(id+'-v3b').innerHTML=v3Body(p,key);
-  document.getElementById(id+'-st').innerHTML=p.v3.months[key].kind==='k'?'<span class="tag t-kak">確定</span>':'<span class="tag t-sok">速報・経理待ち</span>';
+  document.getElementById(id+'-st').innerHTML=p.v3.months[key].tag?`<span class="tag t-sok">${p.v3.months[key].tag}</span>`:p.v3.months[key].kind==='k'?'<span class="tag t-kak">確定</span>':'<span class="tag t-sok">速報・経理待ち</span>';
 }
 
 // ===== カード生成 =====
