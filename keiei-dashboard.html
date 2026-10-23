@@ -186,6 +186,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 .v3 .klg{font-size:12px;margin-top:6px}
 .v3 .note{font-size:12px;margin-top:6px}
 .v3 .note.red{color:var(--c-ng);font-weight:700}
+.v3 .cau-wrap{margin-top:12px;border-top:1px solid var(--line);padding-top:4px}
 .v3 .cau{margin:0;padding-left:1.2em;font-size:12px;line-height:1.7}
 .v3 .cau li{margin:2px 0}
 .v3 .fold{margin-top:12px;border-top:1px solid var(--line);padding-top:4px}
@@ -672,7 +673,7 @@ function v3Body(p,key){
      <div class="mb"><div class="sm">収支残</div><div class="mv ${bal>=0?'pos':'neg'}">${bal>=0?'+':'−'}${fmtM(Math.abs(bal))}</div><span class="sm">収支残率 ${v3Pct(bal,m.income)}%</span></div>
     </div>
     <div class="stack"><div style="width:${w(m.labor)};background:var(--c-labor)"></div><div style="width:${w(m.admin)};background:var(--c-admin)"></div><div style="width:${w(m.interest)};background:var(--c-int)"></div><div style="width:${w(bal)};background:var(--c-profit)"></div></div>
-    <div class="lg"><span><i style="background:var(--c-labor)"></i>人件費 ${v3Pct(m.labor,m.income)}%</span><span><i style="background:var(--c-admin)"></i>${m.adminLabel||'管理経費'} ${v3Pct(m.admin,m.income)}%</span><span><i style="background:var(--c-int)"></i>${m.intLabel||'利息'}</span>${bal>=0?'<span><i style="background:var(--c-profit)"></i>収支残</span>':''}</div>${bal<0?'<div class="note red">支出が収入を上回っています（帯は支出全体を100%として表示）</div>':''}${m.note?`<div class="note red">${m.note}</div>`:''}`;
+    <div class="lg"><span><i style="background:var(--c-labor)"></i>人件費 ${v3Pct(m.labor,m.income)}%</span><span><i style="background:var(--c-admin)"></i>${m.adminLabel||'管理経費'} ${v3Pct(m.admin,m.income)}%</span><span><i style="background:var(--c-int)"></i>${m.intLabel||'利息'}</span>${bal>=0?'<span><i style="background:var(--c-profit)"></i>収支残</span>':''}</div>`;
   } else {
     money=`<div class="m3">
      <div class="mb"><div class="sm">収入</div><div class="mv">${fmtM(m.income)}</div><span class="tag t-src">${m.incomeSrc}</span></div>
@@ -696,10 +697,12 @@ function v3Body(p,key){
   </div><div class="klg">${m.staffAll}</div>`;
   const rows=r=>r.map(x=>x.length===1?`<tr class="grp"><td colspan="2">${x[0]}</td></tr>`:`<tr><td>${x[0]}</td><td>${x[1]?v3Man(x[1]):'0'}</td></tr>`).join('');
   const mon=m.label.replace(/^令和\d+年|\s.*$/g,'');
-  const fold=conf?`<div class="fold">
+  const bal2=conf?m.income-(m.labor+m.admin+m.interest):0;
+  const notes=conf?`${bal2<0?'<div class="note red">支出が収入を上回っています（①の帯は支出全体を100%として表示）</div>':''}${m.note?`<div class="note red">${m.note}</div>`:''}`:'';
+  const fold=conf?`<div class="fold">${notes}
    <details><summary>支出の内訳</summary><table class="tb"><tr><th>科目</th><th>${mon}</th></tr>${rows(m.expRows)}</table></details>
    <details><summary>収入の内訳</summary><table class="tb"><tr><th>科目</th><th>${mon}</th></tr>${rows(m.incRows)}</table></details></div>`:'';
-  const cau=(m.cautions&&m.cautions.length)?`<div class="sec">③ 注意ポイント${m.cautionTitle?'（'+m.cautionTitle+'）':''}</div><ul class="cau">${m.cautions.map(t=>`<li>${t}</li>`).join('')}</ul>`:'';
+  const cau=(m.cautions&&m.cautions.length)?`<div class="cau-wrap"><div class="sec">③ 注意ポイント${m.cautionTitle?'（'+m.cautionTitle+'）':''}</div><ul class="cau">${m.cautions.map(t=>`<li>${t}</li>`).join('')}</ul></div>`:'';
   return `<div class="sec">① 収支（当月）</div>${money}<div class="sec">② 運営の指標</div>${kpi}${fold}${cau}`;
 }
 function v3Card(p){
