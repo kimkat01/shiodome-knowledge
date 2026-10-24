@@ -311,7 +311,7 @@ const PARKS=[
    //   7〜9月（2026-10-23追加）：収支＝LeySer資金収支推移表の月別欄（収入＝補助金＋付随事業＋受取利息＋雑収入、支出＝人件費＋管理経費＋借入金利息）、
    //   在籍＝コドモン各月の登降園記録（7月84・8月86・9月88、園児マスタと一致）、職員＝各月度勤務実績＋職員マスタ（全日欠勤の栗原さんは保育職員から除外）
    //   国基準：7月10名、8・9月11名（1・2歳31名→6）。6月確定の人件費は月次報告書の689万円のまま（LeySer推移表では716万円）
-   v3:{ order:['m9','m8','m7','k'], months:{
+   v3:{ order:['m9','m8','m7','k'], def:'k', months:{   // def＝最初に表示する月（2026-10-24 本部指示で6月確定）
      k:{ label:'令和8年6月 確定', kind:'k',
          income:10180015, labor:6893019, admin:1902222, interest:31817,
          enrolled:84, base:10, staff:21, fte:15.3, fteNote:'保育職員・6月度勤務実績',
@@ -707,7 +707,8 @@ function v3Body(p,key){
   return `<div class="sec">① 収支（当月）</div>${money}<div class="sec">② 運営の指標</div>${kpi}${fold}${cau}`;
 }
 function v3Card(p){
-  const opts=p.v3.order.map(k=>`<option value="${k}">${p.v3.months[k].label}</option>`).join('');
+  const d0=p.v3.def||p.v3.order[0];
+  const opts=p.v3.order.map(k=>`<option value="${k}"${k===d0?' selected':''}>${p.v3.months[k].label}</option>`).join('');
   return `<div class="park-card-head">
     <div><div class="park-card-name">${p.label}</div><div class="park-card-sub">${p.sub.split('・')[0]}・定員${p.capacity||'—'}名${p.elastic?'（弾力'+p.elastic+'名）':''}</div>${p.kotei?`<div class="park-card-sub">公定価格（${p.kotei}）</div>`:''}</div>
     <div style="text-align:right"><label class="sm" for="${p.id}-ms" style="display:block">表示する月</label>
@@ -822,7 +823,7 @@ function buildCards(){
       </div>`;
     }
     track.appendChild(card);
-    if(p.v3) v3Show(p.id,p.v3.order[0]);
+    if(p.v3) v3Show(p.id,p.v3.def||p.v3.order[0]);
   });
 
   resizeViewport();
