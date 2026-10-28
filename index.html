@@ -607,7 +607,7 @@ if(HQ_MODE && !HQ_AUTHED) setTimeout(function(){ var el=document.getElementById(
     <!-- 給食・駐車場の記録一覧（2026-10-08）：職員がシフト管理で押した「食べた／使った」を園全員分・1ヶ月で見る -->
     <a class="tool-item" id="kpLink" href="kp-list.html" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 13h2M8 16h2M14 13h2M14 16h2"/></svg>給食・駐車場</a>
-    <a class="tool-item" href="https://kimkat01.github.io/voiceminutes/" target="_blank" rel="noopener">
+    <a class="tool-item" id="vmLink" href="https://kimkat01.github.io/voiceminutes/" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>文字起こし</a>
     <a class="tool-item" href="https://kimkat01.github.io/anpi/anpi_admin.html" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24"><path d="M12 2 3 6v6c0 5 4 8.5 9 10 5-1.5 9-5 9-10V6z"/><path d="M9 12l2 2 4-4"/></svg>危機管理対応状況</a>
@@ -1677,6 +1677,22 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
     }catch(e){}
   });
   document.getElementById('hiyariLink').href = 'https://kimkat01.github.io/hiyari-hatto2/' + gq;
+  // 2026-10-28：文字起こし（VoiceMinutes）にも園を引き継ぐ。開く瞬間に、通行証を10分だけ有効な引き継ぎメモとして渡す
+  //   （VoiceMinutes はこの通行証で、ログイン用GASからその園の職員名簿（氏名・ふりがな）を受け取り、名前の聞き間違いを防ぐ）
+  document.getElementById('vmLink').href = 'https://kimkat01.github.io/voiceminutes/' + gq;
+  document.getElementById('vmLink').addEventListener('click', function(){
+    try{
+      var tk = '';
+      if(HQ_MODE){
+        var h = JSON.parse(localStorage.getItem('sd_honbu_token') || 'null');
+        tk = (h && h.token) || '';
+      }else{
+        var s = kbReadLogin();
+        tk = (s && s.token) || '';
+      }
+      localStorage.setItem('vm_handoff', JSON.stringify({ garden:GARDEN_INFO.name, key:GARDEN_INFO.key, token:tk, exp:Date.now() + 10*60000 }));
+    }catch(e){}
+  });
 })();
 
 // ============================================================
@@ -1806,7 +1822,8 @@ window.kbLogout = function(){
 
   function saveLogin(s){
     var keep = $('kbgKeep').checked;
-    var obj = { garden:GARDEN, loginId:s.loginId, name:s.name, role:s.role||'', exp: keep ? Date.now() + KB_LOGIN_DAYS*86400000 : 0 };
+    // 2026-10-28：ログイン用GASが発行する通行証（token）も保存する（文字起こしの職員名簿などで使う）
+    var obj = { garden:GARDEN, loginId:s.loginId, name:s.name, role:s.role||'', token:s.token||'', exp: keep ? Date.now() + KB_LOGIN_DAYS*86400000 : 0 };
     try{ if(keep) localStorage.setItem(KB_LOGIN_KEY, JSON.stringify(obj)); else sessionStorage.setItem(KB_LOGIN_KEY, JSON.stringify(obj)); }catch(e){}
     return obj;
   }
@@ -1834,7 +1851,7 @@ window.kbLogout = function(){
       .then(function(d){
         btn.disabled = false; btn.textContent = 'ログイン';
         if(!d.ok){ err.textContent = d.message || 'ログインIDまたはパスワードが正しくありません'; shake(); $('kbgPw').select(); return; }
-        pending = { loginId:id, name:d.name, oldPw:pw, role:d.role||'' };
+        pending = { loginId:id, name:d.name, oldPw:pw, role:d.role||'', token:d.token||'' };
         if(d.mustChangePassword){
           $('kbgLoginStep').style.display = 'none';
           $('kbgChangeStep').style.display = 'block';
