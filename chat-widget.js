@@ -118,7 +118,31 @@
       '.sdc-hint{font-size:11px;color:#9aa0b8;margin-top:4px}' +
       '.sdc-err{color:#e5383b;font-size:13px;padding:6px 14px;background:#fff1f1;display:none}' +
       '.sdc-err.show{display:block}' +
-      '@media (max-width:520px){.sdc-panel{right:0;bottom:0;width:100vw;max-width:100vw;height:100vh;max-height:100vh;border-radius:0}.sdc-fab{right:16px;bottom:16px}}';
+      /* 2026-10-30：center:true のとき（本部ダッシュボード）＝画面の真ん中に出す・青い帯をつまんで動かせる・文字を3ポイント大きく・枠も大きく */
+      '.sdc-panel.sdc-center{right:auto;bottom:auto;left:50%;top:50%;transform:translate(-50%,-50%);width:540px;height:760px;max-height:calc(100vh - 40px);font-size:18px}' +
+      '.sdc-panel.sdc-center.sdc-moved{transform:none}' +
+      '.sdc-center .sdc-head{cursor:move;user-select:none;-webkit-user-select:none;touch-action:none;padding:14px 16px}' +
+      '.sdc-center .sdc-head b{font-size:19px}' +
+      '.sdc-center .sdc-hbtn{height:36px;min-width:36px;font-size:18px}' +
+      '.sdc-center .sdc-room{padding:14px 16px}' +
+      '.sdc-center .sdc-room .nm{font-size:18px}' +
+      '.sdc-center .sdc-room .pv{font-size:16px}' +
+      '.sdc-center .sdc-room .rt{font-size:15px}' +
+      '.sdc-center .sdc-room .ub{min-width:26px;height:26px;line-height:26px;border-radius:13px;font-size:16px}' +
+      '.sdc-center .sdc-sec{font-size:15px;padding:10px 16px 8px}' +
+      '.sdc-center .sdc-day{font-size:15px}' +
+      '.sdc-center .sdc-m .who{font-size:15px}' +
+      '.sdc-center .sdc-m .bub{padding:10px 14px}' +
+      '.sdc-center .sdc-m .meta{font-size:14px}' +
+      '.sdc-center .sdc-del{font-size:14px}' +
+      '.sdc-center .sdc-empty{font-size:17px}' +
+      '.sdc-center .sdc-namebar{font-size:16px}' +
+      '.sdc-center .sdc-namebar input{font-size:17px;padding:6px 10px}' +
+      '.sdc-center .sdc-comp textarea{font-size:18px;height:48px;min-height:48px;max-height:180px}' +
+      '.sdc-center .sdc-send{font-size:18px;height:48px;padding:0 20px}' +
+      '.sdc-center .sdc-hint{font-size:14px}' +
+      '.sdc-center .sdc-err{font-size:16px}' +
+      '@media (max-width:520px){.sdc-panel,.sdc-panel.sdc-center{right:0;bottom:0;left:0;top:0;transform:none;width:100vw;max-width:100vw;height:100vh;max-height:100vh;border-radius:0}.sdc-fab{right:16px;bottom:16px}.sdc-center .sdc-head{cursor:default}}';
     var st = document.createElement('style');
     st.textContent = css;
     document.head.appendChild(st);
@@ -154,7 +178,8 @@
 
     document.body.appendChild(fab);
     document.body.appendChild(panel);
-    if (cfg.showFab === false) panel.style.bottom = '22px';
+    if (cfg.center) { panel.classList.add('sdc-center'); enableDrag(panel); }
+    else if (cfg.showFab === false) panel.style.bottom = '22px';
 
     $('sdcClose').onclick = close;
     $('sdcBack').onclick = function () { state.room = null; renderList(); loadSummary(); };
@@ -173,7 +198,46 @@
     }
   }
 
-  function autosize() { var ta = $('sdcText'); ta.style.height = '42px'; ta.style.height = Math.max(42, Math.min(ta.scrollHeight + 2, 140)) + 'px'; }
+  function autosize() {
+    var ta = $('sdcText'), lo = cfg.center ? 48 : 42, hi = cfg.center ? 180 : 140;
+    ta.style.height = lo + 'px'; ta.style.height = Math.max(lo, Math.min(ta.scrollHeight + 2, hi)) + 'px';
+  }
+
+  /* ---------- 青い帯（ヘッダー）をつまんで動かす（center:true のとき） ----------
+     ・最初は画面の真ん中。動かした位置は、ページを開き直すまで覚えておく
+     ・画面の外に出てしまわないよう、帯が必ず画面内に残るようにする
+     ・スマホ幅（520px以下）では全画面表示のため動かさない */
+  function enableDrag(panel) {
+    var head = panel.querySelector('.sdc-head');
+    var drag = null;
+    function clamp(v, lo, hi) { return Math.max(lo, Math.min(v, hi)); }
+    head.addEventListener('pointerdown', function (e) {
+      if (e.button !== 0 || window.innerWidth <= 520) return;
+      if (e.target.closest('button')) return;              // ‹ ↻ × ボタンは普通に押せるように
+      var r = panel.getBoundingClientRect();
+      panel.classList.add('sdc-moved');
+      panel.style.left = r.left + 'px'; panel.style.top = r.top + 'px';
+      drag = { dx: e.clientX - r.left, dy: e.clientY - r.top, w: r.width, h: head.offsetHeight };
+      try { head.setPointerCapture(e.pointerId); } catch (x) {}
+      e.preventDefault();
+    });
+    head.addEventListener('pointermove', function (e) {
+      if (!drag) return;
+      var x = clamp(e.clientX - drag.dx, 60 - drag.w, window.innerWidth - 60);
+      var y = clamp(e.clientY - drag.dy, 0, window.innerHeight - drag.h);
+      panel.style.left = x + 'px'; panel.style.top = y + 'px';
+    });
+    function end(e) { if (!drag) return; drag = null; try { head.releasePointerCapture(e.pointerId); } catch (x) {} }
+    head.addEventListener('pointerup', end);
+    head.addEventListener('pointercancel', end);
+    window.addEventListener('resize', function () {      // 画面サイズが変わって外にはみ出したら戻す
+      if (!panel.classList.contains('sdc-moved')) return;
+      if (window.innerWidth <= 520) { panel.classList.remove('sdc-moved'); panel.style.left = ''; panel.style.top = ''; return; }
+      var r = panel.getBoundingClientRect();
+      panel.style.left = clamp(r.left, 60 - r.width, window.innerWidth - 60) + 'px';
+      panel.style.top = clamp(r.top, 0, window.innerHeight - head.offsetHeight) + 'px';
+    });
+  }
   function updateSendBtn() {
     var ok = !!$('sdcText').value.trim() && !state.sending;
     if (cfg.side === 'honbu' && $('sdcName') && !$('sdcName').value.trim()) ok = false;
@@ -382,6 +446,7 @@
        accent: '#3a63d8',           // ボタン・自分の吹き出しの色
        badgeIds: ['menuBadgeId'],   // 未読数を一緒に出す要素のid（省略可）
        showFab: true,               // 右下の💬ボタンを出すか（false＝メニューやカードから ShiodomeChat.open() で開く）
+       center: false,               // true＝画面の真ん中に大きめの文字で出し、青い帯をつまんで動かせる（本部ダッシュボードで使用）
        onUnread: function(n){}      // 未読数が変わるたびに呼ばれる（省略可）
      })
      ShiodomeChat.open()            // メニューなどから開くとき
