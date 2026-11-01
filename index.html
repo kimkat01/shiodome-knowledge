@@ -434,6 +434,15 @@ if(HQ_MODE){
 var HQ_GATE_ENABLED = false;   // 2026-10：本部用はパスワードなしで入る。パスワードを復活させる時は true に戻す
 var HQ_AUTHED = !HQ_GATE_ENABLED;
 if(HQ_MODE && HQ_GATE_ENABLED){ try{ HQ_AUTHED = sessionStorage.getItem(HQ_AUTH_KEY) === '1'; }catch(e){} }
+// 2026-11-01：本部メンバー確認。本部用（?garden=honbu）で開いたとき、最初の1回だけ名前を選んでもらう。
+//   選んだ名前はこの端末に覚え、フィードの投稿・コメント・いいね、園長とのチャットの送信者名に使う。
+//   ※名前を選ぶだけの確認で、パスワードではない。メンバーを増やすときは HQ_MEMBERS に名前を足す
+var HQ_MEMBERS = ['柴 明彦', '柴 理沙子', '木村 勝彦'];
+var HQ_MEMBER_KEY = 'kb_honbu_member';
+function hqMember(){
+  try{ var v = localStorage.getItem(HQ_MEMBER_KEY) || ''; return HQ_MEMBERS.indexOf(v) >= 0 ? v : ''; }catch(e){ return ''; }
+}
+if(HQ_MODE && HQ_AUTHED && !hqMember()) document.write('<style>#appMain{display:none!important}#hqMemberGate{display:flex!important}</style>');
 if(HQ_MODE && !HQ_AUTHED) document.write('<style>#appMain{display:none!important}#hqGate{display:flex!important}</style>');
 var GARDEN = GARDEN_INFO ? GARDEN_INFO.name : '';   // 日本語の園名（職員マスタの園名と同じ）
 // 社会福祉法人雄雅会（園コード Y〜）の園は緑テーマにする（色の中身は <head> 末尾の html.law-y）
@@ -572,6 +581,56 @@ function hqLogin(){
   location.reload();
 }
 if(HQ_MODE && !HQ_AUTHED) setTimeout(function(){ var el=document.getElementById('hqPw'); if(el) el.focus(); }, 50);
+</script>
+
+<!-- ===== 本部メンバー確認（2026-11-01・本部モードで名前が未選択のときだけ表示） ===== -->
+<style>
+  #hqMemberGate{display:none;min-height:100vh;align-items:center;justify-content:center;padding:24px 16px;
+    background:linear-gradient(135deg,var(--bg1) 0%,var(--bg2) 100%);}
+  .hqm-lock{width:56px;height:56px;border-radius:16px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;
+    background:#e6ecfb;color:#4169e1}
+  .hqm-lock svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .hqm-title{font-size:20px;font-weight:800;letter-spacing:.06em}
+  .hqm-text{font-size:14px;color:#333;line-height:1.8;margin:10px 0 20px}
+  .hqm-list{display:flex;flex-direction:column;gap:10px}
+  .hqm-btn{width:100%;padding:13px 14px;border:1px solid #cdd6f3;border-radius:10px;background:#f4f7fe;color:#1f2a55;
+    font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.08em}
+  .hqm-btn:hover{background:#e6ecfb;border-color:#4169e1}
+  .hqm-note{font-size:12px;color:#777;margin-top:18px;line-height:1.7}
+  .kb-user .hqm-change{background:none;border:none;color:#4169e1;font-size:12px;cursor:pointer;text-decoration:underline;font-family:inherit;padding:0;margin-left:6px}
+</style>
+<div id="hqMemberGate">
+  <div class="kbg-card">
+    <div class="hqm-lock"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div>
+    <div class="hqm-title">本部メンバー確認</div>
+    <div class="hqm-text">ここから先は、登録された<br>本部メンバーのみ入室できます。</div>
+    <div class="hqm-list" id="hqMemberList"></div>
+    <div class="hqm-note">選んだお名前で投稿・チャットが記録されます。</div>
+  </div>
+</div>
+<script>
+(function(){
+  var box = document.getElementById('hqMemberList');
+  if(!box) return;
+  HQ_MEMBERS.forEach(function(n){
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'hqm-btn'; b.textContent = n;
+    b.onclick = function(){ hqChooseMember(n); };
+    box.appendChild(b);
+  });
+})();
+function hqChooseMember(n){
+  try{
+    localStorage.setItem(HQ_MEMBER_KEY, n);
+    localStorage.setItem('shiodome_chat_honbu_name', n);   // 園長とのチャットの「送信者名」にも入れておく
+  }catch(e){}
+  location.reload();
+}
+function hqChangeMember(){
+  if(!confirm('お名前を選び直しますか？')) return;
+  try{ localStorage.removeItem(HQ_MEMBER_KEY); }catch(e){}
+  location.reload();
+}
 </script>
 
 <div class="app" id="appMain">
@@ -857,7 +916,8 @@ function linkify(escaped){
 /* ログイン中の人（ログイン直後でも読めるよう毎回ストレージから取る） */
 function me(){
   // 本部モードはログインなしのため、共通ID「honbu」で投稿する（フィードを本番GASにつないだ後も投稿できるように）
-  if(typeof HQ_MODE!=="undefined" && HQ_MODE) return { loginId:"honbu", name:"本部", role:"本部" };   // 2026-10-19：name を空→「本部」に（いいね・投稿が「名無し」になっていたため）
+  // 2026-11-01：名前は「本部メンバー確認」で選んだ人（未選択のときだけ「本部」）
+  if(typeof HQ_MODE!=="undefined" && HQ_MODE) return { loginId:"honbu", name:(hqMember() || "本部"), role:"本部" };
   const s = (typeof kbReadLogin==="function" ? kbReadLogin() : null) || {};
   return { loginId: String(s.loginId||""), name: s.name||"", role: s.role||"" };
 }
@@ -1626,9 +1686,18 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
       location.search = '?garden=honbu' + (sel.value ? '&view=' + encodeURIComponent(sel.value) : '');
     });
     document.getElementById('hqViewNote').textContent = HQ_VIEW
-      ? 'この園の園長と同じ画面です。投稿は「本部」として行われます。'
+      ? 'この園の園長と同じ画面です。投稿は「本部」の' + (hqMember() || '本部') + 'さんとして行われます。'
       : '園を選ぶと、その園のメニューがすべて開けます。';
     document.getElementById('hqView').style.display = 'block';
+    // 2026-11-01：選んだ本部メンバーの名前と「切り替え」
+    if(hqMember()){
+      document.getElementById('kbUserName').textContent = hqMember();
+      var ku = document.getElementById('kbUser');
+      var cb = document.createElement('button');
+      cb.type = 'button'; cb.className = 'hqm-change'; cb.textContent = '切り替え'; cb.onclick = hqChangeMember;
+      ku.appendChild(cb);
+      ku.style.display = 'flex';
+    }
 
     // 2026-10-15：左メニューは各園と全く同じ並びで表示する。本部で使えない項目は隠さず、
     //   グレー表示＋リンクなしにし、クリックすると「開けない理由」をポップアップで出す
@@ -1670,7 +1739,7 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
   //   引き継がれないことがあるため、開く瞬間に誰が開いたかを10分だけ有効な引き継ぎメモとして渡す
   document.getElementById('kpLink').addEventListener('click', function(){
     try{
-      var s = HQ_MODE ? { loginId:'honbu', name:'本部', role:'本部' } : kbReadLogin();
+      var s = HQ_MODE ? { loginId:'honbu', name:(hqMember() || '本部'), role:'本部' } : kbReadLogin();
       if(!s) return;
       localStorage.setItem('kp_handoff__' + GARDEN_INFO.key, JSON.stringify({
         loginId:String(s.loginId||''), name:s.name||'', role:s.role||'', exp:Date.now() + 10*60000 }));
@@ -1916,8 +1985,10 @@ document.addEventListener('click', function(e){
   var ok = false;
   if(HQ_MODE){
     // 本部モード：全園の部屋を見られる。園を選んで表示しているときは、その園の部屋を最初に開く
+    // 2026-11-01：送信者名は「本部メンバー確認」で選んだ名前（チャット画面の送信者名欄にも入れる）
+    try{ if(hqMember()) localStorage.setItem('shiodome_chat_honbu_name', hqMember()); }catch(e){}
     ok = ShiodomeChat.init({ side:'honbu', defaultGarden: HQ_VIEW ? HQ_VIEW.code : null,
-      user:function(){ return { loginId:'honbu', name:'' }; }, accent:accent, badgeIds:['chatBadge'], showFab:false });
+      user:function(){ return { loginId:'honbu', name:(hqMember() || '') }; }, accent:accent, badgeIds:['chatBadge'], showFab:false });
     document.getElementById('chatLinkLabel').textContent = '園長とのチャット';
   }else if(KB_LOGIN){
     // 2026-10-14：園の画面（?garden=園キー）から送ったものは、本部アカウント（ID 9始まり等）でログインしていても「その園」として扱う
@@ -1925,8 +1996,9 @@ document.addEventListener('click', function(e){
     ok = ShiodomeChat.init({
       side: 'garden',
       garden: { code: GARDEN_INFO.code, name: GARDEN_INFO.name },
-      // 本部用IDでログインしているときは名前（＝「本部」）を送らず、園名だけで表示する
-      user: function(){ var m = me(); return { loginId: m.loginId, name: (typeof isHonbuUser==='function' && isHonbuUser()) ? '' : m.name }; },
+      // 本部の共通ID（名前が「本部」「社福本部」）は名前を送らず園名だけで表示する。
+      //   2026-11-01：9901（柴 理沙子）のような個人の本部IDは名前を送る
+      user: function(){ var m = me(); return { loginId: m.loginId, name: (typeof isHonbuUser==='function' && isHonbuUser() && /^(社福)?本部$/.test(m.name)) ? '' : m.name }; },
       accent: accent, badgeIds: ['chatBadge'], showFab: false   // 左メニューの「本部とのチャット」ボタンから開く
     });
   }
