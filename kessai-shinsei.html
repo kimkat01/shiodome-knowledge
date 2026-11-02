@@ -918,7 +918,7 @@ function loadResubmit(){
     note.classList.add('show');
   }).catch(function(err){
     form.style.display = 'none';
-    note.innerHTML = '<b>この再申請リンクは使えません</b><br>'+escapeHtml(err.message)+'<br>新しく申請する場合は、ナレッジボードの「決裁申請」から開き直してください。';
+    note.innerHTML = '<b>この再申請リンクは使えません</b><br>'+escapeHtml(err.message)+'<br>新しく申請する場合は、しおどめポータルの「決裁申請」から開き直してください。';
     note.classList.add('show');
   });
 }
