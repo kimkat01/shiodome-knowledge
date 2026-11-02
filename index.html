@@ -690,7 +690,7 @@ function hqChangeMember(){
     <button class="nav-chat" id="navChat" style="display:none" onclick="if(window.ShiodomeChat)ShiodomeChat.open();">💬 <span id="chatLinkLabel">本部とのチャット</span><span class="chat-count" id="chatBadge"></span></button>
     <!-- お知らせ（2026-11-01）：ANSHIN KUNと同じお知らせをポータルでも読める。通知の試行中の園だけ表示（中身は push-client.js） -->
     <button class="nav-chat" id="navNews" style="display:none" type="button" onclick="if(window.ShiodomePush)ShiodomePush.openNews();">📰 <span>お知らせ</span><span class="chat-count" id="spNewsBadge"></span></button>
-    <!-- ログアウト（2026-10-19）：ポータルサイトからログアウトする。本部用画面では本部ダッシュボードに戻る -->
+    <!-- ログアウト（2026-10-19）：ポータルサイトからログアウトする。本部用画面では本部ダッシュボードのログイン画面に戻る -->
     <button class="nav-logout" id="navLogout" type="button" onclick="kbLogout()">
       <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>ログアウト</button>
   </aside>
@@ -1866,16 +1866,25 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
 // ログアウト（左メニュー下のボタン）。2026-10-19：本部用画面では下の処理が途中で終わり
 //   ボタンが効かなかったため、どの画面でも使えるようにここ（外側）で定義する
 window.kbLogout = function(){
-  if(HQ_MODE){   // 本部用画面はログインなしのため、本部ダッシュボードに戻る
-    if(!confirm('ポータルサイトを終了して、本部ダッシュボードに戻りますか？')) return;
-    location.href = 'https://kimkat01.github.io/honbu-dashboard/';
+  if(!confirm('ログアウトしますか？')) return;
+  try{ localStorage.setItem('portal_logout_signal', String(Date.now())); }catch(e){}   // 同じPCで開いている他のポータルのタブへの合図
+  kbAfterLogout();
+};
+// ログアウト後の処理（2026-11-02）。本部は本部ダッシュボードの通行証も消してログイン画面へ、園はこの画面のログイン画面へ
+function kbAfterLogout(){
+  if(HQ_MODE){
+    try{ localStorage.removeItem(HQ_MEMBER_KEY); localStorage.removeItem('shiodome_chat_honbu_name'); }catch(e){}
+    location.href = 'https://kimkat01.github.io/honbu-dashboard/?logout=1';
     return;
   }
-  if(!confirm('ログアウトしますか？')) return;
   try{ localStorage.removeItem(KB_LOGIN_KEY); }catch(e){}
   try{ sessionStorage.removeItem(KB_LOGIN_KEY); }catch(e){}
   location.reload();
-};
+}
+// 別のタブ（ツール画面など）でログアウトしたら、このタブもログアウト状態にする
+window.addEventListener('storage', function(e){
+  if(e.key === 'portal_logout_signal' && e.newValue) kbAfterLogout();
+});
 
 (function(){
   var AUTH_GAS_URL = 'https://script.google.com/macros/s/AKfycbwnTzHQ5XdHPPLdf9QnWJLA-Dc7oBIYzfr1MfFd-Uunyarw0QWc48WzzAme6hR1muBisg/exec';
