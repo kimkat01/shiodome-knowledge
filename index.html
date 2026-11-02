@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>しおどめポータルサイト</title>
+<!-- ホーム画面アイコン・通知（2026-11-01）：アイコンの赤い数字と通知は push-client.js（kimkat01/staff-dashboard）。
+     manifest は試行中の園（push-client.js の PUSH_GARDENS）だけに付ける（他の園は今までどおり） -->
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<meta name="apple-mobile-web-app-title" content="しおどめポータル">
+<script src="https://kimkat01.github.io/staff-dashboard/gardens.js"></script>
+<script src="https://kimkat01.github.io/staff-dashboard/push-client.js"></script>
+<script>try{ if(window.ShiodomePush && typeof gardenFromUrl==='function') ShiodomePush.head(gardenFromUrl(), 'manifests/'); }catch(e){}</script>
 <style>
   :root{
     --bg1:#efeafc; --bg2:#e7f0fb;
@@ -680,6 +688,8 @@ function hqChangeMember(){
     <button class="nav-post" id="navPost">＋ 投稿する</button>
     <!-- 本部とのチャット（2026-10）：園⇔本部の1対1。中身は chat-widget.js。GAS未設定のあいだは非表示 -->
     <button class="nav-chat" id="navChat" style="display:none" onclick="if(window.ShiodomeChat)ShiodomeChat.open();">💬 <span id="chatLinkLabel">本部とのチャット</span><span class="chat-count" id="chatBadge"></span></button>
+    <!-- お知らせ（2026-11-01）：ANSHIN KUNと同じお知らせをポータルでも読める。通知の試行中の園だけ表示（中身は push-client.js） -->
+    <button class="nav-chat" id="navNews" style="display:none" type="button" onclick="if(window.ShiodomePush)ShiodomePush.openNews();">📰 <span>お知らせ</span><span class="chat-count" id="spNewsBadge"></span></button>
     <!-- ログアウト（2026-10-19）：ポータルサイトからログアウトする。本部用画面では本部ダッシュボードに戻る -->
     <button class="nav-logout" id="navLogout" type="button" onclick="kbLogout()">
       <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>ログアウト</button>
@@ -2014,6 +2024,26 @@ document.addEventListener('click', function(e){
     });
   }
   if(ok) document.getElementById('navChat').style.display = '';
+})();
+</script>
+<script>
+/* 通知・アイコンの未読数（2026-11-01）：未読のお知らせ＋未読のフィード投稿＋本部からの未読チャット の合計をアイコンに出す
+   ・対象の園（push-client.js の PUSH_GARDENS）で、園長ログイン済みのときだけ動く。本部用（?garden=honbu）では動かない */
+(function(){
+  if(!window.ShiodomePush || HQ_MODE || !GARDEN_INFO) return;
+  var on = ShiodomePush.init({
+    app: 'portal',
+    garden: { code: GARDEN_INFO.code, key: GARDEN_INFO.key, name: GARDEN_INFO.name },
+    user: function(){ var s = (typeof kbReadLogin === 'function') ? kbReadLogin() : null; return s ? { loginId: s.loginId, name: s.name } : {}; },
+    swUrl: 'sw.js'
+  });
+  if(on) document.getElementById('navNews').style.display = '';
+  // チャットを読んだら、アイコンの数字もすぐ減らす
+  var cb = document.getElementById('chatBadge');
+  if(on && cb && window.MutationObserver){
+    var prev = cb.textContent;
+    new MutationObserver(function(){ if(cb.textContent !== prev){ prev = cb.textContent; ShiodomePush.refresh(); } }).observe(cb, { childList:true, characterData:true, subtree:true });
+  }
 })();
 </script>
 <script>
