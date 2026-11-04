@@ -199,7 +199,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
           </div>
           <div><label class="lbl" for="v1">業者名<span class="req">必須</span></label><input type="text" id="v1" placeholder="採用する業者"></div>
           <div class="aimitsu" id="aimitsu" hidden>
-            <p>500,000円以上のため、相見積もりを入れてください（上の業者を含めて3社）</p>
+            <p>500,000円以上のため、相見積もりを入れてください（上の業者を含めて3社）。決裁後は契約書も必要です。</p>
             <div class="vrow"><input type="text" id="v2" placeholder="2社目の業者名" aria-label="2社目の業者名"><div class="yen"><span>¥</span><input type="text" inputmode="numeric" id="a2" data-amt placeholder="金額" aria-label="2社目の金額"></div></div>
             <div class="vrow"><input type="text" id="v3" placeholder="3社目の業者名" aria-label="3社目の業者名"><div class="yen"><span>¥</span><input type="text" inputmode="numeric" id="a3" data-amt placeholder="金額" aria-label="3社目の金額"></div></div>
             <label class="chk"><input type="checkbox" id="noA">相見積もりを取れない（理由を下の補足に記入）</label>
@@ -268,7 +268,7 @@ function lastC(i,a){return i.log.filter(x=>x.action===a).pop()}
 function nextHtml(i){
  if(role==='encho'){
   if(i.st===W)return['wait','<b>理事長の確認待ちです</b><p>結果が出ると、ポータルの左メニュー「決裁申請」に赤丸が付きます。まだ発注しないでください。</p>'];
-  if(i.st===D)return['done','<b>決裁されました</b><p>発注・契約に進んでください。</p>'];
+  if(i.st===D)return['done','<b>決裁されました</b><p>'+(num(i.amt)>=500000?'500,000円以上のため、契約書を取り交わしてから発注してください。':'発注に進んでください。')+'</p>'];
   const h=lastC(i,i.st);const c=h?'<div class="c">'+esc(h.role)+'より：'+esc(h.comment)+'</div>':'';
   if(i.st===B)return['back','<b>差戻しになりました</b><p>理由を確認し、修正して再申請してください。</p>'+c+'<button type="button" class="btn main" id="redo" style="width:100%">修正して再申請する</button>'];
   return['rej','<b>却下されました</b><p>この申請は終了です。発注しないでください。</p>'+c];
