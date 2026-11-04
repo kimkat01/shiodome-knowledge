@@ -205,7 +205,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
             <label class="chk"><input type="checkbox" id="noA">相見積もりを取れない（理由を下の補足に記入）</label>
           </div>
           <div><label class="lbl" for="riyu">補足<span class="opt" id="riyuTag">任意・ひとことで</span></label><input type="text" id="riyu" placeholder="例）修理不能と業者判断"></div>
-          <div><div class="attach"><label class="btn" for="files" id="pick" style="font-size:15px;padding:10px 16px">📎 見積書を添付</label>任意・写真でも可（8MBまで）<input type="file" id="files" multiple accept="application/pdf,image/*" hidden></div><ul class="flist" id="flist"></ul></div>
+          <div><div class="attach"><label class="btn" for="files" id="pick" style="font-size:15px;padding:10px 16px">📎 見積書を添付</label><span id="pickNote">任意・写真でも可（8MBまで）</span><input type="file" id="files" multiple accept="application/pdf,image/*" hidden></div><ul class="flist" id="flist"></ul></div>
         </div>
         <button type="submit" class="submit" id="send">申請する</button>
         <button type="button" class="btn" id="cancel" style="width:100%;margin-top:10px">これまでの申請を見る<span class="nb" id="cnt" style="margin-left:8px"></span></button>
@@ -265,18 +265,19 @@ function docHtml(i,pon){const bl=(t,x,g)=>'<div class="doc-block'+(g?' grow':'')
  +'<div class="doc-row2"><div class="doc-block" style="margin-bottom:0"><div class="bh">金額</div><div class="doc-amount"><span class="yen-total">¥ '+esc(i.amt)+'</span></div></div><div class="doc-block" style="margin-bottom:0"><div class="bh">見積書の添付</div><div class="doc-files-line'+(i.files.length?'':' empty')+'">'+esc(i.files.length?'📎 '+i.files.join('　/　'):'添付ファイルなし')+'</div></div></div>'
  +'<div class="doc-stamps-wrap"><div class="doc-stamps-title">決裁欄</div><div class="doc-stamps">'+stamp('園長（申請）',{d:'申請',n:'山田',at:i.at})+stamp('理事長補佐',i.h&&{d:i.h.d,n:'柴',at:i.h.at},pon==='hosa')+stamp('理事長',i.r&&{d:i.r.d,n:'柴',at:i.r.at},pon==='rijicho')+'</div><div class="doc-footer">決裁承認システムにより電子的に承認されたものです。</div></div>'}
 function lastC(i,a){return i.log.filter(x=>x.action===a).pop()}
+function cm(h){return h&&h.comment?'<div class="c">'+esc(h.role)+'より：'+esc(h.comment)+'</div>':''}
 function nextHtml(i){
  if(role==='encho'){
   if(i.st===W)return['wait','<b>理事長の確認待ちです</b><p>結果が出ると、ポータルの左メニュー「決裁申請」に赤丸が付きます。まだ発注しないでください。</p>'];
-  if(i.st===D)return['done','<b>決裁されました</b><p>'+(num(i.amt)>=500000?'500,000円以上のため、契約書を取り交わしてから発注してください。':'発注に進んでください。')+'</p>'];
-  const h=lastC(i,i.st);const c=h?'<div class="c">'+esc(h.role)+'より：'+esc(h.comment)+'</div>':'';
+  if(i.st===D)return['done','<b>決裁されました</b><p>'+(num(i.amt)>=500000?'500,000円以上のため、契約書を取り交わしてから発注してください。':'発注に進んでください。')+'</p>'+i.log.filter(x=>x.action==='承認'&&x.comment).map(cm).join('')];
+  const c=cm(lastC(i,i.st));
   if(i.st===B)return['back','<b>差戻しになりました</b><p>理由を確認し、修正して再申請してください。</p>'+c+'<button type="button" class="btn main" id="redo" style="width:100%">修正して再申請する</button>'];
   return['rej','<b>却下されました</b><p>この申請は終了です。発注しないでください。</p>'+c];
  }
  const can=role==='rijicho'?i.st===W:hosaPending(i);
  if(!can){const m=i.st===W?'理事長の確認待ちです。補佐の印は押してあります。':i.st===B?'園長へ差し戻し中です。再申請されると、もう一度確認待ちになります。':i.st===D?'理事長の承認により、決裁済みです。':'却下されました。手続きは終了しています。';return['wait','<b>'+i.st+'</b><p>'+m+'</p>']}
  const late=role==='hosa'&&i.st===D;
- return['wait','<b>'+LABEL[role]+'（'+NAMES[role]+'）</b>'+(late?'<p>決裁済みです。補佐の印だけ押せます。</p>':'')+'<button type="button" class="btn approve" data-d="承認">承認する</button>'+(late?'':'<div style="margin-top:12px"><label class="lbl" for="cmt" style="font-size:15px">差戻し・却下の理由</label><textarea id="cmt" placeholder="差戻し・却下のときだけ入力"></textarea><div class="err" id="cmtErr" hidden style="margin:6px 0 0">理由を入力してください</div><div class="two"><button type="button" class="btn" data-d="差戻し">差戻し</button><button type="button" class="btn" data-d="却下">却下</button></div></div>')];
+ return['wait','<b>'+LABEL[role]+'（'+NAMES[role]+'）</b>'+(late?'<p>決裁済みです。補佐の印だけ押せます。</p>':'')+'<button type="button" class="btn approve" data-d="承認">承認する</button>'+(late?'':'<div class="two"><button type="button" class="btn" data-d="差戻し">差戻し</button><button type="button" class="btn" data-d="却下">却下</button></div>')+'<button type="button" class="btn" id="cmtT" style="width:100%;margin-top:8px">💬 コメントを書く</button><div id="cmtW" hidden style="margin-top:8px"><label class="lbl" for="cmt" style="font-size:15px">園長へのコメント（任意）</label><textarea id="cmt" placeholder="入力してから、承認・差戻し・却下を押してください"></textarea></div>'];
 }
 function openD(i,pon){cur=i;if(role==='encho'&&(i.st===D||i.st===R))i.seen=true;
  $('dSt').className='badge '+cls(i.st);$('dSt').textContent=i.st;$('dNo').textContent=i.no;$('doc').innerHTML=docHtml(i,pon);
@@ -286,6 +287,7 @@ function openD(i,pon){cur=i;if(role==='encho'&&(i.st===D||i.st===R))i.seen=true;
  $('dFiles').innerHTML=i.files.length?i.files.map(f=>'<div style="font-weight:700;word-break:break-all">📎 '+esc(f)+'</div>').join(''):'<span style="color:var(--ink-soft)">添付はありません</span>';
  $('hist').innerHTML=i.log.slice().reverse().map(h=>'<li><b>'+esc(h.role)+'</b>　'+esc(h.name)+'　<b>'+esc(h.action)+'</b><div class="w">'+esc(h.at)+'</div>'+(h.comment?'<div class="c">'+esc(h.comment)+'</div>':'')+'</li>').join('');
  $('ov').hidden=false;document.body.style.overflow='hidden';fit();
+ const ct=$('cmtT');if(ct)ct.onclick=()=>{$('cmtW').hidden=false;ct.hidden=true;$('cmt').focus()};
  const rd=$('redo');if(rd)rd.onclick=()=>{const x=cur;closeD();startForm(x)};
  $('next').querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>decide(b.dataset.d));
  render();
@@ -293,20 +295,19 @@ function openD(i,pon){cur=i;if(role==='encho'&&(i.st===D||i.st===R))i.seen=true;
 function closeD(){$('ov').hidden=true;document.body.style.overflow='';cur=null}
 function fit(){const a=$('docArea'),wide=innerWidth>900,s=Math.min((a.clientWidth-32)/794,wide?(a.clientHeight-32)/1123:Infinity,1);$('doc').style.transform='scale('+s+')';$('sc').style.width=794*s+'px';$('sc').style.height=1123*s+'px'}
 addEventListener('resize',()=>{if(cur)fit()});
-function decide(d){const i=cur,cm=$('cmt'),c=cm?cm.value.trim():'';
- if(d!=='承認'&&!c){$('cmtErr').hidden=false;cm.focus();return}
+function decide(d){const i=cur,ce=$('cmt'),c=ce?ce.value.trim():'';
  const rec={d,at:today()};if(role==='hosa')i.h=rec;else i.r=rec;
  if(d===B)i.st=B;else if(d===R)i.st=R;else if(role==='rijicho')i.st=D;
  i.seen=false;i.log.push(hist(LABEL[role],NAMES[role],d,nowS(),c));
  openD(i,role);
- log(d==='承認'?(role==='rijicho'?'決裁済みになりました。上の「園長」に切り替えると、左メニューに赤い数字が付いています。':'補佐の印が押されました。決裁の状態は変わらず、園長への通知もありません。'):d+'になりました。「園長」に切り替えると、理由と赤い数字が確認できます。');
+ log(d==='承認'?(role==='rijicho'?'決裁済みになりました。上の「園長」に切り替えると、左メニューに赤い数字が付いています。':'補佐の印が押されました。決裁の状態は変わらず、園長への通知もありません。'):d+'になりました。「園長」に切り替えると、赤い数字とコメントが確認できます。');
 }
 function startForm(x){$('f').reset();picked=[];editing=x||null;renderFiles();$('backNote').hidden=!x;$('send').textContent=x?'再申請する':'申請する';
  if(x){$('kubun').value=x.kubun;$('riyu_kbn').value=x.rk;$('kenmei').value=x.ken;$('kingaku').value=x.amt;$('jiki').value=x.jiki;$('riyu').value=x.riyu;$('v1').value=x.v[0][0];[1,2].forEach(k=>{const v=x.v[k]||['',''];$('v'+(k+1)).value=v[0];$('a'+(k+1)).value=v[1]});
-  if(needA()&&!x.v[1])$('noA').checked=true;const h=lastC(x,B);$('backNote').innerHTML='<b>差戻しの修正（'+x.no+'）</b>'+(h?'<div class="c">'+esc(h.role)+'より：'+esc(h.comment)+'</div>':'')}
+  if(needA()&&!x.v[1])$('noA').checked=true;const h=lastC(x,B);$('backNote').innerHTML='<b>差戻しの修正（'+x.no+'）</b>'+cm(h)}
  aim();show('form');scrollTo(0,0)}
 const needA=()=>num($('kingaku').value)>=500000,noteReq=()=>(needA()&&$('noA').checked)||$('kubun').value==='その他'||$('riyu_kbn').value==='その他';
-function aim(){$('aimitsu').hidden=!needA();$('pick').textContent=needA()?'📎 見積書・契約書を添付':'📎 見積書を添付';const t=$('riyuTag');t.textContent=noteReq()?'必須':'任意・ひとことで';t.className=noteReq()?'req':'opt'}
+function aim(){const pn=$('pickNote');pn.textContent=(needA()?'必須':'任意')+'・写真でも可（8MBまで）';pn.style.color=needA()?'var(--danger)':'';$('aimitsu').hidden=!needA();$('pick').textContent=needA()?'📎 見積書・契約書を添付':'📎 見積書を添付';const t=$('riyuTag');t.textContent=noteReq()?'必須':'任意・ひとことで';t.className=noteReq()?'req':'opt'}
 document.querySelectorAll('[data-amt]').forEach(e=>e.addEventListener('input',function(){this.value=yen(this.value)}));
 ['kingaku','kubun','riyu_kbn','noA'].forEach(id=>{$(id).addEventListener('input',aim);$(id).addEventListener('change',aim)});
 $('files').onchange=e=>{Array.from(e.target.files).forEach(f=>picked.push(f.name));renderFiles();e.target.value=''};
@@ -317,6 +318,7 @@ $('f').addEventListener('submit',e=>{e.preventDefault();$('err').hidden=true;
  const three=needA()&&!$('noA').checked;
  if(three)for(const id of ['v2','a2','v3','a3'])if(!$(id).value.trim()){$(id).focus();return err('相見積もり3社分を入力するか、「相見積もりを取れない」にチェックしてください')}
  if(noteReq()&&!$('riyu').value.trim()){$('riyu').focus();return err('補足に内容または理由を入力してください')}
+ if(needA()&&!picked.length&&!(editing&&editing.files.length))return err('500,000円以上は、見積書・契約書の添付が必須です');
  const v=[[$('v1').value.trim(),$('kingaku').value]];if(three){v.push([$('v2').value.trim(),$('a2').value],[$('v3').value.trim(),$('a3').value])}
  const base={kubun:$('kubun').value,ken:$('kenmei').value.trim(),rk:$('riyu_kbn').value,riyu:$('riyu').value.trim(),jiki:$('jiki').value,v,amt:$('kingaku').value,at:today(),h:null,r:null,seen:false};
  let it;if(editing){it=Object.assign(editing,base);it.st=W;it.files=it.files.concat(picked);it.log.push(hist('園長',ENCHO,'再申請',nowS()))}
