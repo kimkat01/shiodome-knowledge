@@ -322,7 +322,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:
     </div>
     <div class="kb-row">
       <label>子どもの声の別扱い</label>
-      <label style="width:auto;font-weight:normal;"><input type="checkbox" id="childSeparate" checked onchange="setChildSeparate(this.checked)"> 子どもの声らしい発言の文字を隠し、言葉の判定から外す（周囲より大きい声は残す）</label>
+      <label style="width:auto;font-weight:normal;"><input type="checkbox" id="childSeparate" onchange="setChildSeparate(this.checked)"> 子どもの声らしい発言の文字を隠し、言葉の判定から外す（周囲より大きい声は残す）</label>
     </div>
     <div class="kb-row">
       <label style="align-self:flex-start;padding-top:9px;">修正の学習<br><span style="font-size:9.5px;color:var(--text3)">誤り→正しい</span></label>
@@ -1284,10 +1284,10 @@ async function vaBoost(){
   vaAB=null; // メモリ解放
   renderFeed();
 }
-/* 子どもの声の別扱い（既定はON）：大人が興奮して声が高くなった場合を落とさないよう、
+/* 子どもの声の別扱い（既定はOFF。文字がほとんど隠れて確認しにくいため、必要なときだけON）：大人が興奮して声が高くなった場合を落とさないよう、
    声の高さに関係なく周囲より大きい声が続く発言は対象外にして、言葉の判定に残す */
-let childSeparate=true;
-try{childSeparate=localStorage.getItem('vm_child_separate')!=='0';}catch(e){}
+let childSeparate=false;
+try{childSeparate=localStorage.getItem('vm_child_separate')==='1';}catch(e){}
 function setChildSeparate(on){
   childSeparate=!!on;
   try{localStorage.setItem('vm_child_separate',on?'1':'0');}catch(e){}
@@ -1793,6 +1793,10 @@ async function analyzeFrame(base64Imgs,timeLabel,sensVal,gapSec){
 - peer_support：子ども同士の気持ちを言語化して仲介・協同遊びの足場かけ
 - language_model：豊かな語彙・擬音・比喩を使った声かけ・歌・絵本の読み聞かせ
 → 最も顕著な1件のみ、score は1〜5で評定
+→【重要】静止画なので、声かけ・言葉・感情の言語化は判定できない。言葉の内容を推測して検出しないこと
+→【重要】保育士が子どものすぐそばで、しゃがむ・向き合う・一緒に作業するなど、関わりが姿勢と位置から明らかな場合だけ検出する
+→ 立っているだけ・離れた場所にいる・配膳や片付けなどの作業中・子どもに背を向けている場合は必ず null
+→ 迷ったら null（1枚の画像から善意で推測して評価しない）
 →【重要】保育士が画面に映っていない場合は必ず null（子どもだけの場面・保育士不在は null）
 → 保育士の具体的な関わり行動が確認できない場合は null
 → 検出なしは null`:'→ 常に null'}
