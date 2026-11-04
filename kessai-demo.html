@@ -205,7 +205,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
             <label class="chk"><input type="checkbox" id="noA">相見積もりを取れない（理由を下の補足に記入）</label>
           </div>
           <div><label class="lbl" for="riyu">補足<span class="opt" id="riyuTag">任意・ひとことで</span></label><input type="text" id="riyu" placeholder="例）修理不能と業者判断"></div>
-          <div><div class="attach"><label class="btn" for="files" style="font-size:15px;padding:10px 16px">📎 見積書を添付</label>任意・写真でも可（8MBまで）<input type="file" id="files" multiple accept="application/pdf,image/*" hidden></div><ul class="flist" id="flist"></ul></div>
+          <div><div class="attach"><label class="btn" for="files" id="pick" style="font-size:15px;padding:10px 16px">📎 見積書を添付</label>任意・写真でも可（8MBまで）<input type="file" id="files" multiple accept="application/pdf,image/*" hidden></div><ul class="flist" id="flist"></ul></div>
         </div>
         <button type="submit" class="submit" id="send">申請する</button>
         <button type="button" class="btn" id="cancel" style="width:100%;margin-top:10px">これまでの申請を見る<span class="nb" id="cnt" style="margin-left:8px"></span></button>
@@ -306,7 +306,7 @@ function startForm(x){$('f').reset();picked=[];editing=x||null;renderFiles();$('
   if(needA()&&!x.v[1])$('noA').checked=true;const h=lastC(x,B);$('backNote').innerHTML='<b>差戻しの修正（'+x.no+'）</b>'+(h?'<div class="c">'+esc(h.role)+'より：'+esc(h.comment)+'</div>':'')}
  aim();show('form');scrollTo(0,0)}
 const needA=()=>num($('kingaku').value)>=500000,noteReq=()=>(needA()&&$('noA').checked)||$('kubun').value==='その他'||$('riyu_kbn').value==='その他';
-function aim(){$('aimitsu').hidden=!needA();const t=$('riyuTag');t.textContent=noteReq()?'必須':'任意・ひとことで';t.className=noteReq()?'req':'opt'}
+function aim(){$('aimitsu').hidden=!needA();$('pick').textContent=needA()?'📎 見積書・契約書を添付':'📎 見積書を添付';const t=$('riyuTag');t.textContent=noteReq()?'必須':'任意・ひとことで';t.className=noteReq()?'req':'opt'}
 document.querySelectorAll('[data-amt]').forEach(e=>e.addEventListener('input',function(){this.value=yen(this.value)}));
 ['kingaku','kubun','riyu_kbn','noA'].forEach(id=>{$(id).addEventListener('input',aim);$(id).addEventListener('change',aim)});
 $('files').onchange=e=>{Array.from(e.target.files).forEach(f=>picked.push(f.name));renderFiles();e.target.value=''};
