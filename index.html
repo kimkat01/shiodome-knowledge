@@ -1776,6 +1776,8 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
     var jk = document.getElementById('jkLink');
     jk.href = JIKO_URLS[GARDEN_INFO.key];
     jk.style.display = '';
+    // 自己申告を使う園は、給食・駐車場も自己申告で申告するので「給食・駐車場」（旧ボタンの記録）は出さない
+    document.getElementById('kpLink').style.display = 'none';
   }
   // 2026-10-16：給食・駐車場の一覧は「園長（と本部）だけ修正できる」。新しいタブにはログイン情報が
   //   引き継がれないことがあるため、開く瞬間に誰が開いたかを10分だけ有効な引き継ぎメモとして渡す
