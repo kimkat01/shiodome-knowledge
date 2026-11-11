@@ -1833,7 +1833,7 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
 })();
 
 // ============================================================
-// 採用計画申請書：本部の結果（可決・否決・採用決定・不採用）が出たら赤丸で知らせる（2026-10-19）
+// 採用計画申請書：本部の結果（可決・相談・採用決定・不採用）が出たら赤丸で知らせる（2026-10-19）
 //   ・採用申請のGASから、この園の採用前申請・応募者決裁のステータスを読む
 //   ・園長が採用申請の画面で「これまでの申請」を見ると、そのとき出ていた結果は「見た」ことになり赤丸が消える
 //     （見た記録はこのパソコンのブラウザに保存：saiyo_seen__園キー）
@@ -1842,7 +1842,7 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
 (function(){
   var SAIYO_GAS = 'https://script.google.com/macros/s/AKfycbzccLc5Pb4u_SoH4QAjSZyWZBmpmoGSMowK8HShbxkdP6_9NjztdNqYT0pMb4XK6Z9cKA/exec';
   if(!GARDEN_INFO || !GARDEN_INFO.code || HQ_MODE) return;
-  var DONE = /可決|否決|採用決定|不採用|承認|却下/;
+  var DONE = /可決|相談|採用決定|不採用|承認|却下/;
   function get(action){
     return fetch(SAIYO_GAS + '?action=' + action + '&facility=' + encodeURIComponent(GARDEN_INFO.code) + '&t=' + Date.now())
       .then(function(r){ return r.text(); })

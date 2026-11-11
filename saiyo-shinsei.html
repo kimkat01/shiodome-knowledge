@@ -41,6 +41,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:17p
 .st.wait{background:var(--warn-pale);color:var(--warn)}
 .st.ok{background:var(--ok-pale);color:var(--ok)}
 .st.ng{background:var(--danger-pale);color:var(--danger)}
+.st.talk{background:var(--warn-pale);color:var(--warn)}
 .hist-h{margin:8px 0 0;font-size:18px}
 .newtag{display:inline-block;background:var(--danger);color:#fff;font-size:12px;font-weight:800;padding:1px 8px;border-radius:999px;margin-right:8px;vertical-align:2px}
 header{background:var(--accent);color:#fff;padding:18px 16px}
@@ -1021,7 +1022,7 @@ function submitK(){
 }
 
 /* これまでの申請（この園の分） */
-function stClass(s){ s=String(s||''); return /否決|不採用|却下/.test(s)?'ng':/可決|採用決定|承認/.test(s)?'ok':'wait'; }
+function stClass(s){ s=String(s||''); return /相談/.test(s)?'talk':/不採用|却下/.test(s)?'ng':/可決|採用決定|承認/.test(s)?'ok':'wait'; }
 function loadHistory(){
   Promise.all([gasGet('action=listStage1&facility='+encodeURIComponent(FCODE)),gasGet('action=listStage2&facility='+encodeURIComponent(FCODE))]).then(([s1,s2])=>{
     const items=[];
@@ -1029,7 +1030,7 @@ function loadHistory(){
     (s2||[]).forEach(r=>items.push({id:r['決裁ID'],d:String(r['提出日時']||''),kind:'応募者決裁',t:`${r['応募者氏名']||''}さん（${r['採用前申請タイトル']||r['紐づく申請ID']||''}）`,st:r['ステータス']||'決裁確認中',c:r['決裁コメント']}));
     items.sort((x,y)=>x.d<y.d?1:-1);
     /* 園長ダッシュボードの赤丸：本部の結果が出たものを「見た」にする。新しく結果が出たものには NEW を付ける */
-    const SEEN_KEY='saiyo_seen__'+G.key, DONE=/可決|否決|採用決定|不採用|承認|却下/;
+    const SEEN_KEY='saiyo_seen__'+G.key, DONE=/可決|相談|採用決定|不採用|承認|却下/;
     let seen={}; try{ seen=JSON.parse(localStorage.getItem(SEEN_KEY)||'{}')||{}; }catch(e){}
     items.forEach(i=>{ i.isNew=DONE.test(String(i.st)) && seen[i.id]!==String(i.st); if(i.id&&DONE.test(String(i.st))) seen[i.id]=String(i.st); });
     try{ localStorage.setItem(SEEN_KEY,JSON.stringify(seen)); }catch(e){}
