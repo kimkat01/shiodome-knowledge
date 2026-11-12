@@ -676,7 +676,7 @@ function hqChangeMember(){
     <a class="tool-item" id="kessaiLink" href="kessai-shinsei.html" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4"/><path d="M9 13l2 2 4-4"/></svg>決裁申請</a>
     <a class="tool-item" id="saiyoLink" href="saiyo-shinsei.html" target="_blank" rel="noopener">
-      <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>採用計画申請書<span class="nav-badge" id="saiyoBadge" title="本部の結果が出ています"></span></a>
+      <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>採用申請<span class="nav-badge" id="saiyoBadge" title="本部の結果が出ています"></span></a>
     <!-- シフト集計（2026-11-10、旧「給食・駐車場」）：1つの項目。開く先は園ごとに変わる
          ・自己申告を使う園（今はふれあいしおどめ保育園）… 自己申告の事務用ページ（全員一覧・締め用Excel・差し戻し）
          ・それ以外の園 … 給食・駐車場の記録一覧（kp-list.html） -->
@@ -1740,7 +1740,7 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
       lock('manualLink', needGarden('規約・マニュアル'));
       lock('kpLink', needGarden('シフト集計'));
       lock('kessaiLink', needGarden('決裁申請'));
-      lock('saiyoLink', needGarden('採用計画申請書'));
+      lock('saiyoLink', needGarden('採用申請'));
       return;
     }
     // 園を選んでいるときは、下の通常処理でその園のリンクに切り替える
