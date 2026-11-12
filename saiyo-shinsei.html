@@ -43,6 +43,29 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:17p
 .st.ng{background:var(--danger-pale);color:var(--danger)}
 .st.talk{background:var(--warn-pale);color:var(--warn)}
 .hist-h{margin:8px 0 0;font-size:18px}
+.hrow.open{cursor:pointer;text-align:left;font:inherit;color:inherit;width:100%}
+.hrow.open:hover,.hrow.open:focus-visible{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-pale);outline:none}
+.hrow .see{display:inline-block;margin-top:4px;font-size:14px;font-weight:800;color:var(--accent-dark)}
+.hrow .rt{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+/* 申請内容を見る（2026-11-12） */
+.mdl{position:fixed;inset:0;z-index:50;background:rgba(10,12,20,.55);display:flex;align-items:flex-start;justify-content:center;padding:24px 12px;overflow-y:auto}
+.mdl-box{background:var(--card);border-radius:14px;width:100%;max-width:820px;padding:20px;display:flex;flex-direction:column;gap:14px}
+.mdl-hd{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.mdl-hd .k{font-size:15px;font-weight:800;color:var(--sub)}
+.mdl .doc h3{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+.mdl a{color:var(--accent-dark);font-weight:700;word-break:break-all}
+@media print{
+  @page{size:A4;margin:12mm}
+  body.printing>*:not(.mdl){display:none!important}
+  body.printing{background:#fff}
+  body.printing .mdl{position:static;background:none;padding:0;overflow:visible}
+  body.printing .mdl-box{max-width:none;padding:0;border-radius:0}
+  body.printing .noprint{display:none!important}
+  body.printing .doc{border-color:#999}
+  body.printing table{font-size:12pt}
+  body.printing th,body.printing td{border-color:#999;color:#000;background:#fff}
+  body.printing .doc h3{background:#fff;color:#000;border-bottom:1px solid #999}
+}
 .newtag{display:inline-block;background:var(--danger);color:#fff;font-size:12px;font-weight:800;padding:1px 8px;border-radius:999px;margin-right:8px;vertical-align:2px}
 header{background:var(--accent);color:#fff;padding:18px 16px}
 :root[data-theme="dark"] header{color:#10131c}
@@ -503,6 +526,23 @@ td{white-space:pre-wrap;word-break:break-word}
 </section>
 
 </main>
+
+<!-- 申請内容を見る（これまでの申請の行を押すと開く） -->
+<div class="mdl" id="mdl" hidden role="dialog" aria-modal="true" aria-labelledby="mdl-title">
+  <div class="mdl-box">
+    <div class="mdl-hd noprint">
+      <span class="k" id="mdl-kind"></span>
+      <div class="inline">
+        <button type="button" class="btn btn-g" id="mdl-print">印刷／PDF保存</button>
+        <button type="button" class="btn btn-p" id="mdl-close">閉じる</button>
+      </div>
+    </div>
+    <div class="doc">
+      <h3><span id="mdl-title"></span><span class="st" id="mdl-st"></span></h3>
+      <div class="tblwrap"><table id="mdl-tbl"></table></div>
+    </div>
+  </div>
+</div>
 
 <script>
 (function(){
@@ -1026,18 +1066,57 @@ function stClass(s){ s=String(s||''); return /相談/.test(s)?'talk':/不採用|
 function loadHistory(){
   Promise.all([gasGet('action=listStage1&facility='+encodeURIComponent(FCODE)),gasGet('action=listStage2&facility='+encodeURIComponent(FCODE))]).then(([s1,s2])=>{
     const items=[];
-    (s1||[]).forEach(r=>items.push({id:r['申請ID'],d:String(r['提出日時']||''),kind:'採用前申請',t:r['申請タイトル']||`${r['職種']||''}採用の申請`,st:r['ステータス']||'本部確認中',c:r['本部コメント']}));
-    (s2||[]).forEach(r=>items.push({id:r['決裁ID'],d:String(r['提出日時']||''),kind:'応募者決裁',t:`${r['応募者氏名']||''}さん（${r['採用前申請タイトル']||r['紐づく申請ID']||''}）`,st:r['ステータス']||'決裁確認中',c:r['決裁コメント']}));
+    (s1||[]).forEach(r=>items.push({raw:r,id:r['申請ID'],d:String(r['提出日時']||''),kind:'採用前申請',t:r['申請タイトル']||`${r['職種']||''}採用の申請`,st:r['ステータス']||'本部確認中',c:r['本部コメント']}));
+    (s2||[]).forEach(r=>items.push({raw:r,id:r['決裁ID'],d:String(r['提出日時']||''),kind:'応募者決裁',t:`${r['応募者氏名']||''}さん（${r['採用前申請タイトル']||r['紐づく申請ID']||''}）`,st:r['ステータス']||'決裁確認中',c:r['決裁コメント']}));
     items.sort((x,y)=>x.d<y.d?1:-1);
     /* 園長ダッシュボードの赤丸：本部の結果が出たものを「見た」にする。新しく結果が出たものには NEW を付ける */
     const SEEN_KEY='saiyo_seen__'+G.key, DONE=/可決|相談|採用決定|不採用|承認|却下/;
     let seen={}; try{ seen=JSON.parse(localStorage.getItem(SEEN_KEY)||'{}')||{}; }catch(e){}
     items.forEach(i=>{ i.isNew=DONE.test(String(i.st)) && seen[i.id]!==String(i.st); if(i.id&&DONE.test(String(i.st))) seen[i.id]=String(i.st); });
     try{ localStorage.setItem(SEEN_KEY,JSON.stringify(seen)); }catch(e){}
-    $('hist').innerHTML=items.length?items.slice(0,15).map(i=>`<div class="hrow"><div><div class="t">${i.isNew?'<span class="newtag">NEW</span>':''}${esc(i.t)}</div><div class="m">${esc(i.kind)}・${esc(i.d)}${i.c?'・本部より：'+esc(i.c):''}</div></div><span class="st ${stClass(i.st)}">${esc(i.st)}</span></div>`).join('')
+    HIST=items.slice(0,30);
+    $('hist').innerHTML=HIST.length?HIST.map((i,n)=>`<button type="button" class="hrow open" data-n="${n}"><div><div class="t">${i.isNew?'<span class="newtag">NEW</span>':''}${esc(i.t)}</div><div class="m">${esc(i.kind)}・${esc(i.d)}${i.c?'・本部より：'+esc(i.c):''}</div></div><span class="rt"><span class="st ${stClass(i.st)}">${esc(i.st)}</span><span class="see">内容を見る ›</span></span></button>`).join('')
       :'<div class="note">まだ申請はありません。</div>';
   }).catch(()=>{ $('hist').innerHTML='<div class="note">これまでの申請を読み込めませんでした。</div>'; });
 }
+
+/* 申請内容を見る（2026-11-12）：これまでの申請の行を押すと、出した内容を書類の形で表示。印刷・PDF保存もできる */
+let HIST=[];
+function linkify(v){
+  return String(v??'').split(/\n+/).filter(x=>x.trim()).map(x=>{
+    const m=x.match(/https?:\/\/\S+/); if(!m) return esc(x);
+    const label=x.replace(m[0],'').replace(/[：:\s]+$/,'').trim()||'ファイルを開く';
+    return `<a href="${esc(m[0])}" target="_blank" rel="noopener">${esc(label)}</a>`; }).join('<br>')||'なし';
+}
+function stage2Rows(r){
+  const y=v=>v!==''&&v!==undefined&&v!==null&&!isNaN(+v)?yen(+v):v;
+  return [['受付番号',r['決裁ID']],['提出日時',r['提出日時']],['園名',r['施設名']],['記入者',r['記入者']],
+    ['採用前申請',r['採用前申請タイトル']||r['紐づく申請ID']],['応募者氏名',r['応募者氏名']],['面接日',r['面接日']],
+    ['推薦する理由',r['推薦理由']],['職種',r['確定雇用形態']],['入職日',r['入職日']],['給与',r['確定給与条件']],
+    ['想定年収（1人）',y(r['想定年収（1人）'])],['人件費（年度末まで）',y(r['人件費_年度末まで'])],['人件費（年間）',y(r['人件費_年間'])],
+    ['採用経路',r['採用媒体']],['紹介手数料',y(r['紹介手数料'])],
+    ['採用前申請との相違',r['①との相違有無']==='あり'?('あり\n'+(r['相違内容']||'')):(r['①との相違有無']||'')],
+    ['決裁日時',r['決裁日時']],['本部コメント',r['決裁コメント']]]
+    .filter(([k,v])=>v!==undefined&&v!==null&&String(v).trim()!=='');
+}
+function openDetail(i){
+  const r=i.raw||{};
+  let title=i.t, rows;
+  if(i.kind==='採用前申請'){ const a=appFromRow(r); title=a.title; rows=a.rows; }
+  else { rows=stage2Rows(r); title=`${String(r['提出日時']||'').slice(0,10)}【${r['施設名']||GARDEN}】応募者決裁：${r['応募者氏名']||''}さん`; }
+  $('mdl-kind').textContent=i.kind;
+  $('mdl-title').textContent=title;
+  $('mdl-st').className='st '+stClass(i.st); $('mdl-st').textContent=i.st;
+  $('mdl-tbl').innerHTML=tbl(rows)+(i.kind==='応募者決裁'?`<tr><th scope="row">添付書類</th><td>${linkify(r['履歴書URL'])}</td></tr>`:'');
+  $('mdl').hidden=false; document.body.style.overflow='hidden'; $('mdl-close').focus();
+}
+function closeDetail(){ $('mdl').hidden=true; document.body.style.overflow=''; }
+$('hist').addEventListener('click',e=>{ const b=e.target.closest('.hrow.open'); if(b&&HIST[+b.dataset.n]) openDetail(HIST[+b.dataset.n]); });
+$('mdl-close').onclick=closeDetail;
+$('mdl').addEventListener('click',e=>{ if(e.target===$('mdl')) closeDetail(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!$('mdl').hidden) closeDetail(); });
+$('mdl-print').onclick=()=>{ document.body.classList.add('printing'); window.print(); };
+window.addEventListener('afterprint',()=>document.body.classList.remove('printing'));
 
 home();
 loadHistory();
