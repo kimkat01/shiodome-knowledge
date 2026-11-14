@@ -407,7 +407,7 @@ html.law-y .kb-logout:hover{background:#e6f2ea;}
 <body>
 <!-- 試作版（2026-11-14）：本番（index.html）をコピーした検証用ページ。新しい機能はまずここに入れて、本部ダッシュボードの
      「ポータルサイト（試作版）」カードから確認する。確認できたら index.html に移して本番にする -->
-<div id="trial-ribbon" style="position:fixed;top:6px;left:50%;transform:translateX(-50%);z-index:99999;pointer-events:none;
+<div id="trial-ribbon" style="position:fixed;bottom:10px;left:10px;z-index:99999;pointer-events:none;
   background:#e8590c;color:#fff;font-size:13px;font-weight:700;padding:3px 14px;border-radius:999px;
   box-shadow:0 2px 6px rgba(0,0,0,.18);letter-spacing:.05em;">🧪 試作版（本番前の検証用）</div>
 <!-- ============================================================
@@ -704,7 +704,13 @@ function hqChangeMember(){
 
   <!-- ===== 中央：フィード ===== -->
   <main class="col-center">
-    <div class="c-head"><h1>しおどめポータルサイト</h1><span id="feedLabel">すべての投稿</span></div>
+    <div class="c-head"><div class="c-head-row">
+      <div><h1>しおどめポータルサイト</h1><span id="feedLabel">すべての投稿</span></div>
+      <!-- HP閲覧数（2026-11-14・試作版）：押すと自園のホームページ閲覧状況を表示（中身はページ末尾） -->
+      <button class="hp-btn" id="hpBtn" type="button" title="自園のホームページの閲覧状況を見る">
+        <span class="hp-ic">🌐</span><span class="hp-label">HP閲覧数</span><span class="hp-num" id="hpNum">…</span>
+      </button>
+    </div></div>
 
     <div class="feed-toolbar">
       <div class="search-box">
@@ -2120,5 +2126,225 @@ document.addEventListener('click', function(e){
   kbLog('ホーム');
 })();
 </script>
+<!-- ============================================================
+     HP閲覧数（2026-11-14・試作版）
+     ・ヘッダー右の「HP閲覧数」ボタンに今月の閲覧数を表示。押すと詳細（今日・今月・訪問者・スマホ比率・30日推移・押されたボタン）
+     ・数字は GAS（GA4 から園ページごとの数字を取る）から読む。HP_STATS_URL が空のあいだは「サンプル表示」になる
+     ・本部用（?garden=honbu）は、左の「表示する園」で選んだ園の数字を出す
+     ============================================================ -->
+<style>
+  .c-head-row{display:flex; align-items:center; gap:12px;}
+  .c-head-row > div:first-child{min-width:0;}
+  .hp-btn{margin-left:auto; flex:none; display:inline-flex; align-items:center; gap:8px; cursor:pointer; font-family:inherit;
+    border:none; border-radius:999px; padding:9px 16px 9px 14px; color:#fff; font-size:14px; font-weight:800; letter-spacing:.02em;
+    background:linear-gradient(135deg,#ff7a2f 0%,#ff3d8b 100%); box-shadow:0 4px 14px rgba(255,61,139,.35);
+    position:relative; transition:transform .15s, box-shadow .15s;}
+  .hp-btn:hover{transform:translateY(-1px); box-shadow:0 6px 18px rgba(255,61,139,.45);}
+  .hp-btn::after{content:""; position:absolute; inset:-4px; border-radius:999px; border:2px solid rgba(255,61,139,.55);
+    animation:hpPulse 2.2s ease-out infinite; pointer-events:none;}
+  @keyframes hpPulse{0%{opacity:.9; transform:scale(.96)} 70%{opacity:0; transform:scale(1.12)} 100%{opacity:0}}
+  .c-head .hp-btn span{color:#fff; font-size:inherit;}
+  .hp-btn .hp-ic{font-size:17px; line-height:1;}
+  .c-head .hp-btn .hp-num{background:#fff; color:#e6338a; border-radius:999px; padding:2px 10px; font-size:13px; font-weight:800; white-space:nowrap;}
+  .c-head .hp-btn .hp-num small{font-size:11px; font-weight:700; color:#b14a7a; margin-right:3px;}
+  @media (max-width:560px){ .hp-btn .hp-label{display:none} }
+
+  #hpModal{position:fixed; inset:0; z-index:9000; display:none; align-items:flex-start; justify-content:center;
+    background:rgba(20,22,40,.42); padding:40px 14px; overflow:auto;}
+  #hpModal.open{display:flex;}
+  .hp-card{background:#fff; width:100%; max-width:760px; border-radius:18px; box-shadow:0 18px 50px rgba(0,0,0,.25); padding:22px 24px 20px; color:#000;}
+  .hp-top{display:flex; align-items:flex-start; gap:12px; margin-bottom:6px;}
+  .hp-top h2{margin:0; font-size:19px;}
+  .hp-top .hp-garden{font-size:14px; font-weight:700; color:#e6338a; margin-top:2px;}
+  .hp-close{margin-left:auto; border:1px solid #ddd; background:#fff; border-radius:8px; padding:6px 12px; font-size:13px; cursor:pointer; font-family:inherit;}
+  .hp-meta{font-size:12px; color:#555; margin:2px 0 14px;}
+  .hp-sample{display:inline-block; background:#fff3cd; color:#7a5300; border:1px solid #f0d58a; border-radius:8px; padding:6px 10px; font-size:12.5px; font-weight:700; margin-bottom:12px;}
+  .hp-kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:16px;}
+  @media (max-width:640px){ .hp-kpis{grid-template-columns:repeat(2,1fr);} }
+  .hp-kpi{border:1px solid #eee; border-radius:12px; padding:10px 12px; background:#fffafc;}
+  .hp-kpi .k{font-size:12px; color:#333; font-weight:700;}
+  .hp-kpi .v{font-size:24px; font-weight:800; margin-top:2px; color:#000;}
+  .hp-kpi .v small{font-size:13px; font-weight:700; margin-left:2px;}
+  .hp-kpi .d{font-size:12px; margin-top:2px; color:#555;}
+  .hp-up{color:#1a8a4a !important; font-weight:800;} .hp-down{color:#d0342c !important; font-weight:800;}
+  .hp-sec{font-size:14px; font-weight:800; margin:6px 0 8px;}
+  .hp-chart{border:1px solid #eee; border-radius:12px; padding:10px 10px 4px; margin-bottom:16px;}
+  .hp-chart svg{display:block; width:100%; height:auto;}
+  .hp-btns{list-style:none; margin:0 0 14px; padding:0;}
+  .hp-btns li{display:grid; grid-template-columns:minmax(120px,220px) 1fr 56px; align-items:center; gap:10px; padding:5px 0; font-size:13.5px;}
+  .hp-btns .bar{height:12px; border-radius:6px; background:linear-gradient(90deg,#ff7a2f,#ff3d8b);}
+  .hp-btns .cnt{text-align:right; font-weight:800;}
+  .hp-btns .lbl{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .hp-empty{font-size:13px; color:#555; padding:8px 0 14px;}
+  .hp-note{font-size:12px; color:#555; border-top:1px dashed #e5e5e5; padding-top:10px; line-height:1.6;}
+</style>
+
+<div id="hpModal" role="dialog" aria-modal="true" aria-labelledby="hpTitle">
+  <div class="hp-card">
+    <div class="hp-top">
+      <div><h2 id="hpTitle">🌐 ホームページ閲覧状況</h2><div class="hp-garden" id="hpGarden"></div></div>
+      <button class="hp-close" type="button" onclick="hpClose()">✕ 閉じる</button>
+    </div>
+    <div class="hp-meta" id="hpMeta"></div>
+    <div id="hpBody"></div>
+    <div class="hp-note">
+      ※ 閲覧数は「保護者の関心の目安」です。入園を希望する人の数そのものではありません。<br>
+      ※ 計測は2026年11月から始めたため、それより前の数字はありません。前月比が正しく出るのは2027年1月ごろからです。<br>
+      ※ 数字はGoogleアナリティクスから自動で取り込みます（数時間おきに更新）。
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ★ GAS（HP閲覧数API）のURL。用意できたらここに貼る。空のあいだはサンプル表示
+  var HP_STATS_URL = '';
+
+  var btn = document.getElementById('hpBtn');
+  var numEl = document.getElementById('hpNum');
+  if(!btn) return;
+
+  // 表示する園（園マスタの1件）。本部は左の「表示する園」で選んだ園
+  function targetGarden(){
+    if(typeof HQ_MODE !== 'undefined' && HQ_MODE) return (typeof HQ_VIEW !== 'undefined') ? HQ_VIEW : null;
+    return (typeof GARDEN_INFO !== 'undefined') ? GARDEN_INFO : null;
+  }
+  var G = targetGarden();
+  var cache = null;
+
+  function fmt(n){ return (n == null || isNaN(n)) ? '—' : Number(n).toLocaleString('ja-JP'); }
+  function pct(cur, prev){
+    if(!prev) return null;
+    return Math.round((cur - prev) / prev * 100);
+  }
+
+  // サンプル（GASができるまでの見本。園ごとに少し数字を変える）
+  function sampleData(g){
+    var seed = 0, s = (g && g.key) || 'x';
+    for(var i = 0; i < s.length; i++) seed = (seed * 31 + s.charCodeAt(i)) % 9973;
+    function rnd(){ seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+    var daily = [], base = 25 + Math.round(rnd() * 30), today = new Date();
+    for(var d = 29; d >= 0; d--){
+      var dt = new Date(today); dt.setDate(today.getDate() - d);
+      var wk = dt.getDay(), mul = (wk === 0 || wk === 6) ? 0.6 : 1;
+      daily.push({ date: dt.getFullYear() + '-' + ('0' + (dt.getMonth() + 1)).slice(-2) + '-' + ('0' + dt.getDate()).slice(-2),
+                   pv: Math.round((base + rnd() * 25) * mul) });
+    }
+    var monthPv = 0, m = today.getMonth();
+    daily.forEach(function(x){ if(Number(x.date.slice(5, 7)) - 1 === m) monthPv += x.pv; });
+    return {
+      sample: true,
+      updated: '',
+      today: daily[daily.length - 1].pv,
+      month: { pv: monthPv, users: Math.round(monthPv * 0.62), prevPv: Math.round(monthPv * (0.8 + rnd() * 0.4)) },
+      mobileRate: 70 + Math.round(rnd() * 20),
+      daily: daily,
+      buttons: [
+        { label: 'アクセス（地図）', count: 20 + Math.round(rnd() * 30) },
+        { label: '見学予約する',     count: 8 + Math.round(rnd() * 20) },
+        { label: '電話をかける',     count: 5 + Math.round(rnd() * 15) },
+        { label: 'Instagram',        count: 2 + Math.round(rnd() * 10) }
+      ].sort(function(a, b){ return b.count - a.count; })
+    };
+  }
+
+  function load(){
+    if(!G) return Promise.resolve(null);
+    if(cache) return Promise.resolve(cache);
+    if(!HP_STATS_URL){ cache = sampleData(G); return Promise.resolve(cache); }
+    return fetch(HP_STATS_URL + '?action=hpStats&garden=' + encodeURIComponent(G.key))
+      .then(function(r){ return r.json(); })
+      .then(function(j){ if(!j || j.ok === false) throw new Error((j && j.error) || 'error'); cache = j; return j; })
+      .catch(function(){ cache = sampleData(G); cache.loadError = true; return cache; });
+  }
+
+  // ヘッダーのボタンの数字
+  function paintButton(){
+    if(!G){ numEl.innerHTML = '<small>園を選択</small>'; return; }
+    load().then(function(d){
+      if(!d){ numEl.textContent = '—'; return; }
+      var p = pct(d.month.pv, d.month.prevPv);
+      var arrow = p == null ? '' : (p >= 20 ? ' ▲' : (p <= -20 ? ' ▼' : ''));
+      numEl.innerHTML = '<small>今月</small>' + fmt(d.month.pv) + arrow;
+    });
+  }
+
+  // 30日推移のグラフ（SVGの棒グラフ）
+  function chartSvg(daily){
+    var W = 700, H = 170, padL = 34, padB = 22, padT = 10, n = daily.length;
+    var max = Math.max.apply(null, daily.map(function(x){ return x.pv; }).concat([5]));
+    var step = Math.pow(10, Math.floor(Math.log10(max))); var top = Math.ceil(max / step) * step;
+    var bw = (W - padL - 6) / n, h = H - padB - padT, out = '';
+    for(var t = 0; t <= 2; t++){
+      var y = padT + h - h * t / 2, val = Math.round(top * t / 2);
+      out += '<line x1="' + padL + '" x2="' + W + '" y1="' + y + '" y2="' + y + '" stroke="#eee"/>' +
+             '<text x="' + (padL - 6) + '" y="' + (y + 4) + '" font-size="11" text-anchor="end" fill="#555">' + val + '</text>';
+    }
+    daily.forEach(function(x, i){
+      var bh = h * x.pv / top, bx = padL + i * bw + 1.5, by = padT + h - bh;
+      var wk = new Date(x.date + 'T00:00:00').getDay();
+      out += '<rect x="' + bx.toFixed(1) + '" y="' + by.toFixed(1) + '" width="' + Math.max(bw - 3, 2).toFixed(1) + '" height="' + bh.toFixed(1) +
+             '" rx="2" fill="' + ((wk === 0 || wk === 6) ? '#ffb3d1' : '#ff5a8a') + '"><title>' + x.date + '：' + x.pv + '回</title></rect>';
+      if(i % 5 === 0 || i === n - 1){
+        out += '<text x="' + (bx + bw / 2 - 1.5).toFixed(1) + '" y="' + (H - 6) + '" font-size="11" text-anchor="middle" fill="#555">' +
+               Number(x.date.slice(5, 7)) + '/' + Number(x.date.slice(8, 10)) + '</text>';
+      }
+    });
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="過去30日の閲覧数">' + out + '</svg>';
+  }
+
+  function render(d){
+    var body = document.getElementById('hpBody');
+    document.getElementById('hpGarden').textContent = G ? G.name : '';
+    if(!G){
+      document.getElementById('hpMeta').textContent = '';
+      body.innerHTML = '<div class="hp-empty">左の「表示する園」で園を選ぶと、その園のホームページの閲覧状況が表示されます。</div>';
+      return;
+    }
+    document.getElementById('hpMeta').textContent = d.updated ? ('最終更新：' + d.updated) : '';
+    var p = pct(d.month.pv, d.month.prevPv);
+    var pTxt = p == null ? '前月比 —' : ('前月比 <span class="' + (p >= 0 ? 'hp-up' : 'hp-down') + '">' + (p >= 0 ? '+' : '') + p + '%</span>');
+    var sig = p == null ? '' : (p >= 20 ? '🟢 関心が上昇中' : (p <= -20 ? '🔴 関心が低下中' : '🟡 前月並み'));
+    var html = '';
+    if(d.sample){
+      html += '<div class="hp-sample">⚠ ' + (d.loadError ? 'データを読み込めなかったため、' : '計測の準備中のため、') +
+              '表示例（サンプルの数字）を出しています</div>';
+    }
+    html += '<div class="hp-kpis">' +
+      '<div class="hp-kpi"><div class="k">今日の閲覧数</div><div class="v">' + fmt(d.today) + '</div><div class="d">今日の途中まで</div></div>' +
+      '<div class="hp-kpi"><div class="k">今月の閲覧数</div><div class="v">' + fmt(d.month.pv) + '</div><div class="d">' + pTxt + '</div></div>' +
+      '<div class="hp-kpi"><div class="k">今月の訪問者数</div><div class="v">' + fmt(d.month.users) + '<small>人</small></div><div class="d">' + sig + '</div></div>' +
+      '<div class="hp-kpi"><div class="k">スマホから見た人</div><div class="v">' + (d.mobileRate == null ? '—' : d.mobileRate) + '<small>%</small></div><div class="d">今月</div></div>' +
+      '</div>';
+    html += '<div class="hp-sec">過去30日の閲覧数</div><div class="hp-chart">' + chartSvg(d.daily || []) + '</div>';
+    html += '<div class="hp-sec">押されたボタン（今月）</div>';
+    var bs = d.buttons || [];
+    if(!bs.length){
+      html += '<div class="hp-empty">まだ記録がありません。</div>';
+    }else{
+      var mx = Math.max.apply(null, bs.map(function(b){ return b.count; }));
+      html += '<ul class="hp-btns">' + bs.map(function(b){
+        var lbl = String(b.label).replace(/[<>&"]/g, function(c){ return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]; });
+        return '<li><span class="lbl" title="' + lbl + '">' + lbl + '</span><span class="bar" style="width:' + Math.max(4, b.count / mx * 100) + '%"></span><span class="cnt">' + fmt(b.count) + '回</span></li>';
+      }).join('') + '</ul>';
+    }
+    body.innerHTML = html;
+  }
+
+  window.hpOpen = function(){
+    var m = document.getElementById('hpModal');
+    m.classList.add('open');
+    if(!G){ render(null); return; }
+    document.getElementById('hpBody').innerHTML = '<div class="hp-empty">読み込み中…</div>';
+    load().then(render);
+  };
+  window.hpClose = function(){ document.getElementById('hpModal').classList.remove('open'); };
+  document.getElementById('hpModal').addEventListener('click', function(e){ if(e.target === this) hpClose(); });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') hpClose(); });
+  btn.addEventListener('click', hpOpen);
+  paintButton();
+})();
+</script>
+
 </body>
 </html>
