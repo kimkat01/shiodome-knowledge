@@ -2189,7 +2189,7 @@ document.addEventListener('click', function(e){
     <div id="hpBody"></div>
     <div class="hp-note">
       ※ 閲覧数は「保護者の関心の目安」です。入園を希望する人の数そのものではありません。<br>
-      ※ 計測は2026年11月から始めたため、それより前の数字はありません。前月比が正しく出るのは2027年1月ごろからです。<br>
+      ※ 計測は2026年11月から始めたため、それより前の数字はありません。前月同期比（先月の同じ日までとの比較）が正しく出るのは2027年1月ごろからです。<br>
       ※ 数字はGoogleアナリティクスから自動で取り込みます（数時間おきに更新）。
     </div>
   </div>
@@ -2205,8 +2205,10 @@ document.addEventListener('click', function(e){
   if(!btn) return;
 
   // 表示する園（園マスタの1件）。本部は左の「表示する園」で選んだ園
+  // 本部で園を選んでいないときは、法人（学校法人柴学園のトップページ＋サイト全体）を出す
+  var HOJIN = { key:'hojin_shiba', code:'', name:'学校法人柴学園（法人トップ）' };
   function targetGarden(){
-    if(typeof HQ_MODE !== 'undefined' && HQ_MODE) return (typeof HQ_VIEW !== 'undefined') ? HQ_VIEW : null;
+    if(typeof HQ_MODE !== 'undefined' && HQ_MODE) return (typeof HQ_VIEW !== 'undefined' && HQ_VIEW) ? HQ_VIEW : HOJIN;
     return (typeof GARDEN_INFO !== 'undefined') ? GARDEN_INFO : null;
   }
   var G = targetGarden();
@@ -2252,9 +2254,15 @@ document.addEventListener('click', function(e){
     if(!G) return Promise.resolve(null);
     if(cache) return Promise.resolve(cache);
     if(!HP_STATS_URL){ cache = sampleData(G); return Promise.resolve(cache); }
-    return fetch(HP_STATS_URL + '?action=hpStats&garden=' + encodeURIComponent(G.key))
+    return fetch(HP_STATS_URL + '?action=hpStats&garden=' + encodeURIComponent(G.key || '') +
+                 '&code=' + encodeURIComponent(G.code || '') + '&name=' + encodeURIComponent(G.name || ''))
       .then(function(r){ return r.json(); })
-      .then(function(j){ if(!j || j.ok === false) throw new Error((j && j.error) || 'error'); cache = j; return j; })
+      .then(function(j){
+        if(!j) throw new Error('error');
+        if(j.ok === false && (j.status === 'notReady' || j.status === 'notFound')){ cache = j; return j; }  // 準備中はメッセージを出す
+        if(j.ok === false) throw new Error(j.message || 'error');
+        cache = j; return j;
+      })
       .catch(function(){ cache = sampleData(G); cache.loadError = true; return cache; });
   }
 
@@ -2262,7 +2270,7 @@ document.addEventListener('click', function(e){
   function paintButton(){
     if(!G){ numEl.innerHTML = '<small>園を選択</small>'; return; }
     load().then(function(d){
-      if(!d){ numEl.textContent = '—'; return; }
+      if(!d || d.ok === false){ numEl.innerHTML = '<small>準備中</small>'; return; }
       var p = pct(d.month.pv, d.month.prevPv);
       var arrow = p == null ? '' : (p >= 20 ? ' ▲' : (p <= -20 ? ' ▼' : ''));
       numEl.innerHTML = '<small>今月</small>' + fmt(d.month.pv) + arrow;
@@ -2301,9 +2309,14 @@ document.addEventListener('click', function(e){
       body.innerHTML = '<div class="hp-empty">左の「表示する園」で園を選ぶと、その園のホームページの閲覧状況が表示されます。</div>';
       return;
     }
+    if(d && d.ok === false){
+      document.getElementById('hpMeta').textContent = '';
+      body.innerHTML = '<div class="hp-empty">' + (d.message || '準備中です') + '</div>';
+      return;
+    }
     document.getElementById('hpMeta').textContent = d.updated ? ('最終更新：' + d.updated) : '';
     var p = pct(d.month.pv, d.month.prevPv);
-    var pTxt = p == null ? '前月比 —' : ('前月比 <span class="' + (p >= 0 ? 'hp-up' : 'hp-down') + '">' + (p >= 0 ? '+' : '') + p + '%</span>');
+    var pTxt = p == null ? '前月同期比 —' : ('前月同期比 <span class="' + (p >= 0 ? 'hp-up' : 'hp-down') + '">' + (p >= 0 ? '+' : '') + p + '%</span>');
     var sig = p == null ? '' : (p >= 20 ? '🟢 関心が上昇中' : (p <= -20 ? '🔴 関心が低下中' : '🟡 前月並み'));
     var html = '';
     if(d.sample){
@@ -2316,11 +2329,14 @@ document.addEventListener('click', function(e){
       '<div class="hp-kpi"><div class="k">今月の訪問者数</div><div class="v">' + fmt(d.month.users) + '<small>人</small></div><div class="d">' + sig + '</div></div>' +
       '<div class="hp-kpi"><div class="k">スマホから見た人</div><div class="v">' + (d.mobileRate == null ? '—' : d.mobileRate) + '<small>%</small></div><div class="d">今月</div></div>' +
       '</div>';
+    if(d.site){
+      html += '<div class="hp-sec" style="margin-top:-4px">サイト全体（全ページ）の今月：' + fmt(d.site.pv) + '回／' + fmt(d.site.users) + '人</div>';
+    }
     html += '<div class="hp-sec">過去30日の閲覧数</div><div class="hp-chart">' + chartSvg(d.daily || []) + '</div>';
     html += '<div class="hp-sec">押されたボタン（今月）</div>';
     var bs = d.buttons || [];
     if(!bs.length){
-      html += '<div class="hp-empty">まだ記録がありません。</div>';
+      html += '<div class="hp-empty">' + (d.clickReady === false ? 'ボタンの計測は準備中です。' : 'まだ記録がありません。') + '</div>';
     }else{
       var mx = Math.max.apply(null, bs.map(function(b){ return b.count; }));
       html += '<ul class="hp-btns">' + bs.map(function(b){
