@@ -85,7 +85,9 @@
   .tb-btn:hover{transform:translateY(-1px); filter:brightness(1.04);}
   .tb-btn:active{transform:scale(.97);}
   .tb-btn img{display:block;}
-  .tb-hp img{height:44px; width:auto; filter:drop-shadow(0 3px 8px rgba(200,20,90,.30));}
+  /* HP閲覧数ボタン（画像）：ピンクの丸い部分の天地を、コドモン・Leyserの白い丸（42px）に合わせる（2026-11-15）
+     etsuran.png は高さ124pxのうち、丸い部分が18〜122px（104px）。42÷104×124＝50px。丸い部分が画像の中心より少し下なので3px上げる */
+  .tb-hp img{height:50px; width:auto; position:relative; top:-3px; filter:drop-shadow(0 3px 8px rgba(200,20,90,.30));}
   .tb-hp{margin-right:12px;}
   .tb-app{background:#fff; border-radius:999px; padding:3px 14px 3px 6px; box-shadow:0 2px 8px rgba(0,60,140,.18);}
   .tb-app img{height:36px; width:auto;}
@@ -94,7 +96,7 @@
   @media (max-width:820px){
     .top-band{height:60px; padding:0 14px; gap:8px;}
     .top-band h1{font-size:17px;}
-    .tb-hp{margin-right:2px;} .tb-hp img{height:36px;} .tb-app{padding:2px 8px 2px 4px;} .tb-app img{height:28px;}
+    .tb-hp{margin-right:2px;} .tb-hp img{height:38px; top:-2px;} .tb-app{padding:2px 8px 2px 4px;} .tb-app img{height:28px;}
   }
   @media (max-width:600px){ .top-band h1{display:none} .top-band{justify-content:flex-end} }
 
