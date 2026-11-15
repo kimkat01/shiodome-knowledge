@@ -2159,13 +2159,24 @@ document.addEventListener('click', function(e){
   .hp-close{margin-left:auto; border:1px solid #ddd; background:#fff; border-radius:8px; padding:6px 12px; font-size:13px; cursor:pointer; font-family:inherit;}
   .hp-meta{font-size:12px; color:#555; margin:2px 0 14px;}
   .hp-sample{display:inline-block; background:#fff3cd; color:#7a5300; border:1px solid #f0d58a; border-radius:8px; padding:6px 10px; font-size:12.5px; font-weight:700; margin-bottom:12px;}
-  .hp-kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:16px;}
-  @media (max-width:640px){ .hp-kpis{grid-template-columns:repeat(2,1fr);} }
-  .hp-kpi{border:1px solid #eee; border-radius:12px; padding:10px 12px; background:#fffafc;}
+  .hp-kpis{display:grid; grid-template-columns:1fr 1fr 1fr 1.25fr; gap:10px; margin-bottom:16px;}
+  @media (max-width:640px){ .hp-kpis{grid-template-columns:repeat(2,minmax(0,1fr));} }
+  .hp-kpi{border:1px solid #eee; border-radius:12px; padding:10px 12px; background:#fffafc; display:flex; flex-direction:column; min-width:0;}
   .hp-kpi .k{font-size:12px; color:#333; font-weight:700;}
-  .hp-kpi .v{font-size:24px; font-weight:800; margin-top:2px; color:#000;}
+  .hp-kpi .v{font-size:24px; font-weight:800; margin-top:2px; color:#000; line-height:1.3;}
   .hp-kpi .v small{font-size:13px; font-weight:700; margin-left:2px;}
-  .hp-kpi .d{font-size:12px; margin-top:2px; color:#555;}
+  .hp-kpi .d{font-size:12px; margin-top:2px; color:#555; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  /* 上段カードのミニグラフ（2026-11-15）：グラフ部分の高さをそろえ、下の説明の行を4枚で同じ高さにする */
+  .hp-kpi .c{flex:1; min-height:84px; display:flex; flex-direction:column; justify-content:center; margin:6px 0;}
+  .hp-kpi .c svg{display:block; width:100%; height:60px;}
+  .hp-kpi .hp-dev{flex:1; display:flex; flex-direction:column; align-self:flex-start; min-width:0;}
+  .hp-kpi .hp-dev .c{align-items:center;}
+  .hp-kpi .hp-dev .c svg{width:80px; height:80px;}
+  .hp-kpi .hp-dev .d{padding-right:16px;}
+  .hp-kpi .hp-dot{font-style:normal; margin-right:1px;}
+  .hp-nvr{display:flex; height:12px; border-radius:6px; overflow:hidden; background:#eee;}
+  .hp-nvr-l{display:flex; justify-content:space-between; font-size:12px; color:#555; margin-top:6px; white-space:nowrap;}
+  .hp-mini{font-size:12px; color:#888; text-align:center;}
   .hp-up{color:#1a8a4a !important; font-weight:800;} .hp-down{color:#d0342c !important; font-weight:800;}
   .hp-sec{font-size:14px; font-weight:800; margin:6px 0 8px;}
   .hp-chart{border:1px solid #eee; border-radius:12px; padding:10px 10px 4px; margin-bottom:16px;}
@@ -2234,13 +2245,19 @@ document.addEventListener('click', function(e){
     }
     var monthPv = 0, m = today.getMonth();
     daily.forEach(function(x){ if(Number(x.date.slice(5, 7)) - 1 === m) monthPv += x.pv; });
+    var monthDaily = daily.filter(function(x){ return Number(x.date.slice(5, 7)) - 1 === m; });
+    var pDays = new Date(today.getFullYear(), m, 0).getDate(), prevDaily = [];
+    for(var pd = 1; pd <= pDays; pd++) prevDaily.push({ date: 'p-' + pd, pv: Math.round((base + rnd() * 20) * 0.9) });
+    var users = Math.round(monthPv * 0.62), mob = 70 + Math.round(rnd() * 20), tab = Math.round(rnd() * 6);
     return {
       sample: true,
       updated: '',
       today: daily[daily.length - 1].pv,
-      month: { pv: monthPv, users: Math.round(monthPv * 0.62), prevPv: Math.round(monthPv * (0.8 + rnd() * 0.4)) },
-      mobileRate: 70 + Math.round(rnd() * 20),
-      daily: daily,
+      month: { pv: monthPv, users: users, prevPv: Math.round(monthPv * (0.8 + rnd() * 0.4)),
+               newUsers: Math.round(users * 0.65), returningUsers: users - Math.round(users * 0.65) },
+      mobileRate: mob,
+      devices: { mobile: mob, desktop: 100 - mob - tab, tablet: tab },
+      daily: daily, monthDaily: monthDaily, prevDaily: prevDaily,
       buttons: [
         { label: 'アクセス（地図）', count: 20 + Math.round(rnd() * 30) },
         { label: '見学予約する',     count: 8 + Math.round(rnd() * 20) },
@@ -2301,6 +2318,78 @@ document.addEventListener('click', function(e){
     return '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="過去30日の閲覧数">' + out + '</svg>';
   }
 
+  // ---- 上段カードのミニグラフ（2026-11-15） ----
+  var DEV_COLORS = { mobile:'#ff3d8b', desktop:'#ffb3d1', tablet:'#c8c8c8' };
+  function md(dateStr){ return Number(dateStr.slice(5, 7)) + '/' + Number(dateStr.slice(8, 10)); }
+
+  // 今日の閲覧数：直近7日の棒（右端＝今日）
+  function weekSvg(daily){
+    var w = daily.slice(-7), max = Math.max.apply(null, w.map(function(x){ return x.pv; }).concat([1])), out = '';
+    w.forEach(function(x, i){
+      var h = x.pv ? Math.max(3, 40 * x.pv / max) : 2, last = i === w.length - 1;
+      out += '<rect x="' + (4 + i * 20) + '" y="' + (46 - h).toFixed(1) + '" width="14" height="' + h.toFixed(1) + '" rx="' + (x.pv ? 2 : 1) +
+             '" fill="' + (last ? '#ff3d8b' : '#ffc4da') + '"><title>' + md(x.date) + '：' + x.pv + '回</title></rect>';
+    });
+    return '<svg viewBox="0 0 140 50" role="img" aria-label="直近7日の閲覧数">' + out + '</svg>';
+  }
+
+  // 今月の閲覧数：月内の積み上げ線（実線＝今月、点線＝先月）
+  function cumSvg(d){
+    var cur = d.monthDaily, prev = d.prevDaily || [];
+    if(!cur || !cur.length){   // 古い形式のデータ：過去30日から今月分を拾う
+      var ym = (d.daily && d.daily.length) ? d.daily[d.daily.length - 1].date.slice(0, 7) : '';
+      cur = (d.daily || []).filter(function(x){ return x.date.slice(0, 7) === ym; });
+    }
+    if(!cur.length) return '<div class="hp-mini">データなし</div>';
+    var y = Number(cur[0].date.slice(0, 4)), m = Number(cur[0].date.slice(5, 7));
+    var days = new Date(y, m, 0).getDate();
+    var hasPrev = prev.some(function(x){ return x.pv > 0; });
+    function cum(list){ var s = 0; return list.map(function(x){ s += x.pv; return s; }); }
+    var cc = cum(cur), pc = hasPrev ? cum(prev) : [];
+    var max = Math.max(cc[cc.length - 1], pc.length ? pc[pc.length - 1] : 0, 1);
+    function X(i, n){ return 4 + (n > 1 ? i / (n - 1) : 0) * 132; }
+    function Y(v){ return 46 - 40 * v / max; }
+    var out = '';
+    if(pc.length){
+      out += '<polyline points="' + pc.map(function(v, i){ return X(i, pc.length).toFixed(1) + ',' + Y(v).toFixed(1); }).join(' ') +
+             '" fill="none" stroke="#b9b9b9" stroke-width="1.5" stroke-dasharray="3 3"/>';
+    }
+    var pts = cc.map(function(v, i){ return X(i, days).toFixed(1) + ',' + Y(v).toFixed(1); });
+    var lx = X(cc.length - 1, days), ly = Y(cc[cc.length - 1]);
+    out += '<line x1="' + lx.toFixed(1) + '" y1="4" x2="' + lx.toFixed(1) + '" y2="48" stroke="#e5e5e5" stroke-width="1"/>' +
+           '<polyline points="' + pts.join(' ') + '" fill="none" stroke="#ff3d8b" stroke-width="2" stroke-linejoin="round"/>' +
+           '<circle cx="' + lx.toFixed(1) + '" cy="' + ly.toFixed(1) + '" r="3" fill="#ff3d8b"><title>今日までの合計：' + cc[cc.length - 1] + '回</title></circle>';
+    return '<svg viewBox="0 0 140 50" role="img" aria-label="今月の閲覧数の積み上げ">' + out + '</svg>';
+  }
+
+  // 今月の訪問者数：はじめて来た人／また来た人の帯
+  function nvrHtml(mo){
+    if(mo.newUsers == null) return '<div class="hp-mini">内訳は次の集計から出ます</div>';
+    var n = mo.newUsers || 0, r = mo.returningUsers || 0, t = n + r;
+    var np = t ? Math.round(n / t * 100) : 0;
+    return '<div class="hp-nvr">' + (t ? '<div style="width:' + np + '%;background:#ff3d8b"></div><div style="width:' + (100 - np) + '%;background:#ffc4da"></div>' : '') + '</div>' +
+           '<div class="hp-nvr-l"><span>はじめて ' + fmt(n) + '</span><span>また来た ' + fmt(r) + '</span></div>';
+  }
+
+  // スマホから見た人：端末別のドーナツ（スマホ・PC・タブレット）
+  function donutSvg(d){
+    var dv = d.devices;
+    if(!dv && d.mobileRate != null) dv = { mobile: d.mobileRate, desktop: 100 - d.mobileRate, tablet: 0 };
+    var R = 23, C = 2 * Math.PI * R, off = 0;
+    var out = '<circle cx="30" cy="30" r="' + R + '" fill="none" stroke="#eeeeee" stroke-width="10"/>';
+    if(dv){
+      var tot = (dv.mobile || 0) + (dv.desktop || 0) + (dv.tablet || 0) || 1;
+      [['mobile','スマホ'], ['desktop','PC'], ['tablet','タブレット']].forEach(function(k){
+        var v = dv[k[0]] || 0; if(!v) return;
+        var len = C * v / tot;
+        out += '<circle cx="30" cy="30" r="' + R + '" fill="none" stroke="' + DEV_COLORS[k[0]] + '" stroke-width="10" stroke-dasharray="' +
+               len.toFixed(2) + ' ' + C.toFixed(2) + '" stroke-dashoffset="' + (-off).toFixed(2) + '" transform="rotate(-90 30 30)"><title>' + k[1] + ' ' + v + '%</title></circle>';
+        off += len;
+      });
+    }
+    return '<svg viewBox="0 0 60 60" role="img" aria-label="端末別の割合">' + out + '</svg>';
+  }
+
   function render(d){
     var body = document.getElementById('hpBody');
     document.getElementById('hpGarden').textContent = G ? G.name : '';
@@ -2317,17 +2406,23 @@ document.addEventListener('click', function(e){
     document.getElementById('hpMeta').textContent = d.updated ? ('最終更新：' + d.updated) : '';
     var p = pct(d.month.pv, d.month.prevPv);
     var pTxt = p == null ? '前月同期比 —' : ('前月同期比 <span class="' + (p >= 0 ? 'hp-up' : 'hp-down') + '">' + (p >= 0 ? '+' : '') + p + '%</span>');
-    var sig = p == null ? '' : (p >= 20 ? '🟢 関心が上昇中' : (p <= -20 ? '🔴 関心が低下中' : '🟡 前月並み'));
     var html = '';
     if(d.sample){
       html += '<div class="hp-sample">⚠ ' + (d.loadError ? 'データを読み込めなかったため、' : '計測の準備中のため、') +
               '表示例（サンプルの数字）を出しています</div>';
     }
+    var hasPrev = (d.prevDaily || []).some(function(x){ return x.pv > 0; });
+    var perUser = d.month.users ? (d.month.pv / d.month.users).toFixed(1) : '—';
     html += '<div class="hp-kpis">' +
-      '<div class="hp-kpi"><div class="k">今日の閲覧数</div><div class="v">' + fmt(d.today) + '</div><div class="d">今日の途中まで</div></div>' +
-      '<div class="hp-kpi"><div class="k">今月の閲覧数</div><div class="v">' + fmt(d.month.pv) + '</div><div class="d">' + pTxt + '</div></div>' +
-      '<div class="hp-kpi"><div class="k">今月の訪問者数</div><div class="v">' + fmt(d.month.users) + '<small>人</small></div><div class="d">' + sig + '</div></div>' +
-      '<div class="hp-kpi"><div class="k">スマホから見た人</div><div class="v">' + (d.mobileRate == null ? '—' : d.mobileRate) + '<small>%</small></div><div class="d">今月</div></div>' +
+      '<div class="hp-kpi"><div class="k">今日の閲覧数</div><div class="v">' + fmt(d.today) + '</div>' +
+        '<div class="c">' + weekSvg(d.daily || []) + '</div><div class="d">直近7日（右端が今日）</div></div>' +
+      '<div class="hp-kpi" title="' + pTxt.replace(/<[^>]+>/g, '') + '"><div class="k">今月の閲覧数</div><div class="v">' + fmt(d.month.pv) + '</div>' +
+        '<div class="c">' + cumSvg(d) + '</div><div class="d">' + (hasPrev ? '実線＝今月／点線＝先月' : '実線＝今月の積み上げ') + '</div></div>' +
+      '<div class="hp-kpi"><div class="k">今月の訪問者数</div><div class="v">' + fmt(d.month.users) + '<small>人</small></div>' +
+        '<div class="c">' + nvrHtml(d.month) + '</div><div class="d">1人あたり ' + perUser + 'ページ</div></div>' +
+      '<div class="hp-kpi"><div class="k">スマホから見た人</div><div class="v">' + (d.mobileRate == null ? '—' : d.mobileRate) + '<small>%</small></div>' +
+        '<div class="hp-dev"><div class="c">' + donutSvg(d) + '</div>' +
+        '<div class="d"><i class="hp-dot" style="color:' + DEV_COLORS.mobile + '">●</i>スマホ&nbsp;&nbsp;<i class="hp-dot" style="color:' + DEV_COLORS.desktop + '">●</i>PC&nbsp;&nbsp;<i class="hp-dot" style="color:' + DEV_COLORS.tablet + '">●</i>タブレット</div></div></div>' +
       '</div>';
     if(d.site){
       html += '<div class="hp-sec" style="margin-top:-4px">サイト全体（全ページ）の今月：' + fmt(d.site.pv) + '回／' + fmt(d.site.users) + '人</div>';
