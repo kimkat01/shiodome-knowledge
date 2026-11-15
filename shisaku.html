@@ -192,6 +192,9 @@
   .feed-toolbar{margin-bottom:14px;}
   /* 2026-11-15：中央の見出し（すべての投稿）は出さない。検索窓と右の「使い方ガイド」を同じ行・同じ高さにそろえる */
   .col-center > .c-head{display:none;}
+  /* 一番上のフィードのカードと右のカレンダーのカードの頭をそろえる（検索窓の下の間隔＝右の列のすき間 18px） */
+  .feed-toolbar{margin-bottom:18px;}
+  .col-right > .rc{margin-top:0;}
   .search-box{height:44px; padding-top:0; padding-bottom:0;}
   .search-box{display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--line); border-radius:999px; padding:9px 16px; box-shadow:0 4px 14px rgba(90,70,190,.05);}
   .search-box .search-ic{font-size:14px; opacity:.6;}
@@ -210,7 +213,8 @@
 
   .feed{display:flex; flex-direction:column; gap:20px; overflow-anchor:none;}
   .post{background:var(--card); border:1px solid var(--line); border-radius:22px; padding:18px 20px; box-shadow:0 6px 20px rgba(90,70,190,.05); animation:rise .3s ease both;}
-  .post.mine{background:var(--grad-soft); border-color:transparent; box-shadow:0 8px 22px rgba(96,86,220,.12);}
+  /* 2026-11-15：自分の投稿もほかの投稿と同じ白地にする（もとは薄いグラデーション） */
+  .post.mine{background:#fff; border-color:var(--line); box-shadow:0 8px 22px rgba(96,86,220,.12);}
   @keyframes rise{from{opacity:0; transform:translateY(7px)} to{opacity:1; transform:none}}
   @media (prefers-reduced-motion:reduce){.post{animation:none}}
   .p-head{display:flex; align-items:center; gap:11px;}
