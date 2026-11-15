@@ -482,13 +482,13 @@ var HQ_MEMBER_KEY = 'kb_honbu_member';
 function hqMember(){
   try{ var v = localStorage.getItem(HQ_MEMBER_KEY) || ''; return HQ_MEMBERS.indexOf(v) >= 0 ? v : ''; }catch(e){ return ''; }
 }
-if(HQ_MODE && HQ_AUTHED && !hqMember()) document.write('<style>#appMain{display:none!important}#hqMemberGate{display:flex!important}</style>');
-if(HQ_MODE && !HQ_AUTHED) document.write('<style>#appMain{display:none!important}#hqGate{display:flex!important}</style>');
+if(HQ_MODE && HQ_AUTHED && !hqMember()) document.write('<style>#appMain,#topBand{display:none!important}#hqMemberGate{display:flex!important}</style>');
+if(HQ_MODE && !HQ_AUTHED) document.write('<style>#appMain,#topBand{display:none!important}#hqGate{display:flex!important}</style>');
 var GARDEN = GARDEN_INFO ? GARDEN_INFO.name : '';   // 日本語の園名（職員マスタの園名と同じ）
 // 社会福祉法人雄雅会（園コード Y〜）の園は緑テーマにする（色の中身は <head> 末尾の html.law-y）
 if(GARDEN_INFO && /^Y/.test(GARDEN_INFO.code || '')) document.documentElement.classList.add('law-y');
 // 園が決まらないときは、本体を一瞬も見せずにエラー表示にする
-if(!GARDEN) document.write('<style>#appMain{display:none!important}#gardenError{display:flex!important}</style>');
+if(!GARDEN) document.write('<style>#appMain,#topBand{display:none!important}#gardenError{display:flex!important}</style>');
 
 // ============================================================
 // ★ 園長ログイン（2026-09）
@@ -507,7 +507,7 @@ function kbReadLogin(){
   return s;
 }
 var KB_LOGIN = (GARDEN && !HQ_MODE) ? kbReadLogin() : null;
-if(GARDEN && !HQ_MODE && !KB_LOGIN) document.write('<style>#appMain{display:none!important}#kbGate{display:flex!important}</style>');
+if(GARDEN && !HQ_MODE && !KB_LOGIN) document.write('<style>#appMain,#topBand{display:none!important}#kbGate{display:flex!important}</style>');
 </script>
 
 <!-- ===== 園長ログイン画面 ===== -->
