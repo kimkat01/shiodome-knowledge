@@ -955,8 +955,12 @@ function filterSubsidies(list){ return Array.isArray(list) ? list.filter(isSubsi
      スプレッドシート＋ドライブに保存。全17園＋本部の共通フィード。
    ・投稿者はログイン中の人（ログインID）で判定。自分の投稿だけ編集・削除できる。
    ・FEED_GAS_URL が空のあいだは、これまで通りのデモ表示（保存されない）。
+   ・【試作版だけ】2026-11-15：試作版専用のフィード GAS「フィード（試作版）」につなぎ替え。
+     保存先は「しおどめフィード_試作版_データ」＋「しおどめフィード_試作版_添付」。
+     ここで投稿しても本番（index.html）には出ない。本番のURLは下のコメントに残してある。
    ============================================================ */
-const FEED_GAS_URL = 'https://script.google.com/macros/s/AKfycbxOi0s3Uua4i9Y4rPKJc-kAMRTT52VwaiZB8S8yxnl5KRJ3DKFn2RSszcTQ710yOpqO/exec';   // ← フィード用GASのウェブアプリURL（/exec）
+// 本番のフィードGAS：https://script.google.com/macros/s/AKfycbxOi0s3Uua4i9Y4rPKJc-kAMRTT52VwaiZB8S8yxnl5KRJ3DKFn2RSszcTQ710yOpqO/exec
+const FEED_GAS_URL = 'https://script.google.com/macros/s/AKfycbxkStkBN1C_dA-SWkzBmBIrO_K9SBlTSeRY2Ogk3nBD8QGj0Y6u7QsC-bk7cni2p3FP/exec';   // ← 試作版専用フィードGASのウェブアプリURL（/exec）
 const FEED_LIVE = !!FEED_GAS_URL;
 const FEED_POLL_MS = 60000;   // 他の園の新しい投稿を1分ごとに取り込む
 
