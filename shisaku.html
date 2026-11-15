@@ -190,6 +190,9 @@
 
   /* ===== フィード検索 ===== */
   .feed-toolbar{margin-bottom:14px;}
+  /* 2026-11-15：中央の見出し（すべての投稿）は出さない。検索窓と右の「使い方ガイド」を同じ行・同じ高さにそろえる */
+  .col-center > .c-head{display:none;}
+  .search-box{height:44px; padding-top:0; padding-bottom:0;}
   .search-box{display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--line); border-radius:999px; padding:9px 16px; box-shadow:0 4px 14px rgba(90,70,190,.05);}
   .search-box .search-ic{font-size:14px; opacity:.6;}
   .search-box input{flex:1; border:none; outline:none; background:transparent; font:inherit; font-size:14px; color:#000;}
@@ -397,6 +400,7 @@ html.law-y{
 html.law-y body{background:linear-gradient(180deg,var(--bg1) 0%,var(--bg2) 55%,#eef7f1 100%);}
 html.law-y .c-head{background:rgba(232,245,236,.86);}
 html.law-y .nav-chat,
+.col-right > .guide-btn{height:44px; padding-top:0; padding-bottom:0;}
 html.law-y .guide-btn{box-shadow:0 8px 20px rgba(67,160,71,.26);}
 html.law-y .nav-post{color:#2e8f5a; border-color:#43a047;}
 html.law-y .nav-post:hover{background:#f3faf5;}
@@ -738,7 +742,8 @@ function hqChangeMember(){
   <!-- ===== 中央：フィード ===== -->
   <main class="col-center">
     <div class="c-head"><div class="c-head-row">
-      <div><span id="feedLabel">すべての投稿</span></div>
+      <!-- 2026-11-15：「すべての投稿」の表示はやめた（id=feedLabel は絞り込みの処理で使うので要素だけ残す） -->
+      <div><span id="feedLabel" hidden>すべての投稿</span></div>
     </div></div>
 
     <div class="feed-toolbar">
