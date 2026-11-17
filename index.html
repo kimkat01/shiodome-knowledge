@@ -15,7 +15,7 @@
 <style>
   :root{
     --bg1:#efeafc; --bg2:#e7f0fb;
-    --card:#ffffff; --line:#ebe9f6; --ink:#242042; --sub:#8a89a6;
+    --card:#ffffff; --line:#ebe9f6; --ink:#000000; --sub:#000000;
     --grad:linear-gradient(135deg,#7c5cf0 0%,#4f8ef0 100%);
     --grad-soft:linear-gradient(135deg,#f4f0fe 0%,#eaf2fd 100%);
     --shiba:#2b6cb0; --shiba-bg:#eaf2fb;
@@ -239,7 +239,7 @@
   .post-modal-ov.show{display:flex;}
   .post-modal-card{background:#fff; border-radius:22px; max-width:640px; width:100%; padding:24px 24px 22px; box-shadow:0 18px 50px rgba(20,22,50,.3); max-height:92vh; overflow-y:auto;}
   .post-modal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
-  .post-modal-head h2{margin:0; font-size:17px; color:#232433;}
+  .post-modal-head h2{margin:0; font-size:17px; color:#000;}
   .post-modal-close{border:none; background:#f0edfd; color:var(--sub); width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:15px; line-height:1;}
   .like-by{font-size:11px; color:var(--sub); margin-top:8px; padding:0 2px; line-height:1.5;}
 
@@ -323,14 +323,14 @@
   .dl-caret{float:right; color:var(--sub); font-size:12px; margin-left:6px; transition:transform .15s;}
   .dl-row.open .dl-caret{transform:rotate(90deg);}
   .dl-row.open .dl-title{-webkit-line-clamp:unset; display:block; overflow:visible;}
-  .dl-detail{display:none; margin-top:8px; padding:10px 12px; background:#faf9fe; border:1px solid var(--line); border-radius:10px; font-size:12px; line-height:1.7; color:#333; white-space:pre-wrap; word-break:break-word; max-height:320px; overflow-y:auto;}
+  .dl-detail{display:none; margin-top:8px; padding:10px 12px; background:#faf9fe; border:1px solid var(--line); border-radius:10px; font-size:12px; line-height:1.7; color:#000; white-space:pre-wrap; word-break:break-word; max-height:320px; overflow-y:auto;}
   .dl-row.open .dl-detail{display:block;}
   .load-s,.empty-s{font-size:12px; color:var(--sub); padding:8px 2px;}
 
   /* 今週の注目 */
   .hot-row{display:flex; gap:9px; padding:9px 0; border-top:1px dashed rgba(120,110,180,.18); cursor:pointer;}
   .hot-row:first-child{border-top:none;}
-  .hot-rank{font-weight:800; font-size:14px; color:#b7b3d6; width:16px; flex:none;}
+  .hot-rank{font-weight:800; font-size:14px; color:#000; width:16px; flex:none;}
   .hot-text{font-size:12px; line-height:1.45; flex:1; min-width:0; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;}
   .hot-like{font-size:11px; color:var(--like); white-space:nowrap; flex:none;}
   .hot-row:hover .hot-text{color:#6a5cd0;}
@@ -343,8 +343,8 @@
   .foot-note{font-size:11px; color:var(--sub); text-align:center; margin-top:6px; line-height:1.6;}
 
 /* === ツールレール（掲示板をメインにした版で追加） === */
-.rail-label{font-size:10px;font-weight:700;color:#9aa;letter-spacing:.04em;padding:4px 12px 6px;}
-.tool-item{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:12px;color:var(--ink,#2b2b3a);text-decoration:none;font-size:14px;font-weight:600;cursor:pointer;transition:background .12s;}
+.rail-label{font-size:10px;font-weight:700;color:#000;letter-spacing:.04em;padding:4px 12px 6px;}
+.tool-item{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:12px;color:var(--ink,#000);text-decoration:none;font-size:14px;font-weight:600;cursor:pointer;transition:background .12s;}
 .tool-item svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;flex:none;}
 .tool-item:hover{background:#fff;}
 .tool-item.active{background:#fff;box-shadow:0 4px 14px rgba(90,70,190,.06);}
@@ -354,14 +354,14 @@
 .nav-badge{margin-left:auto;min-width:19px;height:19px;padding:0 6px;border-radius:999px;background:#e0322c;color:#fff;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;line-height:1;box-shadow:0 1px 3px rgba(224,50,44,.4);}
 .nav-badge:empty{display:none;}
 /* 「製作中」タグ（AIモニタリング・経営情報） */
-.soon-tag{margin-left:auto;font-size:10px;font-weight:700;color:#8a8f9c;background:#eceef4;border-radius:999px;padding:2px 8px;letter-spacing:.02em;}
+.soon-tag{margin-left:auto;font-size:10px;font-weight:700;color:#000;background:#eceef4;border-radius:999px;padding:2px 8px;letter-spacing:.02em;}
 /* 「NEW」赤丸タグ（更新したメニューに付ける。外すときは<span class="new-tag">NEW</span>を消すだけ） */
 .new-tag{margin-left:auto;display:inline-flex;align-items:center;justify-content:center;height:20px;padding:0 8px;border-radius:999px;background:#e0322c;color:#fff;font-size:10px;font-weight:800;letter-spacing:.04em;line-height:1;box-shadow:0 1px 3px rgba(224,50,44,.4);flex:none;animation:newBlink 1.2s ease-in-out infinite;}
 @keyframes newBlink{0%,100%{opacity:1;}50%{opacity:.25;}}
 @media (prefers-reduced-motion:reduce){.new-tag{animation:none;}}
 /* 右上のアプリボタン（コドモンポケット2・Leyser）2026-11-01 */
 .app-links{display:flex;justify-content:flex-end;gap:8px;height:34px;}
-.app-link{display:flex;align-items:center;gap:7px;padding:3px 12px 3px 3px;border-radius:999px;background:#fff;border:1px solid #e3e5f0;text-decoration:none;color:#3a3f52;font-size:13px;font-weight:700;box-shadow:0 2px 8px rgba(96,86,220,.10);transition:filter .12s,transform .12s;}
+.app-link{display:flex;align-items:center;gap:7px;padding:3px 12px 3px 3px;border-radius:999px;background:#fff;border:1px solid #e3e5f0;text-decoration:none;color:#000;font-size:13px;font-weight:700;box-shadow:0 2px 8px rgba(96,86,220,.10);transition:filter .12s,transform .12s;}
 .app-link:hover{filter:brightness(.97);}
 .app-link:active{transform:scale(.97);}
 .app-link img{width:26px;height:26px;border-radius:7px;display:block;flex:none;}
@@ -376,35 +376,35 @@
 .guide-ov{position:fixed;inset:0;background:rgba(20,22,40,.42);display:none;align-items:center;justify-content:center;z-index:10001;padding:20px;}
 .guide-ov.show{display:flex;}
 .guide-card{background:#fff;border-radius:20px;max-width:440px;width:100%;padding:24px 26px 22px;box-shadow:0 18px 50px rgba(20,22,50,.3);max-height:86vh;overflow-y:auto;}
-.guide-card h2{margin:0 0 4px;font-size:18px;color:#232433;}
-.guide-card .g-sub{margin:0 0 16px;font-size:12px;color:#8a8f9c;}
+.guide-card h2{margin:0 0 4px;font-size:18px;color:#000;}
+.guide-card .g-sub{margin:0 0 16px;font-size:12px;color:#000;}
 .guide-card ol{margin:0;padding-left:20px;}
-.guide-card li{font-size:13px;line-height:1.7;color:#3a3c4a;margin-bottom:8px;}
-.guide-card li b{color:#232433;}
+.guide-card li{font-size:13px;line-height:1.7;color:#000;margin-bottom:8px;}
+.guide-card li b{color:#000;}
 .guide-close{margin-top:18px;width:100%;padding:11px;border:none;border-radius:12px;background:var(--grad);color:#fff;font-size:14px;font-weight:700;cursor:pointer;}
 /* === カレンダー（添付デザイン：日付ブロック左＋グリッド右） === */
 .rc{background:#fff;border:1px solid #e7e8f0;border-radius:22px;box-shadow:0 2px 10px rgba(30,32,60,.06);padding:14px;display:flex;gap:12px;align-items:flex-start;margin-top:12px;}
 .cal-left{width:104px;flex:none;padding-top:2px;}
-.cal-year{font-size:13px;font-weight:800;color:#232323;letter-spacing:.04em;line-height:1;}
+.cal-year{font-size:13px;font-weight:800;color:#000;letter-spacing:.04em;line-height:1;}
 .cal-bigdate{display:flex;align-items:center;gap:6px;margin-top:4px;}
-.cal-bigdate .md{font-size:23px;font-weight:800;color:#1a1a1a;line-height:1.02;font-variant-numeric:tabular-nums;letter-spacing:.01em;}
-.cal-bigdate .md .sl{color:#9aa0aa;margin:0 1px;font-weight:700;}
+.cal-bigdate .md{font-size:23px;font-weight:800;color:#000;line-height:1.02;font-variant-numeric:tabular-nums;letter-spacing:.01em;}
+.cal-bigdate .md .sl{color:#000;margin:0 1px;font-weight:700;}
 .cal-dow-badge{width:22px;height:22px;border-radius:50%;background:#c7cad1;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex:none;}
-.cal-legend-title{font-size:12px;color:#333;font-weight:700;margin-top:14px;margin-bottom:6px;}
-.cal-leg-row{font-size:11px;color:#555;font-weight:600;display:flex;align-items:center;gap:6px;margin-bottom:3px;}
+.cal-legend-title{font-size:12px;color:#000;font-weight:700;margin-top:14px;margin-bottom:6px;}
+.cal-leg-row{font-size:11px;color:#000;font-weight:600;display:flex;align-items:center;gap:6px;margin-bottom:3px;}
 .cal-leg-row .sw{width:11px;height:11px;border-radius:3px;flex:none;display:inline-block;}
 .cal-right{flex:1;min-width:0;}
 .cal-header{display:flex;align-items:center;justify-content:space-between;gap:4px;padding:0 0 7px;}
-.cal-navbtn{background:#fff;border:1px solid #cfd2da;border-radius:7px;padding:3px 7px;font-size:10px;font-weight:700;color:#333;cursor:pointer;white-space:nowrap;user-select:none;transition:background .12s;}
+.cal-navbtn{background:#fff;border:1px solid #cfd2da;border-radius:7px;padding:3px 7px;font-size:10px;font-weight:700;color:#000;cursor:pointer;white-space:nowrap;user-select:none;transition:background .12s;}
 .cal-navbtn:hover{background:#f4f5f8;}
-.cal-title{font-size:12px;font-weight:800;color:#232323;}
-.cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:11px;color:#555;font-weight:700;margin-bottom:4px;}
+.cal-title{font-size:12px;font-weight:800;color:#000;}
+.cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:11px;color:#000;font-weight:700;margin-bottom:4px;}
 .cal-dow-row .s-sun{color:#e0322c;}
 .cal-dow-row .s-sat{color:#3f74e0;}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
-.cal-day{position:relative;aspect-ratio:1/0.86;display:flex;align-items:center;justify-content:center;background:#e9e9ec;border-radius:2px;font-size:12px;font-weight:800;color:#242424;}
+.cal-day{position:relative;aspect-ratio:1/0.86;display:flex;align-items:center;justify-content:center;background:#e9e9ec;border-radius:2px;font-size:12px;font-weight:800;color:#000;}
 .cal-day.oth{background:#f1f2f4;color:transparent;}
-.cal-day.today{background:#fff;box-shadow:inset 0 0 0 2px #1a1a1a;color:#111;}
+.cal-day.today{background:#fff;box-shadow:inset 0 0 0 2px #1a1a1a;color:#000;}
 .cal-day.has-dl{cursor:pointer;}
 .cal-day.dl-near{background:#f7c1c1;color:#791f1f;}
 .cal-day.dl-later{background:#fac775;color:#633806;}
@@ -428,7 +428,7 @@
    ============================================================ */
 html.law-y{
   --bg1:#e6f4ea; --bg2:#eaf5ef;
-  --line:#e0eee4; --ink:#1f3327; --sub:#7d9186;
+  --line:#e0eee4; --ink:#000000; --sub:#000000;
   --grad:linear-gradient(135deg,#2e9e6b 0%,#43a047 100%);
   --grad-soft:linear-gradient(135deg,#edf8f0 0%,#e6f4ea 100%);
   --hq:#3f6b52; --hq-bg:#e6f2ea;
@@ -463,7 +463,7 @@ html.law-y .hot-row:hover .hot-text{color:#2e7d32;}
 html.law-y .kbg-in:focus{border-color:#43a047; box-shadow:0 0 0 3px rgba(67,160,71,.15);}
 html.law-y .kbg-btn,
 html.law-y #cb-submit{background:#43a047 !important;}
-html.law-y .kb-user b{color:#1f3327;}
+html.law-y .kb-user b{color:#000;}
 html.law-y .kb-logout:hover{background:#e6f2ea;}
 </style>
 </head>
@@ -479,9 +479,9 @@ html.law-y .kb-logout:hover{background:#e6f2ea;}
      ============================================================ -->
 <div id="gardenError" style="display:none;min-height:100vh;align-items:center;justify-content:center;background:#f5f6fa;padding:24px">
   <div style="max-width:380px;text-align:center;background:#fff;border-radius:12px;padding:32px 24px;box-shadow:0 2px 12px rgba(0,0,0,.08)">
-    <div style="font-size:18px;font-weight:700;color:#222;margin-bottom:12px">しおどめポータル</div>
+    <div style="font-size:18px;font-weight:700;color:#000;margin-bottom:12px">しおどめポータル</div>
     <div style="font-size:14px;color:#c0392b;line-height:1.7">このURLからはアクセスできません。<br>園ごとに配布されている専用のリンクをご利用ください。</div>
-    <div style="margin-top:10px;font-size:12px;color:#999">リンクが分からない場合は、本部にご確認ください。</div>
+    <div style="margin-top:10px;font-size:12px;color:#000">リンクが分からない場合は、本部にご確認ください。</div>
   </div>
 </div>
 <script src="https://kimkat01.github.io/staff-dashboard/gardens.js"></script>
@@ -552,33 +552,33 @@ if(GARDEN && !HQ_MODE && !KB_LOGIN) document.write('<style>#appMain,#topBand{dis
   #kbGate{display:none;min-height:100vh;align-items:center;justify-content:center;padding:24px 16px;
     background:linear-gradient(135deg,var(--bg1) 0%,var(--bg2) 100%);}
   .kbg-card{background:#fff;border-radius:16px;padding:36px 32px 28px;width:380px;max-width:100%;
-    box-shadow:0 10px 40px rgba(40,30,90,.14);text-align:center;color:#2b2b3a}
+    box-shadow:0 10px 40px rgba(40,30,90,.14);text-align:center;color:#000}
   .kbg-logo{width:52px;height:52px;border-radius:14px;background:var(--grad);color:#fff;font-weight:800;
     font-size:24px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
   .kbg-garden{font-size:18px;font-weight:700}
-  .kbg-sub{font-size:13px;color:#8a8f9c;margin:4px 0 22px}
-  .kbg-label{display:block;text-align:left;font-size:13px;color:#555;margin:0 0 6px;font-weight:700}
+  .kbg-sub{font-size:13px;color:#000;margin:4px 0 22px}
+  .kbg-label{display:block;text-align:left;font-size:13px;color:#000;margin:0 0 6px;font-weight:700}
   .kbg-in{width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid #ddd;border-radius:8px;font-size:16px;color:#000;margin-bottom:14px;font-family:inherit}
   .kbg-in:focus{outline:none;border-color:#4169e1;box-shadow:0 0 0 3px rgba(65,105,225,.15)}
   .kbg-id{letter-spacing:.3em;text-align:center}
-  .kbg-row{display:flex;align-items:center;gap:6px;font-size:13px;color:#555;margin:-4px 0 6px;text-align:left}
+  .kbg-row{display:flex;align-items:center;gap:6px;font-size:13px;color:#000;margin:-4px 0 6px;text-align:left}
   .kbg-row input{width:16px;height:16px;margin:0}
   .kbg-err{color:#e33;font-size:13px;min-height:20px;margin:8px 0;line-height:1.5}
   .kbg-btn{width:100%;padding:12px;border:none;border-radius:8px;background:#4169e1;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
   .kbg-btn:disabled{background:#aab6e6;cursor:wait}
-  .kbg-link{background:none;border:none;color:#8a8f9c;font-size:13px;margin-top:12px;cursor:pointer;text-decoration:underline;font-family:inherit}
-  .kbg-hint{font-size:13px;color:#555;line-height:1.7;text-align:left;margin:0 0 16px}
-  .kbg-help{font-size:12px;color:#999;margin-top:16px;line-height:1.7}
+  .kbg-link{background:none;border:none;color:#000;font-size:13px;margin-top:12px;cursor:pointer;text-decoration:underline;font-family:inherit}
+  .kbg-hint{font-size:13px;color:#000;line-height:1.7;text-align:left;margin:0 0 16px}
+  .kbg-help{font-size:12px;color:#000;margin-top:16px;line-height:1.7}
   .kbg-shake{animation:kbgShake .35s}
   @keyframes kbgShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
   .kb-user{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:-6px 10px 12px;padding:8px 10px;
-    border-radius:10px;background:#f6f5fc;font-size:12px;color:#555}
-  .kb-user b{font-weight:700;color:#242042}
-  .kb-logout{border:1px solid #ddd;background:#fff;border-radius:6px;padding:4px 8px;font-size:12px;color:#555;cursor:pointer;white-space:nowrap;font-family:inherit}
+    border-radius:10px;background:#f6f5fc;font-size:12px;color:#000}
+  .kb-user b{font-weight:700;color:#000}
+  .kb-logout{border:1px solid #ddd;background:#fff;border-radius:6px;padding:4px 8px;font-size:12px;color:#000;cursor:pointer;white-space:nowrap;font-family:inherit}
   .kb-logout:hover{background:#eeecfa}
   .nav-logout{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:10px;padding:10px 12px;
-    border:1px solid #ddd;border-radius:10px;background:#fff;color:#555;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
-  .nav-logout:hover{background:#f6f5fc;color:#333}
+    border:1px solid #ddd;border-radius:10px;background:#fff;color:#000;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+  .nav-logout:hover{background:#f6f5fc;color:#000}
   .nav-logout svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 </style>
 <div id="kbGate">
@@ -668,12 +668,12 @@ if(HQ_MODE && !HQ_AUTHED) setTimeout(function(){ var el=document.getElementById(
     background:#e6ecfb;color:#4169e1}
   .hqm-lock svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
   .hqm-title{font-size:20px;font-weight:800;letter-spacing:.06em}
-  .hqm-text{font-size:14px;color:#333;line-height:1.8;margin:10px 0 20px}
+  .hqm-text{font-size:14px;color:#000;line-height:1.8;margin:10px 0 20px}
   .hqm-list{display:flex;flex-direction:column;gap:10px}
-  .hqm-btn{width:100%;padding:13px 14px;border:1px solid #cdd6f3;border-radius:10px;background:#f4f7fe;color:#1f2a55;
+  .hqm-btn{width:100%;padding:13px 14px;border:1px solid #cdd6f3;border-radius:10px;background:#f4f7fe;color:#000;
     font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.08em}
   .hqm-btn:hover{background:#e6ecfb;border-color:#4169e1}
-  .hqm-note{font-size:12px;color:#777;margin-top:18px;line-height:1.7}
+  .hqm-note{font-size:12px;color:#000;margin-top:18px;line-height:1.7}
   .kb-user .hqm-change{background:none;border:none;color:#4169e1;font-size:12px;cursor:pointer;text-decoration:underline;font-family:inherit;padding:0;margin-left:6px}
 </style>
 <div id="hqMemberGate">
@@ -832,8 +832,8 @@ function hqChangeMember(){
 <!-- コーポレートブック パスワード（経営ダッシュボードと同デザイン） -->
 <div id="cb-gate" style="position:fixed;inset:0;background:rgba(20,22,40,.42);z-index:10002;display:none;align-items:center;justify-content:center;">
   <div style="background:#fff;border-radius:16px;padding:36px 32px;width:320px;max-width:90vw;box-shadow:0 10px 40px rgba(0,0,0,.25);text-align:center;">
-    <div style="font-size:16px;font-weight:700;color:#2b2b3a;margin-bottom:6px;">コーポレートブック</div>
-    <div style="font-size:12px;color:#8a8f9c;margin-bottom:18px;">パスワードを入力してください</div>
+    <div style="font-size:16px;font-weight:700;color:#000;margin-bottom:6px;">コーポレートブック</div>
+    <div style="font-size:12px;color:#000;margin-bottom:18px;">パスワードを入力してください</div>
     <input id="cb-input" type="password" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;margin-bottom:10px;" autocomplete="off">
     <div id="cb-error" style="color:#e33;font-size:12px;height:16px;margin-bottom:6px;"></div>
     <button id="cb-submit" style="width:100%;padding:10px;border:none;border-radius:8px;background:#4169e1;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">開く</button>
@@ -2227,15 +2227,15 @@ document.addEventListener('click', function(e){
   .hp-top h2{margin:0; font-size:19px;}
   .hp-top .hp-garden{font-size:14px; font-weight:700; color:#e6338a; margin-top:2px;}
   .hp-close{margin-left:auto; border:1px solid #ddd; background:#fff; border-radius:8px; padding:6px 12px; font-size:13px; cursor:pointer; font-family:inherit;}
-  .hp-meta{font-size:12px; color:#555; margin:2px 0 14px;}
+  .hp-meta{font-size:12px; color:#000; margin:2px 0 14px;}
   .hp-sample{display:inline-block; background:#fff3cd; color:#7a5300; border:1px solid #f0d58a; border-radius:8px; padding:6px 10px; font-size:12.5px; font-weight:700; margin-bottom:12px;}
   .hp-kpis{display:grid; grid-template-columns:1fr 1fr 1fr 1.25fr; gap:10px; margin-bottom:16px;}
   @media (max-width:640px){ .hp-kpis{grid-template-columns:repeat(2,minmax(0,1fr));} }
   .hp-kpi{border:1px solid #eee; border-radius:12px; padding:10px 12px; background:#fffafc; display:flex; flex-direction:column; min-width:0;}
-  .hp-kpi .k{font-size:12px; color:#333; font-weight:700;}
+  .hp-kpi .k{font-size:12px; color:#000; font-weight:700;}
   .hp-kpi .v{font-size:24px; font-weight:800; margin-top:2px; color:#000; line-height:1.3;}
   .hp-kpi .v small{font-size:13px; font-weight:700; margin-left:2px;}
-  .hp-kpi .d{font-size:12px; margin-top:2px; color:#555; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .hp-kpi .d{font-size:12px; margin-top:2px; color:#000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   /* 上段カードのミニグラフ（2026-11-15）：グラフ部分の高さをそろえ、下の説明の行を4枚で同じ高さにする */
   .hp-kpi .c{flex:1; min-height:84px; display:flex; flex-direction:column; justify-content:center; margin:6px 0;}
   .hp-kpi .c svg{display:block; width:100%; height:60px;}
@@ -2245,8 +2245,8 @@ document.addEventListener('click', function(e){
   .hp-kpi .hp-dev .d{padding-right:16px;}
   .hp-kpi .hp-dot{font-style:normal; margin-right:1px;}
   .hp-nvr{display:flex; height:12px; border-radius:6px; overflow:hidden; background:#eee;}
-  .hp-nvr-l{display:flex; justify-content:space-between; gap:6px; font-size:12px; color:#555; margin-top:6px; white-space:nowrap;}
-  .hp-mini{font-size:12px; color:#888; text-align:center;}
+  .hp-nvr-l{display:flex; justify-content:space-between; gap:6px; font-size:12px; color:#000; margin-top:6px; white-space:nowrap;}
+  .hp-mini{font-size:12px; color:#000; text-align:center;}
   .hp-up{color:#1a8a4a !important; font-weight:800;} .hp-down{color:#d0342c !important; font-weight:800;}
   .hp-sec{font-size:14px; font-weight:800; margin:6px 0 8px;}
   .hp-chart{border:1px solid #eee; border-radius:12px; padding:10px 10px 4px; margin-bottom:16px;}
@@ -2259,9 +2259,9 @@ document.addEventListener('click', function(e){
   /* 2026-11-17：ボタン名を押すと、ホームページのそのボタンの場所を開く（Wixの計測コードがピンクの枠で見せる） */
   .hp-btns a.lbl{color:inherit; text-decoration:underline dotted #ff3d8b; text-underline-offset:3px; cursor:pointer;}
   .hp-btns a.lbl:hover{color:#ff3d8b;}
-  .hp-btn-note{font-size:12px; color:#666; margin:-2px 0 8px;}
-  .hp-empty{font-size:13px; color:#555; padding:8px 0 14px;}
-  .hp-note{font-size:12px; color:#555; border-top:1px dashed #e5e5e5; padding-top:10px; line-height:1.6;}
+  .hp-btn-note{font-size:12px; color:#000; margin:-2px 0 8px;}
+  .hp-empty{font-size:13px; color:#000; padding:8px 0 14px;}
+  .hp-note{font-size:12px; color:#000; border-top:1px dashed #e5e5e5; padding-top:10px; line-height:1.6;}
 </style>
 
 <div id="hpModal" role="dialog" aria-modal="true" aria-labelledby="hpTitle">
