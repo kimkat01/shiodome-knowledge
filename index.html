@@ -2256,6 +2256,10 @@ document.addEventListener('click', function(e){
   .hp-btns .bar{height:12px; border-radius:6px; background:linear-gradient(90deg,#ff7a2f,#ff3d8b);}
   .hp-btns .cnt{text-align:right; font-weight:800;}
   .hp-btns .lbl{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  /* 2026-11-17：ボタン名を押すと、ホームページのそのボタンの場所を開く（Wixの計測コードがピンクの枠で見せる） */
+  .hp-btns a.lbl{color:inherit; text-decoration:underline dotted #ff3d8b; text-underline-offset:3px; cursor:pointer;}
+  .hp-btns a.lbl:hover{color:#ff3d8b;}
+  .hp-btn-note{font-size:12px; color:#666; margin:-2px 0 8px;}
   .hp-empty{font-size:13px; color:#555; padding:8px 0 14px;}
   .hp-note{font-size:12px; color:#555; border-top:1px dashed #e5e5e5; padding-top:10px; line-height:1.6;}
 </style>
@@ -2505,9 +2509,20 @@ document.addEventListener('click', function(e){
       html += '<div class="hp-empty">' + (d.clickReady === false ? 'ボタンの計測は準備中です。' : 'まだ記録がありません。') + '</div>';
     }else{
       var mx = Math.max.apply(null, bs.map(function(b){ return b.count; }));
+      // 2026-11-17：ボタン名を押すと、そのボタンが押されたページを ?hp_find=ボタン名 付きで開く
+      var findUrl = function(b){
+        var base = b.page || d.url;
+        if(!base) return '';
+        try{ var u = new URL(base); u.searchParams.set('hp_find', b.label); return u.toString(); }catch(e){ return ''; }
+      };
+      var esc = function(t){ return String(t).replace(/[<>&"]/g, function(c){ return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]; }); };
+      html += '<div class="hp-btn-note">ボタン名を押すと、ホームページのそのボタンの場所を開いて、ピンクの枠で見せます（開くと閲覧数に1回入ります）</div>';
       html += '<ul class="hp-btns">' + bs.map(function(b){
-        var lbl = String(b.label).replace(/[<>&"]/g, function(c){ return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]; });
-        return '<li><span class="lbl" title="' + lbl + '">' + lbl + '</span><span class="bar" style="width:' + Math.max(4, b.count / mx * 100) + '%"></span><span class="cnt">' + fmt(b.count) + '回</span></li>';
+        var lbl = esc(b.label), url = findUrl(b);
+        var name = url
+          ? '<a class="lbl" href="' + esc(url) + '" target="_blank" rel="noopener" title="' + lbl + '（押すとホームページのこのボタンの場所を開きます）">' + lbl + '</a>'
+          : '<span class="lbl" title="' + lbl + '">' + lbl + '</span>';
+        return '<li>' + name + '<span class="bar" style="width:' + Math.max(4, b.count / mx * 100) + '%"></span><span class="cnt">' + fmt(b.count) + '回</span></li>';
       }).join('') + '</ul>';
     }
     body.innerHTML = html;
