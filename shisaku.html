@@ -765,7 +765,7 @@ function hqChangeMember(){
       <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 13h2M8 16h2M14 13h2M14 16h2"/></svg>シフト集計</a>
     <a class="tool-item" id="vmLink" href="https://kimkat01.github.io/voiceminutes/" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>文字起こし</a>
-    <a class="tool-item" href="https://kimkat01.github.io/anpi/anpi_admin.html" target="_blank" rel="noopener">
+    <a class="tool-item" id="anpiLink" href="https://kimkat01.github.io/anpi/anpi_admin.html" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24"><path d="M12 2 3 6v6c0 5 4 8.5 9 10 5-1.5 9-5 9-10V6z"/><path d="M9 12l2 2 4-4"/></svg>災害報告</a>
 
     <button class="nav-post" id="navPost">＋ 投稿する</button>
@@ -1865,6 +1865,8 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
     }catch(e){}
   });
   document.getElementById('hiyariLink').href = 'https://kimkat01.github.io/hiyari-hatto2/' + gq;
+  // 2026-11-17：災害報告にも園を引き継ぐ（緊急時に「園を選んでください」と聞かれないように、開いた瞬間に自園の画面にする）
+  document.getElementById('anpiLink').href = 'https://kimkat01.github.io/anpi/anpi_admin.html' + gq;
   // 2026-10-28：文字起こし（VoiceMinutes）にも園を引き継ぐ。開く瞬間に、通行証を10分だけ有効な引き継ぎメモとして渡す
   //   （VoiceMinutes はこの通行証で、ログイン用GASからその園の職員名簿（氏名・ふりがな）を受け取り、名前の聞き間違いを防ぐ）
   document.getElementById('vmLink').href = 'https://kimkat01.github.io/voiceminutes/' + gq;
