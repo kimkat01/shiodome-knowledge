@@ -107,28 +107,34 @@
   .tb-btn img{display:block;}
   /* HP閲覧数ボタン（画像）：ピンクの丸い部分の天地を、コドモン・Leyserの白い丸（42px）に合わせる（2026-11-15）
      etsuran.png は高さ124pxのうち、丸い部分が18〜122px（104px）。42÷104×124＝50px。丸い部分が画像の中心より少し下なので3px上げる */
-  .tb-hp img{height:50px; width:auto; position:relative; top:-3px; filter:drop-shadow(0 3px 8px rgba(200,20,90,.30));}
-  .tb-hp{margin-right:12px;}
-  .tb-app{background:#fff; border-radius:999px; padding:3px 14px 3px 6px; box-shadow:0 2px 8px rgba(0,60,140,.18);}
-  .tb-app img{height:36px; width:auto;}
+  /* 2026-11-22：並びを チャットワーク・コドモン・Leyser・HP閲覧数 に変更し、4つとも一回り小さく（白い丸 42px→36px）。
+     HP閲覧数：36÷104×124＝43px */
+  .tb-hp img{height:43px; width:auto; position:relative; top:-2px; filter:drop-shadow(0 3px 8px rgba(200,20,90,.30));}
+  .tb-hp{margin-left:10px;}
+  .tb-app{background:#fff; border-radius:999px; padding:3px 12px 3px 5px; box-shadow:0 2px 8px rgba(0,60,140,.18);}
+  .tb-app img{height:30px; width:auto;}
   /* 社会福祉法人雄雅会（緑テーマ）の園は、帯のグラデーションを左右反転（img/obi-y.png） */
   html.law-y .top-band{background:#2ed3c4 url(img/obi-y.png) center/100% 100% no-repeat;}
   @media (max-width:820px){
-    .top-band{height:60px; padding:0 14px; gap:8px;}
-    .top-band h1{font-size:17px;}
-    .tb-hp{margin-right:2px;} .tb-hp img{height:38px; top:-2px;} .tb-app{padding:2px 8px 2px 4px;} .tb-app img{height:28px;}
+    .top-band{height:60px; padding:0 14px; gap:6px;}
+    .top-band h1{font-size:14px;}
+    .tb-hp{margin-left:2px;} .tb-hp img{height:32px; top:-2px;} .tb-app{padding:2px 7px 2px 3px;} .tb-app img{height:24px;}
   }
+  /* 2026-11-22：ボタンが4つになったので、幅が狭いときはタイトルを小さく（760px以下は非表示）して帯からはみ出さないようにする */
+  @media (min-width:821px) and (max-width:980px){ .top-band{gap:10px; padding:0 18px 0 24px;} .top-band h1{font-size:18px;} }
+  @media (max-width:760px){ .top-band h1{display:none} }
   @media (max-width:600px){ .top-band h1{display:none} .top-band{justify-content:flex-end} }
   /* 2026-11-17：スマホ幅では帯のボタンを小さくして「メニュー」ボタンが画面に収まるようにする */
   @media (max-width:600px){
     .menu-btn{margin-right:auto; padding:7px 11px 7px 9px; font-size:13px;}
     .top-band{padding:0 8px; gap:5px; justify-content:flex-start;}
-    .tb-hp{margin-right:0;} .tb-hp img{height:30px; top:-1px;} .tb-app{padding:2px 5px 2px 3px;} .tb-app img{height:20px;}
+    .tb-hp{margin-left:0;} .tb-hp img{height:26px; top:-1px;} .tb-app{padding:2px 4px 2px 2px;} .tb-app img{height:17px;}
   }
-  @media (max-width:380px){
+  @media (max-width:410px){ /* 2026-11-22：ボタンが4つになったので 380px→410px に変更 */
     .top-band{padding:0 6px; gap:4px;} .menu-btn{padding:6px 9px 6px 7px; font-size:12px; gap:4px;} .menu-btn svg{width:18px; height:18px;}
-    .tb-hp img{height:26px;} .tb-app{padding:2px 4px 2px 2px;} .tb-app img{height:17px;}
+    .tb-hp img{height:22px;} .tb-app{padding:2px 3px 2px 2px;} .tb-app img{height:14px;}
   }
+  @media (max-width:340px){ .tb-app img{height:11px;} .tb-hp img{height:19px;} }
 
   .me{display:flex; gap:8px; align-items:center; flex-wrap:wrap; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:10px 12px; margin-bottom:12px;}
   .me label{font-size:12px; color:var(--sub);}
@@ -722,9 +728,11 @@ function hqChangeMember(){
   <!-- 2026-11-17：スマホ用の「メニュー」ボタン（幅820px以下のときだけ表示）。押すと左メニューが出る -->
   <button class="menu-btn" id="menuBtn" type="button" aria-label="メニューを開く" onclick="toggleMenu()"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>メニュー</button>
   <h1>しおどめポータルサイト</h1>
-  <button class="tb-btn tb-hp" id="hpBtn" type="button" title="自園のホームページの閲覧状況を見る"><img src="img/etsuran.png" alt="HP閲覧数"><span id="hpNum" hidden></span></button>
+  <!-- 2026-11-22：チャットワークを追加し、並びを チャットワーク・コドモン・Leyser・HP閲覧数 に変更 -->
+  <a class="tb-btn tb-app" href="https://www.chatwork.com/" target="_blank" rel="noopener" title="チャットワークを開く"><img src="img/chatwork.png" alt="チャットワーク"></a>
   <a class="tb-btn tb-app" href="https://www.codmon.com/manage/#/login" target="_blank" rel="noopener" title="コドモン（管理画面）を開く"><img src="img/codmon.png" alt="コドモン"></a>
   <a class="tb-btn tb-app" href="https://www.leyserplus.jp/employee" target="_blank" rel="noopener" title="Leyserを開く"><img src="img/layser.png" alt="Leyser"></a>
+  <button class="tb-btn tb-hp" id="hpBtn" type="button" title="自園のホームページの閲覧状況を見る"><img src="img/etsuran.png" alt="HP閲覧数"><span id="hpNum" hidden></span></button>
 </header>
 
 <div class="app" id="appMain">
