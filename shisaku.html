@@ -483,6 +483,23 @@ body{padding-bottom:25px;}
 /* 試作版の目印（左下のオレンジ）はフッターに重ならないよう上へ */
 #trial-ribbon{bottom:35px!important;}
 </style>
+<style>
+/* ===== 2026-11-24 試作版：上の帯の並びを「左：潮止学事教育社のロゴ ／ 中央：しおどめポータルサイト ／ 右：ボタン」に =====
+   3列（左右を同じ幅）にして、タイトルを帯のちょうど真ん中に置く。ボタンが多くて右列が広いときも重ならない */
+.top-band{display:grid; grid-template-columns:1fr auto 1fr; align-items:center;}
+.top-band .tb-left{display:flex; align-items:center; gap:10px; justify-self:start; min-width:0;}
+.top-band .tb-right{display:flex; align-items:center; gap:inherit; justify-self:end;}
+.top-band h1{margin:0 16px; text-align:center;}
+.tb-gakuji{height:40px; width:auto; display:block; flex:none;}
+/* HP閲覧数：画像の左に透明な余白（高さの約22%）があるので、その分を詰めて他のボタンと同じ間隔にする */
+.tb-hp{margin-left:-9px;}
+@media (max-width:820px){ .tb-gakuji{height:32px;} .tb-hp{margin-left:-7px;} }
+/* タイトルが消える幅（760px以下）では3列をやめて、左（メニュー）と右（ボタン）に寄せる従来の並びに戻す */
+@media (max-width:760px){ .top-band{display:flex;} .top-band .tb-right{margin-left:auto;} }
+@media (max-width:600px){ .tb-gakuji{display:none;} .tb-hp{margin-left:-6px;} }
+@media (max-width:410px){ .tb-hp{margin-left:-5px;} }
+@media (max-width:340px){ .tb-hp{margin-left:-4px;} }
+</style>
 </head>
 <body>
 <!-- ============================================================
@@ -824,13 +841,19 @@ function hqChangeMember(){
      ・今月の閲覧数（id=hpNum）は画面には出さず、ボタンにマウスを乗せたときの説明に出す -->
 <header class="top-band" id="topBand">
   <!-- 2026-11-17：スマホ用の「メニュー」ボタン（幅820px以下のときだけ表示）。押すと左メニューが出る -->
+  <!-- 2026-11-24 試作版：左＝潮止学事教育社のロゴ（＋スマホではメニューボタン）／中央＝タイトル／右＝ボタン -->
+  <div class="tb-left">
+    <img class="tb-gakuji" src="img/gakuji/header-logo.png" alt="株式会社潮止学事教育社">
   <button class="menu-btn" id="menuBtn" type="button" aria-label="メニューを開く" onclick="toggleMenu()"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>メニュー</button>
+  </div>
   <h1>しおどめポータルサイト</h1>
+  <div class="tb-right">
   <!-- 2026-11-22：チャットワークを追加し、並びを チャットワーク・コドモン・Leyser・HP閲覧数 に変更 -->
   <a class="tb-btn tb-app" href="https://www.chatwork.com/" target="_blank" rel="noopener" title="チャットワークを開く"><img src="img/chatwork.png" alt="チャットワーク"></a>
   <a class="tb-btn tb-app" href="https://www.codmon.com/manage/#/login" target="_blank" rel="noopener" title="コドモン（管理画面）を開く"><img src="img/codmon.png" alt="コドモン"></a>
   <a class="tb-btn tb-app" href="https://www.leyserplus.jp/employee" target="_blank" rel="noopener" title="Leyserを開く"><img src="img/layser.png" alt="Leyser"></a>
   <button class="tb-btn tb-hp" id="hpBtn" type="button" title="自園のホームページの閲覧状況を見る"><img src="img/etsuran.png" alt="HP閲覧数"><span id="hpNum" hidden></span></button>
+  </div>
 </header>
 
 <div class="app" id="appMain">
