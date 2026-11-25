@@ -132,9 +132,10 @@ html body{background:#dbdcdf}
 .ap-item label{color:var(--sub);font-weight:700;white-space:nowrap}
 .ap-item input{font-size:15px;padding:2px 4px;border:none;border-bottom:1.5px solid transparent;border-radius:0;background:transparent;color:var(--ink);font-weight:700;width:auto}
 .ap-item input[readonly]{background:transparent;color:var(--ink)}
-.ap-item #pre-garden{field-sizing:content;min-width:8em}
+.ap-item #pre-garden,.ap-item #k-garden{field-sizing:content;min-width:8em}
 .ap-item .ap-edit{border-bottom-color:var(--line)}
 .ap-item .ap-edit:focus{border-bottom-color:var(--accent);box-shadow:none}
+#k-pre-view:empty{display:none}
 .ap-wide{flex:1}
 .ap-wide input{flex:1;min-width:0}
 /* entry */
@@ -449,12 +450,14 @@ td{white-space:pre-wrap;word-break:break-word}
 <!-- ============ 応募者決裁 ============ -->
 <form id="v-kessai" class="stack" hidden novalidate>
   <div class="stack" data-k="1">
-    <div class="card">
-      <h2>申請者情報</h2>
-      <div class="row">
-        <div class="field"><label for="k-garden">園名</label><input type="text" id="k-garden" readonly></div>
-        <div class="field"><label for="k-writer">記入者名<span class="req">必須</span><span class="opt">園長の氏名が入ります（代理で書くときは書き換え）</span></label><input type="text" id="k-writer"></div>
+    <!-- 申請者情報（2026-11-25）：採用前申請と同じく小さく1行に。記入者名は押せば書き換えられる -->
+    <div class="card applicant">
+      <div class="ap-line">
+        <span class="ap-item"><label for="k-garden">園名：</label><input type="text" id="k-garden" readonly tabindex="-1"></span>
+        <span class="ap-item"><label for="k-writer">記入者名：</label><input type="text" id="k-writer" class="ap-edit" size="10" title="代理で書くときは書き換えてください"></span>
       </div>
+    </div>
+    <div class="card">
       <div class="field">
         <label for="k-pre">採用前申請を選ぶ<span class="req">必須</span><span class="opt">本部で可決された申請だけ表示されます</span></label>
         <select id="k-pre"></select>
