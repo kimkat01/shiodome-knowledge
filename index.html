@@ -1931,7 +1931,7 @@ updateTime();setInterval(updateTime,30000);renderCalendar();loadCalendarDeadline
 (function(){
   var SAIYO_GAS = 'https://script.google.com/macros/s/AKfycbzccLc5Pb4u_SoH4QAjSZyWZBmpmoGSMowK8HShbxkdP6_9NjztdNqYT0pMb4XK6Z9cKA/exec';
   if(!GARDEN_INFO || !GARDEN_INFO.code || HQ_MODE) return;
-  var DONE = /可決|相談|採用決定|不採用|承認|却下/;
+  var DONE = /可決|相談|否決|採用決定|不採用|承認|却下/;   // 否決は画面では「相談」と表示（2026-11-25）
   function get(action){
     return fetch(SAIYO_GAS + '?action=' + action + '&facility=' + encodeURIComponent(GARDEN_INFO.code) + '&t=' + Date.now())
       .then(function(r){ return r.text(); })

@@ -253,7 +253,7 @@ td{white-space:pre-wrap;word-break:break-word}
       <ol><li>申請者情報・採用前申請の選択</li><li>推薦理由・履歴書の提出</li><li>採用した場合の人件費・諸経費</li></ol>
     </button>
   </div>
-  <p class="flow">採用前申請 → 本部が原則3営業日以内に可否 → 可決後に採用活動 → 応募者決裁 → 採用決定</p>
+  <p class="flow">採用前申請 → 本部が原則3営業日以内に回答（可決・相談） → 可決後に採用活動 → 応募者決裁 → 採用決定</p>
   <h2 class="hist-h">これまでの申請</h2>
   <div class="hist" id="hist"><div class="note">読み込んでいます…</div></div>
 </section>
@@ -437,7 +437,7 @@ td{white-space:pre-wrap;word-break:break-word}
   <!-- 確認 -->
   <div class="stack" data-p="4" hidden>
     <div class="doc"><h3 id="doc-title"></h3><div class="tblwrap"><table id="doc-tbl"></table></div></div>
-    <div class="rule"><b>本部のルール</b><br>・送信後、原則3営業日以内に可否をお知らせします。<br>・可決された場合は、採用活動に入ってください。</div>
+    <div class="rule"><b>本部のルール</b><br>・送信後、原則3営業日以内に結果（可決・相談）をお知らせします。<br>・可決された場合は、採用活動に入ってください。</div>
   </div>
 
   <div class="err" id="pre-err" hidden></div>
@@ -575,9 +575,11 @@ document.title='採用申請 | '+GARDEN;
 $('hd-from').textContent=GARDEN+' → 法人本部';
 /* ===== GASウェブアプリ（採用申請システム） ===== */
 const GAS_URL='https://script.google.com/macros/s/AKfycbzccLc5Pb4u_SoH4QAjSZyWZBmpmoGSMowK8HShbxkdP6_9NjztdNqYT0pMb4XK6Z9cKA/exec';
+/* 「否決」は使わない（2026-11-25）：スプレッドシートに「否決」が入っていても、画面ではすべて「相談」と表示する */
+const noHiketsu=v=>Array.isArray(v)?v.map(r=>(r&&/否決/.test(String(r['ステータス']||'')))?Object.assign({},r,{'ステータス':'相談'}):r):v;
 function gasGet(q){
   return fetch(GAS_URL+'?'+q+'&t='+Date.now(),{redirect:'follow'}).then(r=>r.text()).then(t=>{
-    const j=JSON.parse(t); if(j.result!=='success') throw new Error(j.message||'読み込みに失敗しました'); return j.items; });
+    const j=JSON.parse(t); if(j.result!=='success') throw new Error(j.message||'読み込みに失敗しました'); return noHiketsu(j.items); });
 }
 function gasPost(action,data){
   return fetch(GAS_URL,{method:'POST',body:JSON.stringify({action,data}),redirect:'follow'}).then(r=>r.text()).then(t=>{
@@ -907,7 +909,7 @@ function submitPre(){
   gasPost('submitStage1',data).then(res=>{
     head('採用申請',[],0);
     $('done-h').textContent='採用前申請を送信しました';
-    $('done-p').innerHTML='受付番号：'+esc(res&&res.id||'')+'<br>本部が原則3営業日以内に可否をお知らせします。<br>可決されたら採用活動に入ってください。';
+    $('done-p').innerHTML='受付番号：'+esc(res&&res.id||'')+'<br>本部が原則3営業日以内に結果（可決・相談）をお知らせします。<br>可決されたら採用活動に入ってください。';
     show('v-done'); resetPre();
   }).catch(err=>{
     $('pre-err').hidden=false; $('pre-err').textContent='送信できませんでした。少し待ってからもう一度「この内容で送信する」を押してください。（'+err.message+'）';
