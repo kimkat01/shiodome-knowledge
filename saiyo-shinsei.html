@@ -121,6 +121,22 @@ input[readonly]{background:var(--bg);color:var(--sub)}
 .note{background:var(--bg);border-radius:9px;padding:12px 14px;font-size:15px;color:var(--sub)}
 .note b{color:var(--ink)}
 .pending{border:1.5px dashed var(--warn);background:var(--warn-pale);color:var(--warn);border-radius:9px;padding:12px 14px;font-size:15px;font-weight:600}
+/* 採用前申請：背景をひと段濃く（2026-11-25） */
+body.pre-bg{background:#dbdcdf}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) body.pre-bg{background:#0f1116}}
+:root[data-theme="dark"] body.pre-bg{background:#0f1116}
+/* 採用前申請：申請者情報を小さく2行で */
+.card.applicant{padding:12px 18px;gap:4px}
+.ap-line{display:flex;flex-wrap:wrap;gap:4px 28px;align-items:center;font-size:15px}
+.ap-item{display:flex;align-items:center;min-width:0}
+.ap-item label{color:var(--sub);font-weight:700;white-space:nowrap}
+.ap-item input{font-size:15px;padding:2px 4px;border:none;border-bottom:1.5px solid transparent;border-radius:0;background:transparent;color:var(--ink);font-weight:700;width:auto}
+.ap-item input[readonly]{background:transparent;color:var(--ink)}
+.ap-item #pre-garden{field-sizing:content;min-width:8em}
+.ap-item .ap-edit{border-bottom-color:var(--line)}
+.ap-item .ap-edit:focus{border-bottom-color:var(--accent);box-shadow:none}
+.ap-wide{flex:1}
+.ap-wide input{flex:1;min-width:0}
 /* entry */
 .entry{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media(max-width:620px){.entry{grid-template-columns:1fr}}
@@ -246,15 +262,14 @@ td{white-space:pre-wrap;word-break:break-word}
 
   <!-- P1 -->
   <div class="stack" data-p="1">
-    <div class="card">
-      <h2>申請者情報</h2>
-      <div class="row">
-        <div class="field"><label for="pre-garden">園名</label><input type="text" id="pre-garden" readonly></div>
-        <div class="field"><label for="pre-writer">記入者名<span class="req">必須</span><span class="opt">園長の氏名が入ります（代理で書くときは書き換え）</span></label><input type="text" id="pre-writer"></div>
+    <!-- 申請者情報（2026-11-25）：自動で入るので小さく2行にまとめる。記入者名・申請タイトルは押せば書き換えられる -->
+    <div class="card applicant">
+      <div class="ap-line">
+        <span class="ap-item"><label for="pre-garden">園名：</label><input type="text" id="pre-garden" readonly tabindex="-1"></span>
+        <span class="ap-item"><label for="pre-writer">記入者名：</label><input type="text" id="pre-writer" class="ap-edit" size="10" title="代理で書くときは書き換えてください"></span>
       </div>
-      <div class="field">
-        <label for="pre-title">申請タイトル<span class="opt">自動で入ります（書き換えもできます）</span></label>
-        <input type="text" id="pre-title">
+      <div class="ap-line">
+        <span class="ap-item ap-wide"><label for="pre-title">申請タイトル：</label><input type="text" id="pre-title" class="ap-edit" title="書き換えもできます"></span>
       </div>
     </div>
 
@@ -651,7 +666,7 @@ function calcHtml(c){
 
 /* ---------- 画面切替 ---------- */
 const views=['v-entry','v-pre','v-kessai','v-done'];
-function show(v){views.forEach(x=>$(x).hidden=x!==v);window.scrollTo({top:0,behavior:'smooth'});}
+function show(v){views.forEach(x=>$(x).hidden=x!==v);document.body.classList.toggle('pre-bg',v==='v-pre');window.scrollTo({top:0,behavior:'smooth'});}
 function head(title,steps,cur){
   $('hd-title').textContent=title;
   $('hd-steps').innerHTML=steps.map((s,i)=>`<span class="${i+1===cur?'on':''}">${i+1}. ${s}</span>`).join('');
