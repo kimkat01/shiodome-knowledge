@@ -121,10 +121,10 @@ input[readonly]{background:var(--bg);color:var(--sub)}
 .note{background:var(--bg);border-radius:9px;padding:12px 14px;font-size:15px;color:var(--sub)}
 .note b{color:var(--ink)}
 .pending{border:1.5px dashed var(--warn);background:var(--warn-pale);color:var(--warn);border-radius:9px;padding:12px 14px;font-size:15px;font-weight:600}
-/* 採用前申請：背景をひと段濃く（2026-11-25） */
-body.pre-bg{background:#dbdcdf}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) body.pre-bg{background:#0f1116}}
-:root[data-theme="dark"] body.pre-bg{background:#0f1116}
+/* 背景をひと段濃く（2026-11-25：採用前申請、同日に最初のページ・応募者決裁にも） */
+html body{background:#dbdcdf}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) body{background:#0f1116}}
+:root[data-theme="dark"] body{background:#0f1116}
 /* 採用前申請：申請者情報を小さく2行で */
 .card.applicant{padding:12px 18px;gap:4px}
 .ap-line{display:flex;flex-wrap:wrap;gap:4px 28px;align-items:center;font-size:15px}
@@ -666,7 +666,7 @@ function calcHtml(c){
 
 /* ---------- 画面切替 ---------- */
 const views=['v-entry','v-pre','v-kessai','v-done'];
-function show(v){views.forEach(x=>$(x).hidden=x!==v);document.body.classList.toggle('pre-bg',v==='v-pre');window.scrollTo({top:0,behavior:'smooth'});}
+function show(v){views.forEach(x=>$(x).hidden=x!==v);window.scrollTo({top:0,behavior:'smooth'});}
 function head(title,steps,cur){
   $('hd-title').textContent=title;
   $('hd-steps').innerHTML=steps.map((s,i)=>`<span class="${i+1===cur?'on':''}">${i+1}. ${s}</span>`).join('');
