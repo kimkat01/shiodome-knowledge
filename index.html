@@ -472,8 +472,101 @@ html.law-y #cb-submit{background:#43a047 !important;}
 html.law-y .kb-user b{color:#000;}
 html.law-y .kb-logout:hover{background:#e6f2ea;}
 </style>
+<style>
+/* 2026-11-25 本番：画面下に固定するフッター（社名ロゴ「株式会社 潮止学事教育社」のみ、スミ100%）
+   高さは上の帯の1/3（PC：帯74px→25px、幅820px以下：帯60px→20px） */
+.gk-footbar{position:fixed;left:0;right:0;bottom:0;height:25px;z-index:900;background:#fff;border-top:1px solid #e6e4ef;
+  display:flex;align-items:center;justify-content:center;pointer-events:none;}
+.gk-footbar img{height:15px;width:auto;display:block;}
+body{padding-bottom:25px;}
+@media (max-width:820px){ .gk-footbar{height:20px;} .gk-footbar img{height:12px;} body{padding-bottom:20px;} }
+</style>
+<style>
+/* ===== 2026-11-25 本番：上の帯の並びを「左：潮止学事教育社のロゴ ／ 中央：しおどめポータルサイト ／ 右：ボタン」に =====
+   3列（左右を同じ幅）にして、タイトルを帯のちょうど真ん中に置く。ボタンが多くて右列が広いときも重ならない */
+.top-band{display:grid; grid-template-columns:1fr auto 1fr; align-items:center;}
+.top-band .tb-left{display:flex; align-items:center; gap:10px; justify-self:start; min-width:0;}
+.top-band .tb-right{display:flex; align-items:center; gap:inherit; justify-self:end;}
+.top-band h1{margin:0 16px; text-align:center;}
+.tb-gakuji{height:40px; width:auto; display:block; flex:none;}
+/* HP閲覧数：画像の左に透明な余白（高さの約22%）があるので、その分を詰めて他のボタンと同じ間隔にする */
+.tb-hp{margin-left:-9px;}
+@media (max-width:820px){ .tb-gakuji{height:32px;} .tb-hp{margin-left:-7px;} }
+/* タイトルが消える幅（760px以下）では3列をやめて、左（メニュー）と右（ボタン）に寄せる従来の並びに戻す */
+@media (max-width:760px){ .top-band{display:flex;} .top-band .tb-right{margin-left:auto;} }
+@media (max-width:600px){ .tb-gakuji{display:none;} .tb-hp{margin-left:-6px;} }
+@media (max-width:410px){ .tb-hp{margin-left:-5px;} }
+@media (max-width:340px){ .tb-hp{margin-left:-4px;} }
+/* 2026-11-24：右の4つのボタンの間隔を、これまでの約半分に詰める */
+.top-band .tb-right{gap:7px;}
+@media (min-width:821px) and (max-width:980px){ .top-band .tb-right{gap:5px;} }
+@media (max-width:820px){ .top-band .tb-right{gap:3px;} }
+@media (max-width:410px){ .top-band .tb-right{gap:2px;} }
+</style>
 </head>
 <body>
+<!-- ============================================================
+     オープニング（2026-11-25 本番）：株式会社潮止学事教育社
+     ロゴ（Gakuji）のアニメーション → 消える（約3秒）。ごあいさつ文は本番では出さない
+     ・クリックでいつでもスキップ
+     ・一度見たら30分間は出さない（sessionStorage の gk_opening_portal）。ツールから戻ったときに毎回出ないように。?opening=1 で必ず表示
+     ・ロゴ画像は img/gakuji/op-word / op-line / op-stars / op-jp.png
+     ============================================================ -->
+<script>/* 2026-11-23：ANSHIN KUNとポータルは同じサイト（kimkat01.github.io）なので、記録の名前をアプリごとに分ける。
+   見てから30分以内（ツールから戻ってきたときなど）は出さない。URLに ?opening=1 を付けると必ず出す（確認用） */
+try{ var _gq=new URLSearchParams(location.search).get('opening')==='1'; var _gt=Number(sessionStorage.getItem('gk_opening_portal')||0);
+  if(!_gq && _gt && Date.now()-_gt < 30*60*1000) document.documentElement.classList.add('gk-seen'); }catch(e){}</script>
+<style>
+#gkOpening{position:fixed;inset:0;z-index:2147483000;background:#fff;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:opacity .6s ease, visibility .6s;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",YuGothic,Meiryo,"Noto Sans JP",sans-serif;}
+html.gk-seen #gkOpening{display:none;}
+#gkOpening.gk-out{opacity:0;visibility:hidden;}
+#gkOpening .gk-logo{position:relative;width:min(56vw,240px);aspect-ratio:599/233;}
+#gkOpening .gk-logo img{position:absolute;inset:0;width:100%;height:100%;opacity:0;}
+#gkOpening.gk-play .gk-word {animation:gkWord .8s cubic-bezier(.2,.7,.2,1) .25s forwards;}
+#gkOpening.gk-play .gk-line {animation:gkLine .7s cubic-bezier(.6,0,.2,1) .75s forwards;}
+#gkOpening.gk-play .gk-stars{animation:gkStars .6s cubic-bezier(.3,1.6,.5,1) 1.2s forwards, gkTwinkle 1.2s ease-in-out 1.8s 1;}
+#gkOpening.gk-play .gk-jp   {animation:gkJp .8s ease-out 1.35s forwards;}
+@keyframes gkWord{from{opacity:0;transform:translateY(14px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+@keyframes gkLine{from{opacity:1;clip-path:inset(0 50% 0 50%)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+@keyframes gkStars{from{opacity:0;transform:scale(.2) rotate(-40deg)}to{opacity:1;transform:none}}
+@keyframes gkTwinkle{0%,100%{filter:none}50%{filter:brightness(1.6) drop-shadow(0 0 4px rgba(0,96,176,.6))}}
+@keyframes gkJp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+#gkOpening .gk-stars{transform-origin:65% 7%;}
+#gkOpening .gk-skip{position:absolute;bottom:max(24px,env(safe-area-inset-bottom));left:0;right:0;text-align:center;
+  font-size:12px;color:#b0b6bf;letter-spacing:.1em;opacity:0;animation:gkJp .6s ease .6s forwards;}
+@media (prefers-reduced-motion: reduce){#gkOpening .gk-logo img{animation:none!important;opacity:1}}
+</style>
+<div id="gkOpening" aria-label="株式会社潮止学事教育社">
+  <div class="gk-logo">
+    <img class="gk-word"  src="img/gakuji/op-word.png"  alt="">
+    <img class="gk-line"  src="img/gakuji/op-line.png"  alt="">
+    <img class="gk-stars" src="img/gakuji/op-stars.png" alt="">
+    <img class="gk-jp"    src="img/gakuji/op-jp.png"    alt="">
+  </div>
+  <div class="gk-skip">クリックでスキップ</div>
+</div>
+<script>
+(function(){
+  function gkStart(){
+    var el=document.getElementById('gkOpening');
+    if(!el) return;
+    if(document.documentElement.classList.contains('gk-seen')){ el.remove(); return; }
+    var timers=[], done=false;
+    var T=function(f,ms){ timers.push(setTimeout(f,ms)); };
+    var close=function(){
+      if(done) return; done=true; timers.forEach(clearTimeout);
+      try{ sessionStorage.setItem('gk_opening_portal', String(Date.now())); }catch(e){}
+      el.classList.add('gk-out'); setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 700);
+    };
+    el.addEventListener('click', close);
+    T(function(){ el.classList.add('gk-play'); }, 150);   // ロゴのアニメーション
+    T(close, 3300);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', gkStart); else gkStart();
+})();
+</script>
+<!-- オープニング ここまで -->
 <!-- ============================================================
      ★ 園の切り替え（2026-09）：URLの ?garden=園キー で園を決める。
        例）https://kimkat01.github.io/shiodome-knowledge/?garden=tsukuba
@@ -722,12 +815,19 @@ function hqChangeMember(){
      ・今月の閲覧数（id=hpNum）は画面には出さず、ボタンにマウスを乗せたときの説明に出す -->
 <header class="top-band" id="topBand">
   <!-- 2026-11-17：スマホ用の「メニュー」ボタン（幅820px以下のときだけ表示）。押すと左メニューが出る -->
+  <!-- 2026-11-25：左＝潮止学事教育社のロゴ（＋スマホではメニューボタン）／中央＝タイトル／右＝ボタン -->
+  <div class="tb-left">
+    <img class="tb-gakuji" src="img/gakuji/header-logo.png" alt="株式会社潮止学事教育社">
   <button class="menu-btn" id="menuBtn" type="button" aria-label="メニューを開く" onclick="toggleMenu()"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>メニュー</button>
+  </div>
   <h1>しおどめポータルサイト</h1>
+  <div class="tb-right">
+  <!-- 2026-11-22：チャットワークを追加し、並びを チャットワーク・コドモン・Leyser・HP閲覧数 に変更 -->
   <a class="tb-btn tb-app" href="https://www.chatwork.com/" target="_blank" rel="noopener" title="チャットワークを開く"><img src="img/chatwork.png" alt="チャットワーク"></a>
   <a class="tb-btn tb-app" href="https://www.codmon.com/manage/#/login" target="_blank" rel="noopener" title="コドモン（管理画面）を開く"><img src="img/codmon.png" alt="コドモン"></a>
   <a class="tb-btn tb-app" href="https://www.leyserplus.jp/employee" target="_blank" rel="noopener" title="Leyserを開く"><img src="img/layser.png" alt="Leyser"></a>
   <button class="tb-btn tb-hp" id="hpBtn" type="button" title="自園のホームページの閲覧状況を見る"><img src="img/etsuran.png" alt="HP閲覧数"><span id="hpNum" hidden></span></button>
+  </div>
 </header>
 
 <div class="app" id="appMain">
@@ -2570,5 +2670,7 @@ function toggleMenu(open){
   window.addEventListener('resize', function(){ if(window.innerWidth > 820) toggleMenu(false); });
 })();
 </script>
+<!-- 2026-11-25：画面下に固定のフッター（社名ロゴ） -->
+<div class="gk-footbar"><img src="img/gakuji/shamei.png" alt="株式会社潮止学事教育社"></div>
 </body>
 </html>
