@@ -473,15 +473,6 @@ html.law-y .kb-user b{color:#000;}
 html.law-y .kb-logout:hover{background:#e6f2ea;}
 </style>
 <style>
-/* 2026-11-25 本番：画面下に固定するフッター（社名ロゴ「株式会社 潮止学事教育社」のみ、スミ100%）
-   高さは上の帯の1/3（PC：帯74px→25px、幅820px以下：帯60px→20px） */
-.gk-footbar{position:fixed;left:0;right:0;bottom:0;height:25px;z-index:900;background:#fff;border-top:1px solid #e6e4ef;
-  display:flex;align-items:center;justify-content:center;pointer-events:none;}
-.gk-footbar img{height:15px;width:auto;display:block;}
-body{padding-bottom:25px;}
-@media (max-width:820px){ .gk-footbar{height:20px;} .gk-footbar img{height:12px;} body{padding-bottom:20px;} }
-</style>
-<style>
 /* ===== 2026-11-25 本番：上の帯の並びを「左：潮止学事教育社のロゴ ／ 中央：しおどめポータルサイト ／ 右：ボタン」に =====
    3列（左右を同じ幅）にして、タイトルを帯のちょうど真ん中に置く。ボタンが多くて右列が広いときも重ならない */
 .top-band{display:grid; grid-template-columns:1fr auto 1fr; align-items:center;}
@@ -2670,7 +2661,5 @@ function toggleMenu(open){
   window.addEventListener('resize', function(){ if(window.innerWidth > 820) toggleMenu(false); });
 })();
 </script>
-<!-- 2026-11-25：画面下に固定のフッター（社名ロゴ） -->
-<div class="gk-footbar"><img src="img/gakuji/shamei.png" alt="株式会社潮止学事教育社"></div>
 </body>
 </html>
