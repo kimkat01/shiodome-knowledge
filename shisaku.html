@@ -846,7 +846,7 @@ function hqChangeMember(){
   <a class="tb-btn tb-app" href="https://www.chatwork.com/" target="_blank" rel="noopener" title="チャットワークを開く"><img src="img/chatwork.png" alt="チャットワーク"></a>
   <a class="tb-btn tb-app" href="https://www.codmon.com/manage/#/login" target="_blank" rel="noopener" title="コドモン（管理画面）を開く"><img src="img/codmon.png" alt="コドモン"></a>
   <a class="tb-btn tb-app" href="https://www.leyserplus.jp/employee" target="_blank" rel="noopener" title="Leyserを開く"><img src="img/layser.png" alt="Leyser"></a>
-  <button class="tb-btn tb-hp" id="hpBtn" type="button" title="自園のホームページの閲覧状況を見る"><img src="img/etsuran.png" alt="HP閲覧数"><span id="hpNum" hidden></span></button>
+  <button class="tb-btn tb-hp" id="hpBtn" type="button" title="ホームページの閲覧状況・全園のホームページ" aria-haspopup="menu" aria-expanded="false"><img src="img/etsuran.png" alt="HP閲覧数"><span id="hpNum" hidden></span></button>
   </div>
 </header>
 
@@ -2670,8 +2670,154 @@ document.addEventListener('click', function(e){
   window.hpClose = function(){ document.getElementById('hpModal').classList.remove('open'); };
   document.getElementById('hpModal').addEventListener('click', function(e){ if(e.target === this) hpClose(); });
   document.addEventListener('keydown', function(e){ if(e.key === 'Escape') hpClose(); });
-  btn.addEventListener('click', hpOpen);
+  // 2026-11-26：ボタンを押したときは、すぐ閲覧状況を開かず「HP閲覧数を見る／全園のHP一覧」のメニューを出す（下の hpMenu のスクリプトで設定）
   paintButton();
+})();
+</script>
+
+<!-- ============================================================
+     2026-11-26 試作版：HP閲覧数ボタンのメニュー化
+     ・ヘッダーのHP閲覧数ボタン（id=hpBtn）を押すと、小さなメニューが開く
+         ① HP閲覧数を見る … 今までどおり自園のホームページ閲覧状況（hpOpen）
+         ② 全園のHP一覧   … 17園のホームページを法人別に一覧表示。園名を押すと新しいタブで開く
+     ・URLは「HP URL一覧.xlsx」（法人サイト2件・園サイト17件）より
+     ============================================================ -->
+<style>
+  .tb-hp{position:relative;}
+  .tb-hp::after{content:"▼"; position:absolute; right:-2px; bottom:-1px; width:15px; height:15px; border-radius:50%;
+    background:#fff; color:#e6338a; font-size:8px; line-height:15px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,.25);}
+  @media (max-width:600px){ .tb-hp::after{width:12px; height:12px; line-height:12px; font-size:7px;} }
+  #hpMenu{position:fixed; z-index:9100; display:none; min-width:220px; background:#fff; border-radius:12px;
+    box-shadow:0 10px 30px rgba(0,0,0,.22); border:1px solid #eee; overflow:hidden;}
+  #hpMenu.open{display:block;}
+  #hpMenu button{display:flex; align-items:center; gap:10px; width:100%; border:none; background:#fff; cursor:pointer;
+    padding:12px 16px; font-size:14px; font-weight:700; color:#000; font-family:inherit; text-align:left;}
+  #hpMenu button + button{border-top:1px solid #f0f0f0;}
+  #hpMenu button:hover{background:#fff0f6; color:#e6338a;}
+  #hpMenu .ic{font-size:17px; width:20px; text-align:center;}
+
+  #hpAllModal{position:fixed; inset:0; z-index:9000; display:none; align-items:flex-start; justify-content:center;
+    background:rgba(20,22,40,.42); padding:40px 14px; overflow:auto;}
+  #hpAllModal.open{display:flex;}
+  .hpa-sec{font-size:14px; font-weight:800; margin:14px 0 8px; color:#333;}
+  .hpa-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(225px,1fr)); gap:8px;}
+  .hpa-grid a{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; border:1px solid #e6e6e6;
+    border-radius:10px; color:#000; text-decoration:none; font-size:13.5px; font-weight:700; background:#fff; transition:border-color .15s, background .15s;}
+  .hpa-grid a:hover{border-color:#ff3d8b; background:#fff7fb;}
+  .hpa-grid a .go{font-size:12px; color:#e6338a; flex:none;}
+  .hpa-grid a.mine{border-color:#ff3d8b; background:#fff0f6;}
+  .hpa-grid a .me{font-size:11px; color:#fff; background:#e6338a; border-radius:999px; padding:1px 7px; margin-left:6px; flex:none;}
+  html.law-y .hpa-grid a:hover, html.law-y .hpa-grid a.mine{border-color:#43a047; background:#eef7f0;}
+  html.law-y .hpa-grid a .go{color:#2e7d32;} html.law-y .hpa-grid a .me{background:#43a047;}
+  .hpa-hojin{font-size:13px; color:#333; margin-top:16px; border-top:1px dashed #e5e5e5; padding-top:12px;}
+  .hpa-hojin a{color:#0b5cad; font-weight:700; margin-right:14px;}
+</style>
+
+<div id="hpMenu" role="menu" aria-label="ホームページ">
+  <button type="button" role="menuitem" id="hpMenuStats"><span class="ic">📊</span>HP閲覧数を見る</button>
+  <button type="button" role="menuitem" id="hpMenuAll"><span class="ic">🌐</span>全園のHP一覧</button>
+</div>
+
+<div id="hpAllModal" role="dialog" aria-modal="true" aria-labelledby="hpAllTitle">
+  <div class="hp-card">
+    <div class="hp-top">
+      <div><h2 id="hpAllTitle">🌐 全園のホームページ（17園）</h2></div>
+      <button class="hp-close" type="button" onclick="hpAllClose()">✕ 閉じる</button>
+    </div>
+    <div class="hp-meta">園名を押すと、その園のホームページが新しいタブで開きます。</div>
+    <div class="hpa-sec">学校法人柴学園（14園）</div>
+    <div class="hpa-grid" id="hpaShiba"></div>
+    <div class="hpa-sec">社会福祉法人雄雅会（3園）</div>
+    <div class="hpa-grid" id="hpaYuga"></div>
+    <div class="hpa-hojin">法人サイト：
+      <a href="https://www.gakuhou-shibagakuen.com/" target="_blank" rel="noopener">学校法人柴学園</a>
+      <a href="https://www.yugakai.org/" target="_blank" rel="noopener">社会福祉法人雄雅会</a>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ★ 全園のホームページURL（HP URL一覧.xlsx より）。園が増えた・URLが変わったときはここを直す
+  var SHIBA = 'https://www.gakuhou-shibagakuen.com/';
+  var YUGA  = 'https://www.yugakai.org/';
+  var HP_LIST = {
+    shiba: [
+      ['認定こども園 しおどめの森',      SHIBA + 'mori'],
+      ['しおどめ保育園 八潮駅北',        SHIBA + 'ekikita'],
+      ['しおどめ保育園 京急蒲田駅前',    SHIBA + 'kamata'],
+      ['しおどめ保育園 小規模認可',      SHIBA + 'sho'],
+      ['しおどめ保育園 江戸川中央',      SHIBA + 'edogawa'],
+      ['しおどめ保育園 春日部',          SHIBA + 'kasukabe'],
+      ['しおどめ保育園 越谷',            SHIBA + 'koshigaya'],
+      ['しおどめ保育園 八潮茜町',        SHIBA + 'yashioakane'],
+      ['ふれあいしおどめ保育園',          SHIBA + 'shinfureai'],
+      ['しおどめ保育園 つくば',          SHIBA + 'st'],
+      ['しおどめ保育園 稲城',            SHIBA + encodeURIComponent('しおどめ保育園稲城')],
+      ['しおどめ保育園 久喜',            SHIBA + 'shinkuki'],
+      ['しおどめ保育園 三郷中央',        SHIBA + 'shinmisato'],
+      ['ふれあいしおどめ保育園八潮',      SHIBA + 'fureaiyashio']
+    ],
+    yuga: [
+      ['八潮しおどめ保育園',              YUGA + 'yashio'],
+      ['守谷しおどめ保育園',              YUGA + 'shinmoriyashiodome'],
+      ['しおどめなかよし保育園',          YUGA + 'shiodome-nakayoshi']
+    ]
+  };
+
+  var btn  = document.getElementById('hpBtn');
+  var menu = document.getElementById('hpMenu');
+  if(!btn || !menu) return;
+
+  function esc(t){ return String(t).replace(/[<>&"]/g, function(c){ return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]; }); }
+  function norm(t){ return String(t || '').replace(/[\s　]/g, ''); }
+  // 自園（本部モードで園を選んでいるときはその園）に「自園」の印を付ける
+  function myName(){
+    if(typeof HQ_MODE !== 'undefined' && HQ_MODE) return (typeof HQ_VIEW !== 'undefined' && HQ_VIEW) ? HQ_VIEW.name : '';
+    return (typeof GARDEN !== 'undefined') ? GARDEN : '';
+  }
+  function fill(id, list){
+    var me = norm(myName());
+    document.getElementById(id).innerHTML = list.map(function(r){
+      var mine = me && norm(r[0]) === me;
+      return '<a href="' + esc(r[1]) + '" target="_blank" rel="noopener"' + (mine ? ' class="mine"' : '') + '>'
+        + '<span>' + esc(r[0]) + (mine ? '<span class="me">自園</span>' : '') + '</span><span class="go">開く ↗</span></a>';
+    }).join('');
+  }
+
+  // メニューの開け閉め（ボタンの真下・右端そろえで出す）
+  function openMenu(){
+    var r = btn.getBoundingClientRect();
+    menu.classList.add('open');
+    var w = menu.offsetWidth;
+    var left = Math.min(Math.max(8, r.right - w), window.innerWidth - w - 8);
+    menu.style.left = left + 'px';
+    menu.style.top  = (r.bottom + 8) + 'px';
+    btn.setAttribute('aria-expanded', 'true');
+  }
+  function closeMenu(){ menu.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }
+
+  btn.addEventListener('click', function(e){
+    e.stopPropagation();
+    menu.classList.contains('open') ? closeMenu() : openMenu();
+  });
+  document.getElementById('hpMenuStats').addEventListener('click', function(){
+    closeMenu();
+    if(typeof window.hpOpen === 'function') window.hpOpen();
+  });
+  document.getElementById('hpMenuAll').addEventListener('click', function(){
+    closeMenu();
+    fill('hpaShiba', HP_LIST.shiba);
+    fill('hpaYuga',  HP_LIST.yuga);
+    document.getElementById('hpAllModal').classList.add('open');
+  });
+  window.hpAllClose = function(){ document.getElementById('hpAllModal').classList.remove('open'); };
+  document.getElementById('hpAllModal').addEventListener('click', function(e){ if(e.target === this) hpAllClose(); });
+
+  document.addEventListener('click', function(e){ if(!menu.contains(e.target) && e.target !== btn) closeMenu(); });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape'){ closeMenu(); hpAllClose(); } });
+  window.addEventListener('resize', closeMenu);
+  window.addEventListener('scroll', closeMenu, true);
 })();
 </script>
 
