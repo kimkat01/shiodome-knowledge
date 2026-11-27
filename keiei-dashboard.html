@@ -860,7 +860,7 @@ function v3Over(p,m){
   const up=v3Up(p,m), o=v=>v==null?0:Math.round((v-up)*10)/10;
   const of=o(m.fte), os=o(m.staff);
   const [lab,v]=of>0?['常勤換算',of]:os>0?['保育士の人数',os]:[null,0];
-  return v>0?`<div class="kover">${v}名超過<span>${lab}が上限（${up}名）を超えています</span></div>`:'';
+  return v>0?`<div class="kover"><small style="font-size:14px;font-weight:700;margin-right:4px">${lab}</small>${v}名超過<span>${lab}が上限（${up}名）を超えています</span></div>`:'';
 }
 // 適正上限：国基準の常勤換算（年齢ごとに小数）があればその×1.8、なければ国基準（人数）×1.8。左右のカードで同じ値を使う
 function v3Low(p,m){ const f=v3BaseFte(p,m); return f!=null?f:m.base; }   // 下限（国基準）。常勤換算があればそちら
