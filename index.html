@@ -140,6 +140,11 @@
   .me label{font-size:12px; color:var(--sub);}
   .me select,.me input{font:inherit; font-size:13px; padding:8px 10px; border:1px solid var(--line); border-radius:12px; background:#fbfbfe; color:#000; outline:none;}
   .me input{flex:1; min-width:110px;}
+  /* 2026-11-27：匿名投稿の切り替え */
+  .me .anon-sw{display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); cursor:pointer; white-space:nowrap;}
+  .me .anon-sw input{flex:none; min-width:0; width:16px; height:16px; margin:0; padding:0;}
+  .me input#myname:disabled{opacity:.45;}
+  .avatar.anon{background:#9aa0ad !important;}
 
   .composer{background:var(--card); border:1px solid var(--line); border-radius:22px; padding:18px; margin-bottom:16px; box-shadow:0 8px 26px rgba(90,70,190,.07); transition:box-shadow .15s ease, border-color .15s ease;}
   .composer.drag-over{border-color:#7c5cf0; box-shadow:0 0 0 3px rgba(124,92,240,.18);}
@@ -954,6 +959,7 @@ function hqChangeMember(){
       <label for="who">投稿者</label>
       <select id="who"></select>
       <input id="myname" type="text" placeholder="お名前">
+      <label class="anon-sw" title="チェックすると、投稿者名を表示しません（所属園は表示されます）"><input type="checkbox" id="anonChk"> 名前を出さない</label>
     </div>
     <div class="composer" id="composer">
       <textarea id="body" placeholder="いまの共有を書く…（例：良かった保育の工夫、ヒヤリの気づき、質問など）"></textarea>
@@ -1101,6 +1107,18 @@ const who = document.getElementById("who");
 ORGS.forEach(o=>{ const opt=document.createElement("option"); opt.value=o.code; opt.textContent=o.code==="本部"?"本部":`${o.code}｜${o.name}`; who.appendChild(opt); });
 const findOrg = code => ORGS.find(o=>o.code===code) || ORGS[0];
 const myname = document.getElementById("myname");
+/* 2026-11-27：匿名投稿（投稿ごとに「名前を出す／匿名」を選べる）
+   ・匿名にすると、名前欄は何も表示しない（無地）。アイコンも文字なしの灰色。所属園のバッジは表示する
+   ・保存上の名前は目印として「匿名」にしている（画面には出さない）
+   ・誰の投稿かはログインIDで記録されるので、自分の投稿の編集・削除、本部の削除はこれまで通り
+   ・コメントは対象外（コメントはこれまで通り名前が出る） */
+const ANON_NAME = "匿名";
+const anonChk = document.getElementById("anonChk");
+const isAnon = p => !!p && p.name===ANON_NAME;
+function setAnon(on){ anonChk.checked=!!on; myname.disabled=!!on; }
+anonChk.addEventListener("change",()=>{ myname.disabled=anonChk.checked; if(typeof postDirty!=="undefined") postDirty=true; });
+/* 投稿（新規・編集）に使う名前 */
+function posterName(){ return anonChk.checked ? ANON_NAME : (myname.value.trim()||me().name||"名無し"); }
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
 /* 2026-10-22：本文・コメント中の http(s):// で始まるURLをリンクにする（別タブで開く）。
    esc() で安全化した後の文字列に対して使う。末尾の句読点・閉じ括弧はリンクに含めない */
@@ -1126,6 +1144,7 @@ function myGardenCode(){ return isHonbuUser() ? "本部" : ((GARDEN_INFO && GARD
 function resetPoster(){
   who.value = findOrg(myGardenCode()).code;
   myname.value = me().name || myname.value || "";
+  setAnon(false);
 }
 resetPoster();
 
@@ -1178,7 +1197,9 @@ function feedGet(){
 }
 function feedPost(action, data){
   const m = me();
-  const payload = Object.assign({action, who:{code:who.value, name:(myname.value.trim()||m.name||"名無し"), loginId:m.loginId, role:m.role}}, data);
+  // 匿名は投稿の新規・更新のときだけ（コメント・いいねは本人の名前）
+  const nm = (action==="create"||action==="update") ? posterName() : (myname.value.trim()||m.name||"名無し");
+  const payload = Object.assign({action, who:{code:who.value, name:nm, loginId:m.loginId, role:m.role}}, data);
   return fetch(FEED_GAS_URL, {method:"POST", body:JSON.stringify(payload), redirect:"follow"})
     .then(r=>r.text()).then(t=>{ let d=null; try{ d=JSON.parse(t); }catch(e){} if(!d) throw new Error("サーバーの応答を読み取れませんでした"); if(!d.ok) throw new Error(d.message||"保存に失敗しました"); return d; });
 }
@@ -1292,8 +1313,8 @@ function render(){
     const el=document.createElement("div"); el.className="post"+(mine?" mine":""); el.dataset.pid=p.id;
     el.innerHTML=`
       <div class="p-head">
-        <div class="avatar" style="background:${orgColor(p.org)}">${esc(initial(p.name))}</div>
-        <div><div class="p-name">${esc(p.name)}</div>
+        <div class="avatar${isAnon(p)?" anon":""}" style="background:${orgColor(p.org)}">${isAnon(p)?"":esc(initial(p.name))}</div>
+        <div><div class="p-name">${isAnon(p)?"":esc(p.name)}</div>
           <div class="p-meta"><span class="badge ${orgClass(p.org)}" title="${esc(gName)}">${esc(p.code)}</span><span class="time">${p.code!=="本部"?esc(gName)+"・":""}${ago(p.ts)}${p.updated&&p.updated-p.ts>60000?"（編集済み）":""}</span>${isNewPost(p)?'<span class="new-tag feed-new">NEW</span>':""}</div></div>
         ${p.topic?`<span class="chip">#${esc(p.topic)}</span>`:""}
       </div>
@@ -1446,7 +1467,7 @@ function saveDraft(){
   const rec = {
     id: draftId || ("dr"+Date.now()+Math.floor(Math.random()*1000)),
     owner: draftOwner(), ts: Date.now(),
-    body: bodyEl.value, topic,
+    body: bodyEl.value, topic, anon: anonChk.checked,
     atts: atts.filter(a=>a.dataUrl).map(a=>({kind:a.kind, dataUrl:a.dataUrl, name:a.name, mime:a.mime}))
   };
   return DraftDB.put(rec).then(()=>{ draftId=rec.id; postDirty=false; updateDraftCount(); return true; })
@@ -1455,7 +1476,7 @@ function saveDraft(){
 
 /* ---------- 投稿モーダル開閉 ---------- */
 function fillComposer(d){
-  bodyEl.value = d.body||""; topic = d.topic||null;
+  bodyEl.value = d.body||""; topic = d.topic||null; setAnon(!!d.anon);
   atts = (d.atts||[]).map(a=>Object.assign({}, a, a.dataUrl?{url:a.dataUrl}:{}));
   document.querySelectorAll(".topic").forEach(x=>x.setAttribute("aria-pressed", x.dataset.t===topic?"true":"false"));
   renderAttList(); refreshPostBtn();
@@ -1468,8 +1489,8 @@ function openPostModal(editPost, draft){
   draftBtn.hidden = !!editPost;
   document.getElementById("pmDraftLink").hidden = !!editPost;
   if(editPost){
-    who.value = editPost.code; myname.value = editPost.name;
-    fillComposer({body:editPost.body, topic:editPost.topic, atts:attsOf(editPost).map(a=>typeof a==="string"?{kind:"image",url:a}:Object.assign({},a))});
+    who.value = editPost.code; myname.value = isAnon(editPost) ? (me().name||"") : editPost.name;
+    fillComposer({body:editPost.body, topic:editPost.topic, anon:isAnon(editPost), atts:attsOf(editPost).map(a=>typeof a==="string"?{kind:"image",url:a}:Object.assign({},a))});
   } else {
     resetPoster();
     fillComposer(draft || {});
@@ -1505,7 +1526,7 @@ function legacyAttach(list){
 function totalMB(list){ return list.reduce((s,a)=>s+(a.dataUrl?a.dataUrl.length*0.75:0),0)/1024/1024; }
 /* 投稿・更新を送る（下書き一覧の「投稿する」からも使う） */
 function submitPost({body, topic:tp, atts:list, editId}){
-  const o=findOrg(who.value), name=myname.value.trim()||"名無し";
+  const o=findOrg(who.value), name=posterName();
   if(!FEED_LIVE){
     const img=list[0]||null;
     if(editId){ const p=posts.find(x=>String(x.id)===String(editId)); if(p){ Object.assign(p,{code:o.code, name, org:o.org, topic:tp, body, img, imgs:list}); } }
@@ -1540,7 +1561,7 @@ function renderDrafts(){
     if(!list.length){ box.innerHTML=`<div class="draft-empty">下書きはありません。<br>投稿画面の「下書き保存」で、書きかけの投稿をここに残せます。</div>`; return; }
     box.innerHTML = list.map(d=>{
       const imgs=(d.atts||[]).filter(a=>a.kind==="image"), files=(d.atts||[]).filter(a=>a.kind!=="image");
-      const meta=[`${fmtDT(d.ts)} 保存`, d.topic?`#${esc(d.topic)}`:"", imgs.length?`写真${imgs.length}枚`:"", files.length?`ファイル${files.length}件`:""].filter(Boolean).join("　");
+      const meta=[`${fmtDT(d.ts)} 保存`, d.anon?"名前なし":"", d.topic?`#${esc(d.topic)}`:"", imgs.length?`写真${imgs.length}枚`:"", files.length?`ファイル${files.length}件`:""].filter(Boolean).join("　");
       return `<div class="draft-item" data-did="${esc(d.id)}">
         <div class="draft-meta">${meta}</div>
         <div class="draft-text">${d.body&&d.body.trim()?esc(d.body):'<span class="draft-noText">（本文なし）</span>'}</div>
@@ -1573,7 +1594,7 @@ document.getElementById("draftList").addEventListener("click",e=>{
     if(b.dataset.dpost){
       if(!(d.body&&d.body.trim()) && !(d.atts||[]).length){ toast("本文も添付もない下書きは投稿できません"); return; }
       if(!confirm("この下書きを投稿します。よろしいですか？")) return;
-      resetPoster();
+      resetPoster(); setAnon(!!d.anon);
       b.disabled = true; b.textContent = "送信中…";
       submitPost({body:(d.body||"").trim(), topic:d.topic||null, atts:(d.atts||[]).map(a=>Object.assign({url:a.dataUrl},a)), editId:null})
         .then(()=>DraftDB.del(id)).then(()=>{ updateDraftCount(); closeDrafts(); afterPosted(); })
