@@ -801,7 +801,7 @@ function v3Columns(v,base,label,max){
                          :`<text x="110" y="${yV-4}" text-anchor="middle" font-size="12" fill="var(--ink)">${v}</text>`;
   return `<svg viewBox="0 0 150 128" width="100%" role="img">
    <line x1="20" y1="15" x2="140" y2="15" stroke="var(--s2)"/><line x1="20" y1="105" x2="140" y2="105" stroke="var(--line)"/>
-   <text x="16" y="19" text-anchor="end" font-size="12" fill="var(--ink)">${max}</text><text x="16" y="109" text-anchor="end" font-size="12" fill="var(--ink)">0</text>
+   <text x="16" y="17.5" text-anchor="end" font-size="7" fill="var(--ink)">${max}</text><text x="16" y="107.5" text-anchor="end" font-size="7" fill="var(--ink)">0</text>
    <rect x="34" y="${yB}" width="36" height="${base*K}" fill="var(--c-base)"/>
    <rect x="34" y="${yU}" width="36" height="${(up-base)*K}" fill="var(--c-ok)"/>
    <text x="52" y="${base*K>=16?yB+15:yB-4}" text-anchor="middle" font-size="12" fill="${base*K>=16?'#fff':'var(--ink)'}">${base}</text>
@@ -846,7 +846,7 @@ function v3StaffSvg(staff,fte,base,max,upIn){
       <text x="${x+18}" y="123" text-anchor="middle" font-size="12" fill="var(--ink)">${lab}</text>`; };
   return `<svg viewBox="0 0 150 128" width="100%" role="img" aria-label="園の保育士と常勤換算">
    <line x1="20" y1="15" x2="140" y2="15" stroke="var(--s2)"/><line x1="20" y1="105" x2="140" y2="105" stroke="var(--line)"/>
-   <text x="16" y="19" text-anchor="end" font-size="12" fill="var(--ink)">${max}</text><text x="16" y="109" text-anchor="end" font-size="12" fill="var(--ink)">0</text>
+   <text x="16" y="17.5" text-anchor="end" font-size="7" fill="var(--ink)">${max}</text><text x="16" y="107.5" text-anchor="end" font-size="7" fill="var(--ink)">0</text>
    <rect x="20" y="${yU}" width="120" height="${yB-yU}" fill="var(--c-ok)" opacity=".35"/>
    <line x1="20" y1="${yB}" x2="140" y2="${yB}" stroke="var(--c-base)" stroke-width="1.5" stroke-dasharray="4 3"/>
    <line x1="20" y1="${yU}" x2="140" y2="${yU}" stroke="var(--c-mark)" stroke-width="1.5" stroke-dasharray="4 3"/>
@@ -880,7 +880,7 @@ function v3BaseFte(p,m){
 function v3Peak(url){
   let ov=document.getElementById('peak-ov');
   if(!ov){ ov=document.createElement('div'); ov.id='peak-ov';
-    ov.innerHTML='<div class="peak-box" role="dialog" aria-modal="true" aria-label="シフト"><button type="button" class="peak-x" aria-label="閉じる">× 閉じる</button><iframe title="シフト"></iframe></div>';
+    ov.innerHTML='<div class="peak-box" role="dialog" aria-modal="true" aria-label="配置人数グラフ"><button type="button" class="peak-x" aria-label="閉じる">× 閉じる</button><iframe title="配置人数グラフ"></iframe></div>';
     document.body.appendChild(ov);
     const close=()=>{ov.style.display='none';ov.querySelector('iframe').src='about:blank';};
     ov.addEventListener('click',e=>{if(e.target===ov)close();});
@@ -895,7 +895,7 @@ function v3BaseSvg(base,max,bf){
   max=max||30; const up=Math.round((bf!=null?bf:base)*V3_COEF*10)/10, Y0=105, K=90/max, yB=Y0-base*K, yU=Y0-up*K;
   return `<svg viewBox="0 0 150 128" width="100%" role="img" aria-label="国基準と適正上限">
    <line x1="20" y1="15" x2="140" y2="15" stroke="var(--s2)"/><line x1="20" y1="105" x2="140" y2="105" stroke="var(--line)"/>
-   <text x="16" y="19" text-anchor="end" font-size="12" fill="var(--ink)">${max}</text><text x="16" y="109" text-anchor="end" font-size="12" fill="var(--ink)">0</text>
+   <text x="16" y="17.5" text-anchor="end" font-size="7" fill="var(--ink)">${max}</text><text x="16" y="107.5" text-anchor="end" font-size="7" fill="var(--ink)">0</text>
    <rect x="58" y="${yB}" width="44" height="${base*K}" fill="var(--c-base)"/>
    <rect x="58" y="${yU}" width="44" height="${(up-base)*K}" fill="var(--c-ok)"/>
    ${base*K>=16?`<text x="80" y="${yB+15}" text-anchor="middle" font-size="12" fill="#fff">${base}</text>`:`<text x="106" y="${(yB+Y0)/2+4}" text-anchor="start" font-size="12" fill="var(--ink)">${base}</text>`}
