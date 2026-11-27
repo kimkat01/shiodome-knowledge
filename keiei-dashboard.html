@@ -785,7 +785,7 @@ function v3Donut(pct,color,center,mark){
   let tick='';
   if(mark!=null){ const a=(mark/100*360-90)*Math.PI/180, c=Math.cos(a), s=Math.sin(a);
     tick=`<line x1="${(75+31*c).toFixed(1)}" y1="${(58+31*s).toFixed(1)}" x2="${(75+49*c).toFixed(1)}" y2="${(58+49*s).toFixed(1)}" stroke="var(--c-mark)" stroke-width="2.5"/>`; }
-  return `<svg viewBox="0 0 150 106" width="100%" role="img">
+  return `<svg viewBox="0 0 150 106" width="80%" role="img" style="margin:0 auto">
    <circle cx="75" cy="58" r="40" fill="none" stroke="var(--s2)" stroke-width="13"/>
    <circle cx="75" cy="58" r="40" fill="none" stroke="${color}" stroke-width="13" stroke-dasharray="${dash} ${V3C.toFixed(1)}" transform="rotate(-90 75 58)"/>
    ${tick}<text x="75" y="64" text-anchor="middle" font-size="18" font-weight="700" fill="var(--ink)">${center}</text></svg>`;
@@ -876,11 +876,11 @@ function v3BaseFte(p,m){
   if(m.staffNote&&/小規模A型/.test(m.staffNote)) t+=10;
   return t/10;
 }
-// 一番職員が多い日（職員配置シミュレーションの「日別の詳細」を固定したページ）をポップアップで開く（2026-11-27）
+// シフト（一番職員が多い日。職員配置シミュレーションの「日別の詳細」を固定したページ）をポップアップで開く（2026-11-27）
 function v3Peak(url){
   let ov=document.getElementById('peak-ov');
   if(!ov){ ov=document.createElement('div'); ov.id='peak-ov';
-    ov.innerHTML='<div class="peak-box" role="dialog" aria-modal="true" aria-label="一番職員が多い日"><button type="button" class="peak-x" aria-label="閉じる">× 閉じる</button><iframe title="一番職員が多い日"></iframe></div>';
+    ov.innerHTML='<div class="peak-box" role="dialog" aria-modal="true" aria-label="シフト"><button type="button" class="peak-x" aria-label="閉じる">× 閉じる</button><iframe title="シフト"></iframe></div>';
     document.body.appendChild(ov);
     const close=()=>{ov.style.display='none';ov.querySelector('iframe').src='about:blank';};
     ov.addEventListener('click',e=>{if(e.target===ov)close();});
@@ -961,7 +961,7 @@ function v3Body(p,key){
    <div class="kb"><div class="kh"><span class="sm">園の配置</span></div>
      <div><div class="kr"><span>保育士の配置</span><b>${m.staff==null?'—':m.staff+'名'}</b></div>
      <div class="kr"><span>常勤換算</span><b>${m.fte==null?'—':m.fte+'名'}</b></div></div>
-     <div>${v3Over(p,m)}${p.peak?`<button type="button" class="kpeak" onclick="v3Peak('${p.peak.url}')">一番職員が多い日を見る（${p.peak.day}）</button>`:''}</div>
+     <div>${v3Over(p,m)}</div>
      <div>${m.base==null?v3Wait('職員一覧待ち'):v3StaffSvg(m.staff,m.fte,v3Low(p,m),mx,v3Up(p,m))}</div>
      <div>${m.base==null?'':`<div class="kf l" style="font-weight:700">${v3Jline('保育士',m.staff,v3Low(p,m),v3Up(p,m))}<br>${v3Jline('常勤換算',m.fte,v3Low(p,m),v3Up(p,m))}</div>`}
      <div class="kf l">保育士：${m.staffNote||'園長・調理・事務を除く'}<br>常勤換算：${m.fteNote}${m.extraNote?'<br>'+m.extraNote:''}</div></div></div>
@@ -972,6 +972,7 @@ function v3Body(p,key){
      <div>${m.base==null?v3Wait('職員一覧待ち'):v3BaseSvg(m.base,mx,v3BaseFte(p,m))}</div>
      <div>${m.base==null?'':`<div class="kf l">${v3BaseBreak(p,m)}</div>`}</div></div>
    </div>
+   ${p.peak?`<button type="button" class="kpeak" style="grid-column:1/-1" onclick="v3Peak('${p.peak.url}')">シフトを見る（${p.peak.day}）</button>`:''}
   </div><div class="klg">${m.staffAll}</div>`;
   const rows=r=>r.map(x=>x.length===1?`<tr class="grp"><td colspan="2">${x[0]}</td></tr>`:`<tr><td>${x[0]}</td><td>${x[1]?v3Man(x[1]):'0'}</td></tr>`).join('');
   const mon=m.label.replace(/^令和\d+年|\s.*$/g,'');
