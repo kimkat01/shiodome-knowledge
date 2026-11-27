@@ -595,7 +595,7 @@ const YUGA_PARKS=[
    staffTotal:25,staffDesc:'',age0:9,age1:12,age2:12,age3:14,age4:13,age5:13,hasData:true, capByAge:[9,12,12,14,14,14],
    v3:{ order:['m9','m8','m7','k'], def:'m9', months:{   // 7〜9月は2026-11-27追加（出典：月次推移部門別資金収支計算書R08-09の月別欄）
      m9:{ label:'令和8年9月', kind:'k', adminLabel:'事業費・事務費', intLabel:'利息等', tag:'経理入力中',
-         income:12771829, labor:8765974, admin:1664858, interest:174886,
+         rLabor:8765974, rIncome:12524401, rCum:'67.29%', income:12771829, labor:8765974, admin:1664858, interest:174886,
          byAge:[9,12,12,14,13,13], byAgeNote:'年齢別は6月の内訳（在籍は6月と同じ73名）', enrolled:73, base:10, staff:19, fte:17.5, fteNote:'保育職員・9月度勤務実績（8/16〜9/15）',
          staffNote:'園長・調理・栄養士・保育補助を除く（主任・派遣1名を含む）', extraNote:'ほかに保育補助 1名（0.4名）',
          staffAll:'全職員 25名（保育19・保育補助1・調理2・栄養士2・園長1）※ほかに栄養士1名がなかよしへヘルプ',
@@ -604,7 +604,7 @@ const YUGA_PARKS=[
          expRows:[['人件費支出',8765974],['事業費支出',723544],['事務費支出',941314],['支払利息等（サービス活動外費用）',174886]],
          incRows:[['委託費収入',12517891],['利用者等利用料収入',6510],['補助金事業収入',0],['その他（受取利息・雑収入等）',247428]] },
      m8:{ label:'令和8年8月 確定', kind:'k', adminLabel:'事業費・事務費', intLabel:'利息等',
-         income:21961064, labor:8161286, admin:1603276, interest:173099,
+         rLabor:8161286, rIncome:21718121, income:21961064, labor:8161286, admin:1603276, interest:173099,
          byAge:[9,12,12,14,13,13], byAgeNote:'年齢別は6月の内訳（在籍は6月と同じ73名）', enrolled:73, base:10, staff:19, fte:17.0, fteNote:'保育職員・8月度勤務実績（7/16〜8/15）',
          staffNote:'園長・調理・栄養士・保育補助を除く（主任・派遣1名を含む）', extraNote:'ほかに保育補助 1名（0.3名）',
          staffAll:'全職員 25名（保育19・保育補助1・調理2・栄養士2・園長1）※ほかに栄養士1名がなかよしへヘルプ',
@@ -612,7 +612,7 @@ const YUGA_PARKS=[
          expRows:[['人件費支出',8161286],['事業費支出',622399],['事務費支出',980877],['支払利息等（サービス活動外費用）',173099]],
          incRows:[['委託費収入',9552617],['利用者等利用料収入',247400],['補助金事業収入',11918104],['その他（受取利息・雑収入等）',242943]] },
      m7:{ label:'令和8年7月 確定', kind:'k', adminLabel:'事業費・事務費', intLabel:'利息等',
-         bonus:5514140, income:10102935, labor:14357724, admin:1591926, interest:176091,
+         rLabor:10489474, rIncome:9853255, bonus:5514140, income:10102935, labor:14357724, admin:1591926, interest:176091,
          byAge:[9,12,12,14,13,13], byAgeNote:'年齢別は6月の内訳（在籍は6月と同じ73名）', enrolled:73, base:10, staff:19, fte:17.5, fteNote:'保育職員・7月度勤務実績（6/16〜7/15）',
          staffNote:'園長・調理・栄養士・保育補助を除く（主任・派遣1名を含む）', extraNote:'ほかに保育補助 1名（0.4名）',
          staffAll:'全職員 25名（保育19・保育補助1・調理2・栄養士2・園長1）※ほかに栄養士1名がなかよしへヘルプ',
@@ -620,7 +620,7 @@ const YUGA_PARKS=[
          expRows:[['人件費支出',14357724],['（うち職員賞与支出）',5514140],['事業費支出',762615],['事務費支出',829311],['支払利息等（サービス活動外費用）',176091]],
          incRows:[['委託費収入',9569205],['利用者等利用料収入',263050],['補助金事業収入',21000],['その他（受取利息・雑収入等）',249680]] },
      k:{ label:'令和8年6月 確定', kind:'k', adminLabel:'事業費・事務費', intLabel:'利息等',
-         income:10079742, labor:8270476, admin:1651595, interest:179826,
+         rLabor:8270476, rIncome:9840042, income:10079742, labor:8270476, admin:1651595, interest:179826,
          byAge:[9,12,12,14,13,13], enrolled:73, base:10, staff:19, fte:17.6, fteNote:'保育職員・6月度勤務実績',
          staffNote:'園長・調理・栄養士・保育補助を除く', extraNote:'ほかに保育補助 1名（0.4名）',
          staffAll:'全職員 25名（保育19・保育補助1・調理2・栄養士2・園長1）',
@@ -637,7 +637,7 @@ const YUGA_PARKS=[
    staffTotal:19, staffDesc:'',age0:4,age1:12,age2:17,age3:13,age4:17,age5:18,hasData:true, capByAge:[9,12,15,18,18,18],
    v3:{ order:['m9','m8','m7','k'], def:'m9', months:{   // 7〜9月は2026-11-27追加（出典：月次推移部門別資金収支計算書R08-09の月別欄）
      m9:{ label:'令和8年9月', kind:'k', adminLabel:'事業費・事務費', intLabel:'利息等',
-         income:11957658, labor:6221378, admin:1277435, interest:139793,
+         rLabor:6221378, rIncome:11765430, rCum:'54.15%', income:11957658, labor:6221378, admin:1277435, interest:139793,
          byAge:[7,12,17,14,17,18], enrolled:85, base:11, staff:15, fte:12.3, fteNote:'保育職員・9月度勤務実績（8/16〜9/15）',
          staffNote:'園長・調理を除く（看護師1名を含む）',
          staffAll:'全職員 19名（保育15・調理3・園長1）',
@@ -645,14 +645,14 @@ const YUGA_PARKS=[
          expRows:[['人件費支出',6221378],['事業費支出',820883],['事務費支出',456552],['支払利息等（サービス活動外費用）',139793]],
          incRows:[['委託費収入',11437000],['利用者等利用料収入',283180],['補助金事業収入',45250],['その他（受取利息・雑収入等）',192228]] },
      m8:{ label:'令和8年8月 確定', kind:'k', adminLabel:'事業費・事務費', intLabel:'利息等',
-         income:11184467, labor:5810370, admin:1587435, interest:136170,
+         rLabor:5810370, rIncome:10949190, income:11184467, labor:5810370, admin:1587435, interest:136170,
          byAge:[6,12,17,15,18,18], enrolled:86, base:10, staff:15, fte:12.0, fteNote:'保育職員・8月度勤務実績（7/16〜8/15）',
          staffNote:'園長・調理を除く（看護師1名を含む）',
          staffAll:'全職員 19名（保育15・調理3・園長1）',
          expRows:[['人件費支出',5810370],['事業費支出',1039674],['事務費支出',547761],['支払利息等（サービス活動外費用）',136170]],
          incRows:[['委託費収入',10637240],['利用者等利用料収入',274700],['補助金事業収入',37250],['その他（受取利息・雑収入等）',235277]] },
      m7:{ label:'令和8年7月 確定', kind:'k', adminLabel:'事業費・事務費', intLabel:'利息等',
-         bonus:4232179, income:11213644, labor:10358090, admin:1956791, interest:138597,
+         rLabor:7393959, rIncome:11041000, bonus:4232179, income:11213644, labor:10358090, admin:1956791, interest:138597,
          byAge:[6,12,18,14,18,18], enrolled:86, base:10, staff:15, fte:12.7, fteNote:'保育職員・7月度勤務実績（6/16〜7/15）',
          staffNote:'園長・調理を除く（看護師1名を含む）',
          staffAll:'全職員 19名（保育15・調理3・園長1）',
@@ -660,7 +660,7 @@ const YUGA_PARKS=[
          expRows:[['人件費支出',10358090],['（うち職員賞与支出）',4232179],['事業費支出',1044228],['事務費支出',912563],['支払利息等（サービス活動外費用）',138597]],
          incRows:[['委託費収入',10712590],['利用者等利用料収入',292160],['補助金事業収入',36250],['その他（受取利息・雑収入等）',172644]] },
      k:{ label:'令和8年6月 確定', kind:'k', adminLabel:'事業費・事務費', intLabel:'利息等',
-         income:10838364, labor:5814215, admin:1755334, interest:133173,
+         rLabor:5814215, rIncome:10656840, income:10838364, labor:5814215, admin:1755334, interest:133173,
          byAge:[4,12,17,13,17,18], enrolled:81, base:10, staff:15, fte:12.7, fteNote:'保育職員・6月度勤務実績',
          staffNote:'園長・調理を除く（看護師1名・6月在籍の退職者1名を含む）',
          staffAll:'全職員 19名（保育15・調理3・園長1）',
@@ -679,7 +679,7 @@ const YUGA_PARKS=[
    staffTotal:16,staffDesc:'',age0:3,age1:5,age2:4,age3:19,age4:8,age5:4,hasData:true, capByAge:[3,5,5,19,19,19],
    v3:{ order:['m9','m8','m7','k'], def:'m9', months:{   // 7〜9月は2026-11-27追加（出典：月次推移部門別資金収支計算書R08-09の月別欄）
      m9:{ label:'令和8年9月', kind:'k', adminLabel:'事業費・事務費', intLabel:'利息等', tag:'経理入力中',
-         income:7974804, labor:5231693, admin:2434568, interest:93154,
+         rLabor:5231693, rIncome:7838131, rCum:'63.51%', income:7974804, labor:5231693, admin:2434568, interest:93154,
          byAge:[4,5,5,18,9,4], byAgeNote:'クラス未設定の3名は0歳に計上（要確認）', enrolled:45, base:7, staff:12, fte:11.0, fteNote:'保育職員・9月度勤務実績（8/16〜9/15）',
          staffNote:'園長・調理・栄養士を除く（主任を含む）',
          staffAll:'全職員 15名（保育12・調理1・栄養士1（八潮からのヘルプ）・園長1）',
@@ -688,7 +688,7 @@ const YUGA_PARKS=[
          expRows:[['人件費支出',5231693],['事業費支出',563079],['事務費支出',1871489],['支払利息等（サービス活動外費用）',93154]],
          incRows:[['委託費収入',7838131],['利用者等利用料収入',0],['補助金事業収入',0],['その他（受取利息・雑収入等）',136673]] },
      m8:{ label:'令和8年8月 確定', kind:'k', adminLabel:'事業費・事務費', intLabel:'利息等',
-         income:19343617, labor:4961573, admin:2365852, interest:92488,
+         rLabor:4961573, rIncome:19211952, income:19343617, labor:4961573, admin:2365852, interest:92488,
          byAge:[4,5,5,18,8,4], byAgeNote:'クラス未設定の3名は0歳に計上（要確認）', enrolled:44, base:7, staff:12, fte:10.7, fteNote:'保育職員・8月度勤務実績（7/16〜8/15）',
          staffNote:'園長・調理・栄養士・長期欠勤を除く（主任を含む）',
          staffAll:'全職員 17名（保育12・調理2・栄養士1（八潮からのヘルプ）・園長1・長期欠勤1）',
@@ -696,7 +696,7 @@ const YUGA_PARKS=[
          expRows:[['人件費支出',4961573],['事業費支出',577267],['事務費支出',1788585],['支払利息等（サービス活動外費用）',92488]],
          incRows:[['委託費収入',5749154],['利用者等利用料収入',169950],['補助金事業収入',13292848],['その他（受取利息・雑収入等）',131665]] },
      m7:{ label:'令和8年7月 確定', kind:'k', adminLabel:'事業費・事務費', intLabel:'利息等',
-         bonus:2551528, income:6080632, labor:8004226, admin:2679728, interest:98420,
+         rLabor:6529393, rIncome:5940194, bonus:2551528, income:6080632, labor:8004226, admin:2679728, interest:98420,
          byAge:[4,5,5,18,8,4], byAgeNote:'クラス未設定の3名は0歳に計上（要確認）', enrolled:44, base:7, staff:12, fte:11.1, fteNote:'保育職員・7月度勤務実績（6/16〜7/15）',
          staffNote:'園長・調理・栄養士・長期欠勤を除く（主任を含む）',
          staffAll:'全職員 17名（保育12・調理2・栄養士1（八潮からのヘルプ）・園長1・長期欠勤1）',
@@ -704,7 +704,7 @@ const YUGA_PARKS=[
          expRows:[['人件費支出',8004226],['（うち職員賞与支出）',2551528],['事業費支出',543259],['事務費支出',2136469],['支払利息等（サービス活動外費用）',98420]],
          incRows:[['委託費収入',5749154],['利用者等利用料収入',176040],['補助金事業収入',15000],['その他（受取利息・雑収入等）',140438]] },
      k:{ label:'令和8年6月 確定', kind:'k', adminLabel:'事業費・事務費', intLabel:'利息等',
-         income:5906690, labor:5265604, admin:3189791, interest:104635,
+         rLabor:5265604, rIncome:5778988, income:5906690, labor:5265604, admin:3189791, interest:104635,
          byAge:[3,5,4,19,8,4], enrolled:43, base:6, staff:13, fte:11.8, fteNote:'保育職員・6月度勤務実績',
          staffNote:'園長・調理・栄養士を除く（6月在籍の退職者1名を含む）',
          staffAll:'全職員 16名（保育13・調理1・栄養士1・園長1）',
@@ -811,6 +811,7 @@ function v3AgeTable(p,m){
 }
 function v3Body(p,key){
   const m=p.v3.months[key], conf=m.kind==='k';
+  const rep=conf&&m.rLabor!=null&&m.rIncome;   // 報告書と同じ人件費率の計算をする月か
   // 弾力運用（p.elastic＝弾力で受け入れてよい人数）がある園は、定員＋弾力を100%として充足度を出す（2026-10 本部指示）
   const capPct=(p.capacity&&m.enrolled!=null)?m.enrolled/(p.capacity+(p.elastic||0))*100:null;
   let money;
@@ -822,7 +823,7 @@ function v3Body(p,key){
      <div class="mb"><div class="sm">収支残</div><div class="mv ${bal>=0?'pos':'neg'}">${bal>=0?'+':'−'}${fmtM(Math.abs(bal))}</div><span class="sm">収支残率 ${v3Pct(bal,m.income)}%</span></div>
     </div>
     <div class="stack"><div style="width:${w(m.labor)};background:var(--c-labor)"></div><div style="width:${w(m.admin)};background:var(--c-admin)"></div><div style="width:${w(m.interest)};background:var(--c-int)"></div><div style="width:${w(bal)};background:var(--c-profit)"></div></div>
-    <div class="lg"><span><i style="background:var(--c-labor)"></i>人件費 ${v3Pct(m.labor,m.income)}%${m.bonus?'（賞与込み）':''}</span><span><i style="background:var(--c-admin)"></i>${m.adminLabel||'管理経費'} ${v3Pct(m.admin,m.income)}%</span><span><i style="background:var(--c-int)"></i>${m.intLabel||'利息'}</span>${bal>=0?'<span><i style="background:var(--c-profit)"></i>収支残</span>':''}</div>`;
+    <div class="lg"><span><i style="background:var(--c-labor)"></i>${rep?'人件費支出（支払額）':'人件費'} ${v3Pct(m.labor,m.income)}%${(m.bonus&&!rep)?'（賞与込み）':''}</span><span><i style="background:var(--c-admin)"></i>${m.adminLabel||'管理経費'} ${v3Pct(m.admin,m.income)}%</span><span><i style="background:var(--c-int)"></i>${m.intLabel||'利息'}</span>${bal>=0?'<span><i style="background:var(--c-profit)"></i>収支残</span>':''}</div>`;
   } else {
     money=`<div class="m3">
      <div class="mb"><div class="sm">収入</div><div class="mv">${fmtM(m.income)}</div><span class="tag t-src">${m.incomeSrc}</span></div>
@@ -833,13 +834,14 @@ function v3Body(p,key){
     ${(isHonbuUnlocked()&&p.invoiceUrl)?`<a class="inv" href="${p.invoiceUrl}" target="_blank" rel="noopener">📄 請求書を開く</a>`:''}`;
   }
   // 人件費率は賞与を除いて計算（m.bonus＝その月の職員賞与支出。2026-11-27 本部指示：賞与月だけ跳ね上がるのを避ける）
-  const lab=conf?(m.labor-(m.bonus||0))/m.income*100:null, mx=v3Scale(m);
+  // m.rLabor／m.rIncome がある月（社福）は月次報告書と同じ計算：人件費（事業活動計算書）÷サービス活動収益計（2026-11-27 本部指示。賞与も含む）
+  const lab=conf?(rep?m.rLabor/m.rIncome*100:(m.labor-(m.bonus||0))/m.income*100):null, mx=v3Scale(m);
   const kpi=`<div class="k4">
    <div class="kb"><div class="kh"><span class="sm">定員充足度</span>${(p.capByAge&&m.byAge&&capPct!=null)?`<span class="kv">${Math.round(capPct)}%</span>`:''}</div>
      ${(p.capByAge&&m.byAge)?v3AgeTable(p,m):`${v3Donut(capPct,'var(--c-profit)',capPct==null?'—':Math.round(capPct)+'%')}<div class="kf">${m.enrolled==null?'園児一覧待ち':m.enrolled+' / '+(p.capacity||'—')+'名'+(p.elastic?'（弾力'+p.elastic+'名）':'')}</div>`}</div>
    <div class="kb"><div class="kh"><span class="sm">人件費率</span></div>
      ${v3Donut(lab,(lab!=null&&lab>V3_LABOR_TARGET)?'var(--c-over)':'var(--c-labor)',lab==null?'—':lab.toFixed(1)+'%',V3_LABOR_TARGET)}
-     <div class="kf"${(lab!=null&&lab>V3_LABOR_TARGET)?' style="color:var(--c-over);font-weight:700"':''}>${lab==null?'経理待ち':(lab<=V3_LABOR_TARGET?`目安${V3_LABOR_TARGET}%（黒線）以内`:`目安${V3_LABOR_TARGET}%（黒線）超え`)}</div>${m.bonus?`<div class="kf" style="margin-top:0">賞与 ${v3Man(m.bonus)}円を除く</div>`:''}</div>
+     <div class="kf"${(lab!=null&&lab>V3_LABOR_TARGET)?' style="color:var(--c-over);font-weight:700"':''}>${lab==null?'経理待ち':(lab<=V3_LABOR_TARGET?`目安${V3_LABOR_TARGET}%（黒線）以内`:`目安${V3_LABOR_TARGET}%（黒線）超え`)}</div>${rep?`<div class="kf" style="margin-top:0">報告書と同じ計算（人件費÷サービス活動収益）${m.rCum?'<br>4〜9月累計 '+m.rCum:''}</div>`:(m.bonus?`<div class="kf" style="margin-top:0">賞与 ${v3Man(m.bonus)}円を除く</div>`:'')}</div>
    <div class="kb"><div class="kh"><span class="sm">保育士の配置</span><span class="kv">${m.staff==null?'—':m.staff+'名'}</span></div>
      ${m.base==null?v3Wait('職員一覧待ち'):v3Columns(m.staff,m.base,'保育',mx)+v3Jtext(m.staff,m.base)}<div class="kf l">${m.staffNote||'園長・調理・事務を除く'}</div></div>
    <div class="kb"><div class="kh"><span class="sm">常勤換算</span><span class="kv">${m.fte==null?'—':m.fte+'名'}</span></div>
