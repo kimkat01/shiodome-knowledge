@@ -851,8 +851,19 @@ function v3Over(m){
   const [lab,v]=os>0?['保育士',os]:of>0?['常勤換算',of]:[null,0];
   return v>0?`<div class="kover">${v}名超過<span>${lab}が適正上限（${up}名）を超えています</span></div>`:'';
 }
-function v3BaseSvg(base,max){
-  max=max||30; const up=Math.round(base*V3_COEF*10)/10, Y0=105, K=90/max, yB=Y0-base*K, yU=Y0-up*K;
+// 国基準の常勤換算（2026-11-27 本部指示）：年齢ごとに 人数÷配置基準 を小数のまま足した必要人数（切り上げない）。小規模A型は＋1
+function v3BaseFte(p,m){
+  let g=null;
+  if(m.byAge){ const a=m.byAge; g=[a[0],a[1]+a[2],a[3],a[4]+a[5]]; }
+  else if(m.byGroup){ const f=l=>{const r=m.byGroup.find(x=>x[0]===l);return r?r[1]:null;}; g=['0歳','1・2歳','3歳','4・5歳'].map(f); if(g.some(x=>x==null)) g=null; }
+  if(!g) return null;
+  const R=[3,6,15,25]; let v=g.reduce((a,n,i)=>a+n/R[i],0);
+  if(m.staffNote&&/小規模A型/.test(m.staffNote)) v+=1;
+  return Math.round(v*100)/100;
+}
+function v3BaseSvg(base,max,bf){
+  // bf＝国基準の常勤換算（年齢ごとに小数で計算した必要人数）。あれば緑の幅と点線を bf×1.8 にする
+  max=max||30; const up=Math.round((bf!=null?bf:base)*V3_COEF*10)/10, Y0=105, K=90/max, yB=Y0-base*K, yU=Y0-up*K;
   return `<svg viewBox="0 0 150 128" width="100%" role="img" aria-label="国基準と適正上限">
    <line x1="20" y1="15" x2="140" y2="15" stroke="var(--s2)"/><line x1="20" y1="105" x2="140" y2="105" stroke="var(--line)"/>
    <text x="16" y="19" text-anchor="end" font-size="12" fill="var(--ink)">${max}</text><text x="16" y="109" text-anchor="end" font-size="12" fill="var(--ink)">0</text>
@@ -875,7 +886,8 @@ function v3BaseBreak(p,m){
   const parts=g.filter(x=>x[1]>0).map(([l,n])=>[l,n,Math.ceil(n/R[l])]);
   const sum=parts.reduce((a,x)=>a+x[2],0);
   if(sum!==m.base) return (m.staffNote&&/小規模A型/.test(m.staffNote)?'小規模保育A型の＋1名を含む<br>':'')+tail;
-  return parts.map(([l,n,r])=>`${l} ${n}名→${r}名`).join('　')+'<br>'+tail;
+  const bf=v3BaseFte(p,m);
+  return parts.map(([l,n,r])=>`${l} ${n}名→${r}名`).join('　')+(bf!=null?`<br>常勤換算では ${bf.toFixed(2)}名 ×${V3_COEF}＝${Math.round(bf*V3_COEF*10)/10}名`:'')+'<br>'+tail.replace('適正上限（国基準×'+V3_COEF+'）','適正上限（常勤換算）');
 }
 function v3Body(p,key){
   const m=p.v3.months[key], conf=m.kind==='k';
@@ -925,8 +937,8 @@ function v3Body(p,key){
      <div class="kf l">保育士：${m.staffNote||'園長・調理・事務を除く'}<br>常勤換算：${m.fteNote}${m.extraNote?'<br>'+m.extraNote:''}</div></div>
    <div class="kb"><div class="kh"><span class="sm">国基準</span></div>
      <div class="kr"><span>国基準</span><b>${m.base==null?'—':m.base+'名'}</b></div>
-     <div class="kr"><span>適正上限</span><b>${m.base==null?'—':Math.round(m.base*V3_COEF*10)/10+'名'}</b></div>
-     ${m.base==null?v3Wait('職員一覧待ち'):v3BaseSvg(m.base,mx)}
+     ${(()=>{const f=v3BaseFte(p,m);return `<div class="kr"><span>常勤換算の上限</span><b>${f==null?(m.base==null?'—':Math.round(m.base*V3_COEF*10)/10+'名'):Math.round(f*V3_COEF*10)/10+'名'}</b></div>`;})()}
+     ${m.base==null?v3Wait('職員一覧待ち'):v3BaseSvg(m.base,mx,v3BaseFte(p,m))}
      ${m.base==null?'':`<div class="kf l">${v3BaseBreak(p,m)}</div>`}</div>
   </div><div class="klg">${m.staffAll}</div>`;
   const rows=r=>r.map(x=>x.length===1?`<tr class="grp"><td colspan="2">${x[0]}</td></tr>`:`<tr><td>${x[0]}</td><td>${x[1]?v3Man(x[1]):'0'}</td></tr>`).join('');
