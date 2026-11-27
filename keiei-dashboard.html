@@ -187,6 +187,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 .v3 .kr{display:flex;justify-content:space-between;align-items:baseline;font-size:15px;margin-top:2px}
 .v3 .kr b{font-size:20px;font-variant-numeric:tabular-nums}
 .v3 .kover{margin:4px 0 2px;padding:5px 8px;border-radius:6px;background:rgba(226,75,74,.10);color:var(--c-ng);font-size:22px;font-weight:800;line-height:1.25}
+.v3 .kpeak{display:block;width:100%;margin:4px 0 2px;padding:6px 8px;border:1.5px solid var(--c-labor);border-radius:6px;background:#fff;color:var(--c-labor);font-size:14px;font-weight:700;cursor:pointer}
+.v3 .kpeak:hover{background:var(--c-labor);color:#fff}
+#peak-ov{position:fixed;inset:0;z-index:200;background:rgba(20,22,40,.5);display:none;align-items:center;justify-content:center}
+#peak-ov .peak-box{position:relative;width:min(1240px,96vw);height:92vh;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+#peak-ov iframe{width:100%;height:100%;border:0}
+#peak-ov .peak-x{position:absolute;top:8px;right:10px;z-index:1;padding:4px 12px;border:1px solid #80869a;border-radius:6px;background:#fff;font-size:14px;cursor:pointer}
 .v3 .kover span{display:block;font-size:13px;font-weight:600}
 .v3 .kf{font-size:14px;text-align:center;margin-top:auto}
 .v3 .kf.l{text-align:left;margin-top:2px}
@@ -602,7 +608,7 @@ const YUGA_PARKS=[
   //   正規（就業規則の常勤時間）または「1日6時間以上の日が月20日以上」の人を常勤1.0人。それ以外は短時間保育士として勤務時間を合算し÷168。
   //   雇用区分は職員マスタに合わせる（守谷の前川さんは常勤＝本部確認済み）。保育士資格は職員マスタの値をそのまま使う（本部指示）。6月は従来の計算のまま
   {id:'y01', kotei:'6/100', label:'八潮しおどめ保育園',     sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:75,
-   staffTotal:25,staffDesc:'',age0:9,age1:12,age2:12,age3:14,age4:13,age5:13,hasData:true, rMonthly:{L:[5097275, 9049708, 8270476, 10489474, 8161286, 8765974],I:[10300251, 9824914, 9840042, 9853255, 21718121, 12524401]}, ageTable:true, capByAge:[9,12,12,14,14,14],
+   staffTotal:25,staffDesc:'',age0:9,age1:12,age2:12,age3:14,age4:13,age5:13,hasData:true, rMonthly:{L:[5097275, 9049708, 8270476, 10489474, 8161286, 8765974],I:[10300251, 9824914, 9840042, 9853255, 21718121, 12524401]}, peak:{url:'haichi-peak/y01-2026-09.html', day:'9/18'}, ageTable:true, capByAge:[9,12,12,14,14,14],
    v3:{ order:['m9','m8','m7','k'], def:'m9', months:{   // 7〜9月は2026-11-27追加（出典：月次推移部門別資金収支計算書R08-09の月別欄）
      m9:{ label:'令和8年9月', kind:'k', adminLabel:'事業費・事務費', intLabel:'利息等', tag:'経理入力中',
          rNote:'9月は委託費が前月より約297万円多く入ったため、やや低めに出ている可能性があります', mi:5, rLabor:8765974, rIncome:12524401, income:12771829, labor:8765974, admin:1664858, interest:174886,
@@ -644,7 +650,7 @@ const YUGA_PARKS=[
   //   保育職員＝各月度勤務実績から園長・調理3名を除いた15名（看護師1名・浅川さんを含む。浅川さんは9月度まで勤務）
   //   常勤換算＝正規8名×1.0＋非正規7名の実働÷168h：7月度791.0h→12.7／8月度679.5h→12.0／9月度717.75h→12.3
   {id:'y02', kotei:'15/100', label:'守谷しおどめ保育園',     sub:'茨城県守谷市・15/100地域', mult:1.15, capacity:90,
-   staffTotal:19, staffDesc:'',age0:4,age1:12,age2:17,age3:13,age4:17,age5:18,hasData:true, rMonthly:{L:[3352714, 6514322, 5814215, 7393959, 5810370, 6221378],I:[10274690, 10139980, 10656840, 11041000, 10949190, 11765430]}, ageTable:true, capByAge:[9,12,15,18,18,18],
+   staffTotal:19, staffDesc:'',age0:4,age1:12,age2:17,age3:13,age4:17,age5:18,hasData:true, rMonthly:{L:[3352714, 6514322, 5814215, 7393959, 5810370, 6221378],I:[10274690, 10139980, 10656840, 11041000, 10949190, 11765430]}, peak:{url:'haichi-peak/y02-2026-09.html', day:'9/7'}, ageTable:true, capByAge:[9,12,15,18,18,18],
    v3:{ order:['m9','m8','m7','k'], def:'m9', months:{   // 7〜9月は2026-11-27追加（出典：月次推移部門別資金収支計算書R08-09の月別欄）
      m9:{ label:'令和8年9月', kind:'k', adminLabel:'事業費・事務費', intLabel:'利息等',
          mi:5, rLabor:6221378, rIncome:11765430, income:11957658, labor:6221378, admin:1277435, interest:139793,
@@ -686,7 +692,7 @@ const YUGA_PARKS=[
   //   常勤換算＝正規9名×1.0＋非正規3名の実働÷168h：7月度349.25h→11.1／8月度277.25h→10.7／9月度331.75h→11.0
   //   調理の高鹿さんは8月度まで勤務。栄養士の石岡さんはなかよし所属（2026-11-27 本部確認）
   {id:'y03', kotei:'6/100', label:'しおどめなかよし保育園', sub:'埼玉県八潮市・6級地（+6%）', mult:1.06, capacity:70,
-   staffTotal:16,staffDesc:'',age0:3,age1:5,age2:4,age3:19,age4:8,age5:4,hasData:true, rMonthly:{L:[4018213, 6098434, 5265604, 6529393, 4961573, 5231693],I:[5803176, 5977067, 5778988, 5940194, 19211952, 7838131]}, ageTable:true, capByAge:[3,5,5,19,19,19],
+   staffTotal:16,staffDesc:'',age0:3,age1:5,age2:4,age3:19,age4:8,age5:4,hasData:true, rMonthly:{L:[4018213, 6098434, 5265604, 6529393, 4961573, 5231693],I:[5803176, 5977067, 5778988, 5940194, 19211952, 7838131]}, peak:{url:'haichi-peak/y03-2026-09.html', day:'9/2'}, ageTable:true, capByAge:[3,5,5,19,19,19],
    v3:{ order:['m9','m8','m7','k'], def:'m9', months:{   // 7〜9月は2026-11-27追加（出典：月次推移部門別資金収支計算書R08-09の月別欄）
      m9:{ label:'令和8年9月', kind:'k', adminLabel:'事業費・事務費', intLabel:'利息等', tag:'経理入力中',
          rNote:'9月は委託費が前月より約209万円多く入ったため、やや低めに出ている可能性があります', mi:5, rLabor:5231693, rIncome:7838131, income:7974804, labor:5231693, admin:2434568, interest:93154,
@@ -870,6 +876,19 @@ function v3BaseFte(p,m){
   if(m.staffNote&&/小規模A型/.test(m.staffNote)) t+=10;
   return t/10;
 }
+// 一番職員が多い日（職員配置シミュレーションの「日別の詳細」を固定したページ）をポップアップで開く（2026-11-27）
+function v3Peak(url){
+  let ov=document.getElementById('peak-ov');
+  if(!ov){ ov=document.createElement('div'); ov.id='peak-ov';
+    ov.innerHTML='<div class="peak-box" role="dialog" aria-modal="true" aria-label="一番職員が多い日"><button type="button" class="peak-x" aria-label="閉じる">× 閉じる</button><iframe title="一番職員が多い日"></iframe></div>';
+    document.body.appendChild(ov);
+    const close=()=>{ov.style.display='none';ov.querySelector('iframe').src='about:blank';};
+    ov.addEventListener('click',e=>{if(e.target===ov)close();});
+    ov.querySelector('.peak-x').addEventListener('click',close);
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&ov.style.display==='flex')close();});
+  }
+  ov.querySelector('iframe').src=url; ov.style.display='flex';
+}
 function v3BaseSvg(base,max,bf){
   if(bf!=null) base=bf;   // 灰色＝国基準の常勤換算
   // bf＝国基準の常勤換算（年齢ごとに小数で計算した必要人数）。あれば緑の幅と点線を bf×1.8 にする
@@ -942,7 +961,7 @@ function v3Body(p,key){
    <div class="kb"><div class="kh"><span class="sm">園の配置</span></div>
      <div><div class="kr"><span>保育士の配置</span><b>${m.staff==null?'—':m.staff+'名'}</b></div>
      <div class="kr"><span>常勤換算</span><b>${m.fte==null?'—':m.fte+'名'}</b></div></div>
-     <div>${v3Over(p,m)}</div>
+     <div>${v3Over(p,m)}${p.peak?`<button type="button" class="kpeak" onclick="v3Peak('${p.peak.url}')">一番職員が多い日を見る（${p.peak.day}）</button>`:''}</div>
      <div>${m.base==null?v3Wait('職員一覧待ち'):v3StaffSvg(m.staff,m.fte,v3Low(p,m),mx,v3Up(p,m))}</div>
      <div>${m.base==null?'':`<div class="kf l" style="font-weight:700">${v3Jline('保育士',m.staff,v3Low(p,m),v3Up(p,m))}<br>${v3Jline('常勤換算',m.fte,v3Low(p,m),v3Up(p,m))}</div>`}
      <div class="kf l">保育士：${m.staffNote||'園長・調理・事務を除く'}<br>常勤換算：${m.fteNote}${m.extraNote?'<br>'+m.extraNote:''}</div></div></div>
