@@ -264,6 +264,7 @@
   .b-yuga{color:var(--yuga); background:var(--yuga-bg);}
   .b-hq{color:var(--hq); background:var(--hq-bg);}
   .time{font-size:11px; color:var(--sub);}
+  .new-tag.feed-new{margin-left:4px; height:18px; padding:0 7px; font-size:9.5px;}
   .chip{margin-left:auto; font-size:11px; color:#6a5cd0; background:#efeafd; padding:3px 11px; border-radius:999px; font-weight:600;}
   .p-body{font-size:15px; line-height:1.7; margin:12px 2px 0; white-space:pre-wrap; word-break:break-word;}
   .p-link{color:#3d6fe0; text-decoration:underline; word-break:break-all;}
@@ -1185,6 +1186,17 @@ function ago(ts){
   const d=Math.floor(h/24); if(d<7) return `${d}日前`;
   const dt=new Date(ts); return `${dt.getMonth()+1}/${dt.getDate()}`;
 }
+/* フィード投稿の点滅「NEW」（2026-11-27）
+   投稿した日を1日目として4日間（例：11/27の投稿 → 11/30まで）表示し、期限が過ぎると自動で消える。
+   ダミー投稿には付けない。日数を変えるときは FEED_NEW_DAYS を変える（ANSHIN KUN のお知らせも4日）。 */
+const FEED_NEW_DAYS = 4;
+function isNewPost(p){
+  if(!p || p.demo || !p.ts) return false;
+  const d=new Date(p.ts); const st=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+  const t=new Date(); const today=new Date(t.getFullYear(),t.getMonth(),t.getDate());
+  const diff=Math.round((today-st)/86400000);
+  return diff>=0 && diff<FEED_NEW_DAYS;
+}
 function initial(name){ return (name||"?").trim().charAt(0) || "?"; }
 /* 本部アカウントは、他の人の投稿・コメントも削除できる（ダミーは除く） */
 const canModerate = p => !p.demo && FEED_LIVE && isHonbuUser();
@@ -1316,7 +1328,7 @@ function render(){
       <div class="p-head">
         <div class="avatar" style="background:${orgColor(p.org)}">${esc(initial(p.name))}</div>
         <div><div class="p-name">${esc(p.name)}</div>
-          <div class="p-meta"><span class="badge ${orgClass(p.org)}" title="${esc(gName)}">${esc(p.code)}</span><span class="time">${p.code!=="本部"?esc(gName)+"・":""}${ago(p.ts)}${p.updated&&p.updated-p.ts>60000?"（編集済み）":""}</span></div></div>
+          <div class="p-meta"><span class="badge ${orgClass(p.org)}" title="${esc(gName)}">${esc(p.code)}</span><span class="time">${p.code!=="本部"?esc(gName)+"・":""}${ago(p.ts)}${p.updated&&p.updated-p.ts>60000?"（編集済み）":""}</span>${isNewPost(p)?'<span class="new-tag feed-new">NEW</span>':""}</div></div>
         ${p.topic?`<span class="chip">#${esc(p.topic)}</span>`:""}
       </div>
       ${p.body?`<div class="p-body">${linkify(esc(p.body))}</div>`:""}
