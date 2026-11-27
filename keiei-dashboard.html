@@ -27,7 +27,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .header-date{font-family:var(--mono);font-size:11px;opacity:.85;text-align:right}
 
 /* メイン */
-.main{max-width:1480px;margin:0 auto;padding:.75rem 1.5rem 3rem}
+.main{max-width:none;margin:0 auto;padding:.75rem 1.5rem 3rem}
 .section-label{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin:1rem 0 .5rem}
 
 /* サマリー */
@@ -54,8 +54,8 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .slide-btn-circle:disabled{opacity:.3;cursor:default}
 /* 丸矢印ボタン：画面の上下中央に固定（左右はカードの外側。狭い画面では画面端） */
 #btn-prev,#btn-next{position:fixed;top:50%;transform:translateY(-50%);z-index:50;width:44px;height:44px;font-size:22px;box-shadow:0 2px 8px rgba(0,0,0,.25)}
-#btn-prev{left:max(6px,calc(50% - 600px - 50px))}
-#btn-next{right:max(6px,calc(50% - 600px - 50px))}
+#btn-prev{left:12px}
+#btn-next{right:12px}
 .cards-viewport{overflow:hidden;border-radius:12px}
 .cards-track{display:flex;transition:transform .35s ease;will-change:transform}
 
@@ -856,18 +856,22 @@ function v3Over(p,m){
   return v>0?`<div class="kover">${v}名超過<span>${lab}が上限（${up}名）を超えています</span></div>`:'';
 }
 // 適正上限：国基準の常勤換算（年齢ごとに小数）があればその×1.8、なければ国基準（人数）×1.8。左右のカードで同じ値を使う
+function v3Low(p,m){ const f=v3BaseFte(p,m); return f!=null?f:m.base; }   // 下限（国基準）。常勤換算があればそちら
 function v3Up(p,m){ const f=v3BaseFte(p,m); return Math.round((f!=null?f:m.base)*V3_COEF*10)/10; }
-// 国基準の常勤換算（2026-11-27 本部指示）：年齢ごとに 人数÷配置基準 を小数のまま足した必要人数（切り上げない）。小規模A型は＋1
+// 国基準の常勤換算（2026-11-27 本部指示）：年齢ごとに「人数÷配置基準」を小数第1位まで（第2位以下は切り捨て）出して合計する。
+//   年齢別の在籍があれば1歳・2歳、4歳・5歳も別々に計算。まとめた人数しかない園はまとめて計算。小規模保育A型は＋1
 function v3BaseFte(p,m){
   let g=null;
-  if(m.byAge){ const a=m.byAge; g=[a[0],a[1]+a[2],a[3],a[4]+a[5]]; }
-  else if(m.byGroup){ const f=l=>{const r=m.byGroup.find(x=>x[0]===l);return r?r[1]:null;}; g=['0歳','1・2歳','3歳','4・5歳'].map(f); if(g.some(x=>x==null)) g=null; }
+  if(m.byAge){ const a=m.byAge; g=[[a[0],3],[a[1],6],[a[2],6],[a[3],15],[a[4],25],[a[5],25]]; }
+  else if(m.byGroup){ const f=l=>{const r=m.byGroup.find(x=>x[0]===l);return r?r[1]:null;};
+    g=[[f('0歳'),3],[f('1・2歳'),6],[f('3歳'),15],[f('4・5歳'),25]]; if(g.some(x=>x[0]==null)) g=null; }
   if(!g) return null;
-  const R=[3,6,15,25]; let v=g.reduce((a,n,i)=>a+n/R[i],0);
-  if(m.staffNote&&/小規模A型/.test(m.staffNote)) v+=1;
-  return Math.round(v*100)/100;
+  let t=g.reduce((s,[n,r])=>s+Math.floor(n/r*10),0);   // 0.1人単位の整数で足す
+  if(m.staffNote&&/小規模A型/.test(m.staffNote)) t+=10;
+  return t/10;
 }
 function v3BaseSvg(base,max,bf){
+  if(bf!=null) base=bf;   // 灰色＝国基準の常勤換算
   // bf＝国基準の常勤換算（年齢ごとに小数で計算した必要人数）。あれば緑の幅と点線を bf×1.8 にする
   max=max||30; const up=Math.round((bf!=null?bf:base)*V3_COEF*10)/10, Y0=105, K=90/max, yB=Y0-base*K, yU=Y0-up*K;
   return `<svg viewBox="0 0 150 128" width="100%" role="img" aria-label="国基準と適正上限">
@@ -875,7 +879,7 @@ function v3BaseSvg(base,max,bf){
    <text x="16" y="19" text-anchor="end" font-size="12" fill="var(--ink)">${max}</text><text x="16" y="109" text-anchor="end" font-size="12" fill="var(--ink)">0</text>
    <rect x="58" y="${yB}" width="44" height="${base*K}" fill="var(--c-base)"/>
    <rect x="58" y="${yU}" width="44" height="${(up-base)*K}" fill="var(--c-ok)"/>
-   <text x="80" y="${base*K>=16?yB+15:yB-4}" text-anchor="middle" font-size="12" fill="${base*K>=16?'#fff':'var(--ink)'}">${base}</text>
+   ${base*K>=16?`<text x="80" y="${yB+15}" text-anchor="middle" font-size="12" fill="#fff">${base}</text>`:`<text x="106" y="${(yB+Y0)/2+4}" text-anchor="start" font-size="12" fill="var(--ink)">${base}</text>`}
    <line x1="20" y1="${yU}" x2="140" y2="${yU}" stroke="var(--c-mark)" stroke-width="1.5" stroke-dasharray="4 3"/>
    <text x="80" y="${yU-4}" text-anchor="middle" font-size="12" fill="var(--ink)">${up}</text>
    <text x="80" y="123" text-anchor="middle" font-size="12" fill="var(--ink)">国基準</text></svg>`;
@@ -893,7 +897,7 @@ function v3BaseBreak(p,m){
   const sum=parts.reduce((a,x)=>a+x[2],0);
   if(sum!==m.base) return (m.staffNote&&/小規模A型/.test(m.staffNote)?'小規模保育A型の＋1名を含む<br>':'')+tail;
   const bf=v3BaseFte(p,m);
-  return parts.map(([l,n,r])=>`${l} ${n}名→${r}名`).join('　')+(bf!=null?`<br>常勤換算では ${bf.toFixed(2)}名 ×${V3_COEF}＝${Math.round(bf*V3_COEF*10)/10}名`:'')+'<br>'+tail.replace('適正上限（国基準×'+V3_COEF+'）','適正上限（常勤換算）');
+  return parts.map(([l,n,r])=>`${l} ${n}名→${r}名`).join('　')+(bf!=null?`<br>国基準の常勤換算 ${bf.toFixed(1)}名 ×${V3_COEF}＝${Math.round(bf*V3_COEF*10)/10}名`:'')+'<br>'+tail.replace('適正上限（国基準×'+V3_COEF+'）','適正上限（常勤換算）');
 }
 function v3Body(p,key){
   const m=p.v3.months[key], conf=m.kind==='k';
@@ -939,11 +943,12 @@ function v3Body(p,key){
      <div><div class="kr"><span>保育士の配置</span><b>${m.staff==null?'—':m.staff+'名'}</b></div>
      <div class="kr"><span>常勤換算</span><b>${m.fte==null?'—':m.fte+'名'}</b></div></div>
      <div>${v3Over(p,m)}</div>
-     <div>${m.base==null?v3Wait('職員一覧待ち'):v3StaffSvg(m.staff,m.fte,m.base,mx,v3Up(p,m))}</div>
-     <div>${m.base==null?'':`<div class="kf l" style="font-weight:700">${v3Jline('保育士',m.staff,m.base,v3Up(p,m))}<br>${v3Jline('常勤換算',m.fte,m.base,v3Up(p,m))}</div>`}
+     <div>${m.base==null?v3Wait('職員一覧待ち'):v3StaffSvg(m.staff,m.fte,v3Low(p,m),mx,v3Up(p,m))}</div>
+     <div>${m.base==null?'':`<div class="kf l" style="font-weight:700">${v3Jline('保育士',m.staff,v3Low(p,m),v3Up(p,m))}<br>${v3Jline('常勤換算',m.fte,v3Low(p,m),v3Up(p,m))}</div>`}
      <div class="kf l">保育士：${m.staffNote||'園長・調理・事務を除く'}<br>常勤換算：${m.fteNote}${m.extraNote?'<br>'+m.extraNote:''}</div></div></div>
    <div class="kb"><div class="kh"><span class="sm">国基準</span></div>
      <div><div class="kr"><span>国基準</span><b>${m.base==null?'—':m.base+'名'}</b></div>
+     ${(()=>{const f=v3BaseFte(p,m);return f==null?'':`<div class="kr"><span>国基準の常勤換算</span><b>${f.toFixed(1)}名</b></div>`;})()}
      ${(()=>{const f=v3BaseFte(p,m);return `<div class="kr"><span>常勤換算の上限</span><b>${f==null?(m.base==null?'—':Math.round(m.base*V3_COEF*10)/10+'名'):Math.round(f*V3_COEF*10)/10+'名'}</b></div>`;})()}</div>
      <div></div>
      <div>${m.base==null?v3Wait('職員一覧待ち'):v3BaseSvg(m.base,mx,v3BaseFte(p,m))}</div>
@@ -1097,7 +1102,14 @@ function maxIdx(){
   return Math.max(0, PARKS.length-VISIBLE_COUNT);
 }
 
+// カード幅は画面の横幅いっぱいに合わせる（3枚表示。左右の◀▶ボタンの分だけ空ける。2026-11-27 本部指示で拡大）
+function fitCardW(){
+  const gap=getGap(), avail=document.documentElement.clientWidth-130-2*24;
+  const w=Math.max(380,Math.min(720,Math.floor((avail-gap*(VISIBLE_COUNT-1))/VISIBLE_COUNT)));
+  document.documentElement.style.setProperty('--card-w',w+'px');
+}
 function resizeViewport(){
+  fitCardW();
   const vp=document.getElementById('viewport');
   const track=document.getElementById('cards-track');
   if(!track.children.length)return;
