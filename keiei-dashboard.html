@@ -181,7 +181,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 .v3 .kpair{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto auto auto auto auto;column-gap:8px}
 .v3 .kpair>.kb{grid-row:span 5;display:grid;grid-template-rows:subgrid;row-gap:2px}
 .v3 .kb{border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column}
-.v3 .kb svg{display:block;margin-top:2px}
+.v3 .kb svg{display:block;margin-top:2px;max-height:250px}   /* カードを広げてもグラフが縦に伸びすぎないように（左右同じ高さで並ぶ） */
 .v3 .kh{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .v3 .kv{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums}
 .v3 .kr{display:flex;justify-content:space-between;align-items:baseline;font-size:15px;margin-top:2px}
@@ -323,7 +323,7 @@ document.addEventListener('keydown',e=>{
 const PARKS=[
   // 0: ふれあいしおどめ保育園（2026-10-23 先頭へ移動）
   {id:'g10', kotei:'15/100', label:'ふれあいしおどめ保育園',       sub:'茨城県守谷市・15/100地域', mult:1.15, capacity:90,
-   staffTotal:32, staffDesc:'正規13・非正規19',age0:3,age1:15,age2:16,age3:18,age4:18,age5:18,hasData:true, ageTable:true, capByAge:[null,null,null,null,null,null],
+   staffTotal:32, staffDesc:'正規13・非正規19',age0:3,age1:15,age2:16,age3:18,age4:18,age5:18,hasData:true, peak:{url:'haichi-peak/g10-2026-10.html', day:'11/9'}, ageTable:true, capByAge:[null,null,null,null,null,null],
    hasInvoice:true, invoiceIncome:10142940, invoiceMonth:'2026年09月', invoiceUrl:'https://drive.google.com/file/d/1VPn8cI5yfZOKKXC8puT9D0cBCGey3msh/view',
    invoiceRows:{amt0:814300, amt12:4949150, amt35:4379490},
    // ★新カード（v3）。出典：施設別月次報告書R08-06（当月欄）、園児マスタ（6/30時点の在籍＝入園日で判定）、職員マスタ、コドモン6月度勤務実績（5/16〜6/15）
@@ -967,8 +967,7 @@ function v3Body(p,key){
      <div class="kf l">保育士：${m.staffNote||'園長・調理・事務を除く'}<br>常勤換算：${m.fteNote}${m.extraNote?'<br>'+m.extraNote:''}</div></div></div>
    <div class="kb"><div class="kh"><span class="sm">国基準</span></div>
      <div><div class="kr"><span>国基準</span><b>${m.base==null?'—':m.base+'名'}</b></div>
-     ${(()=>{const f=v3BaseFte(p,m);return f==null?'':`<div class="kr"><span>国基準の常勤換算</span><b>${f.toFixed(1)}名</b></div>`;})()}
-     ${(()=>{const f=v3BaseFte(p,m);return `<div class="kr"><span>常勤換算の上限</span><b>${f==null?(m.base==null?'—':Math.round(m.base*V3_COEF*10)/10+'名'):Math.round(f*V3_COEF*10)/10+'名'}</b></div>`;})()}</div>
+     ${(()=>{const f=v3BaseFte(p,m);return f==null?'':`<div class="kr"><span>国基準の常勤換算</span><b>${f.toFixed(1)}名</b></div>`;})()}</div>
      <div></div>
      <div>${m.base==null?v3Wait('職員一覧待ち'):v3BaseSvg(m.base,mx,v3BaseFte(p,m))}</div>
      <div>${m.base==null?'':`<div class="kf l">${v3BaseBreak(p,m)}</div>`}</div></div>
@@ -1000,7 +999,7 @@ function v3Show(id,key){
 }
 
 // ===== カード生成 =====
-const VISIBLE_COUNT=3;  // ビューポートに表示するカード枚数
+const VISIBLE_COUNT=2;  // ビューポートに表示するカード枚数（2026-11-27 本部指示で3→2枚に。カードを横に広く）
 const PER_VIEW=1;       // 1クリックで進むカード枚数
 
 function buildCards(){
@@ -1124,7 +1123,7 @@ function maxIdx(){
 // カード幅は画面の横幅いっぱいに合わせる（3枚表示。左右の◀▶ボタンの分だけ空ける。2026-11-27 本部指示で拡大）
 function fitCardW(){
   const gap=getGap(), avail=document.documentElement.clientWidth-130-2*24;
-  const w=Math.max(380,Math.min(720,Math.floor((avail-gap*(VISIBLE_COUNT-1))/VISIBLE_COUNT)));
+  const w=Math.max(380,Math.min(960,Math.floor((avail-gap*(VISIBLE_COUNT-1))/VISIBLE_COUNT)));
   document.documentElement.style.setProperty('--card-w',w+'px');
 }
 function resizeViewport(){
