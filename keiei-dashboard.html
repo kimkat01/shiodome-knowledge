@@ -717,6 +717,8 @@ if(IS_YUGA){
   PARKS.length = 0;                       // 柴学園のデータは消してから
   YUGA_PARKS.forEach(p=>PARKS.push(p));   // 雄雅会の3園だけを入れる
   document.title = '雄雅会 経営ダッシュボード';
+  // 注意ポップアップのデータ時点（社福だけ。学法は上の本文 id="notice-month" のまま）。月が変わったらここを書き換える
+  const nm=document.getElementById('notice-month'); if(nm) nm.textContent='9月時点';
   document.querySelector('.header-sub').textContent = '社会福祉法人雄雅会　理事長向け月次概算レポート（3園）';
   const v3n=document.getElementById('v3note'); if(v3n) v3n.textContent='※ 3園のカードは新しい形式（月次報告書の実績・国の新基準：3歳15:1、4・5歳25:1）です。収入・支出は資金収支計算書の当月の動きです。';
 }
