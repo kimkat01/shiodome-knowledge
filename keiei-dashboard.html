@@ -181,6 +181,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 .v3 .kb svg{display:block;margin-top:2px}
 .v3 .kh{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .v3 .kv{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
+.v3 .kr{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-top:2px}
+.v3 .kr b{font-size:17px;font-variant-numeric:tabular-nums}
 .v3 .kf{font-size:12px;text-align:center;margin-top:auto}
 .v3 .kf.l{text-align:left;margin-top:2px}
 /* 定員充足度：年齢別の表（2026-11-27 社福3園から。capByAge／byAge がある園だけ） */
@@ -822,6 +824,49 @@ function v3AgeTable(p,m){
   return `<table class="agetb"><tr><th>年齢</th><th>定員</th><th>在籍</th></tr>${rows}
     <tr class="tot"><td>計</td><td>${p.capacity||'—'}${p.elastic?'<span style="font-size:10px">＋弾力'+p.elastic+'</span>':''}</td><td>${n(tot)}</td></tr></table>${note?`<div class="kf l">${note}</div>`:''}`;
 }
+// ===== 配置カード（2026-11-27 本部指示：左＝園の配置（保育士・常勤換算）、右＝国基準） =====
+const v3Jline=(lab,v,base)=>{ if(v==null) return `${lab}：勤務実績待ち`; const [c,t]=v3Judge(v,base);
+  return `<span style="color:${c==='var(--c-labor)'?'var(--ink)':c}">${lab}：${t}</span>`; };
+function v3StaffSvg(staff,fte,base,max){
+  max=max||30; const up=Math.round(base*V3_COEF*10)/10, Y0=105, K=90/max, yB=Y0-base*K, yU=Y0-up*K;
+  const bar=(x,v,lab)=>{ if(v==null) return `<text x="${x+18}" y="100" text-anchor="middle" font-size="12" fill="var(--ink)">—</text><text x="${x+18}" y="123" text-anchor="middle" font-size="12" fill="var(--ink)">${lab}</text>`;
+    const [col]=v3Judge(v,base), yV=Y0-Math.min(v,max)*K;
+    return `<rect x="${x}" y="${yV}" width="36" height="${Y0-yV}" fill="${col}"/><text x="${x+18}" y="${yV-4}" text-anchor="middle" font-size="12" fill="var(--ink)">${v}</text>
+      <text x="${x+18}" y="123" text-anchor="middle" font-size="12" fill="var(--ink)">${lab}</text>`; };
+  return `<svg viewBox="0 0 150 128" width="100%" role="img" aria-label="園の保育士と常勤換算">
+   <line x1="20" y1="15" x2="140" y2="15" stroke="var(--s2)"/><line x1="20" y1="105" x2="140" y2="105" stroke="var(--line)"/>
+   <text x="16" y="19" text-anchor="end" font-size="12" fill="var(--ink)">${max}</text><text x="16" y="109" text-anchor="end" font-size="12" fill="var(--ink)">0</text>
+   <rect x="20" y="${yU}" width="120" height="${yB-yU}" fill="var(--c-ok)" opacity=".35"/>
+   <line x1="20" y1="${yB}" x2="140" y2="${yB}" stroke="var(--c-base)" stroke-width="1.5" stroke-dasharray="4 3"/>
+   <line x1="20" y1="${yU}" x2="140" y2="${yU}" stroke="var(--c-mark)" stroke-width="1.5" stroke-dasharray="4 3"/>
+   ${bar(36,staff,'保育士')}${bar(92,fte,'常勤換算')}</svg>`;
+}
+function v3BaseSvg(base,max){
+  max=max||30; const up=Math.round(base*V3_COEF*10)/10, Y0=105, K=90/max, yB=Y0-base*K, yU=Y0-up*K;
+  return `<svg viewBox="0 0 150 128" width="100%" role="img" aria-label="国基準と適正上限">
+   <line x1="20" y1="15" x2="140" y2="15" stroke="var(--s2)"/><line x1="20" y1="105" x2="140" y2="105" stroke="var(--line)"/>
+   <text x="16" y="19" text-anchor="end" font-size="12" fill="var(--ink)">${max}</text><text x="16" y="109" text-anchor="end" font-size="12" fill="var(--ink)">0</text>
+   <rect x="58" y="${yB}" width="44" height="${base*K}" fill="var(--c-base)"/>
+   <rect x="58" y="${yU}" width="44" height="${(up-base)*K}" fill="var(--c-ok)"/>
+   <text x="80" y="${base*K>=16?yB+15:yB-4}" text-anchor="middle" font-size="12" fill="${base*K>=16?'#fff':'var(--ink)'}">${base}</text>
+   <line x1="20" y1="${yU}" x2="140" y2="${yU}" stroke="var(--c-mark)" stroke-width="1.5" stroke-dasharray="4 3"/>
+   <text x="80" y="${yU-4}" text-anchor="middle" font-size="12" fill="var(--ink)">${up}</text>
+   <text x="80" y="123" text-anchor="middle" font-size="12" fill="var(--ink)">国基準</text></svg>`;
+}
+// 国基準の内訳（新基準：0歳3:1・1・2歳6:1・3歳15:1・4・5歳25:1）。在籍の年齢別から計算し、m.base と一致するときだけ出す
+function v3BaseBreak(p,m){
+  let g=null;
+  if(m.byAge){ const a=m.byAge; g=[['0歳',a[0]],['1・2歳',a[1]+a[2]],['3歳',a[3]],['4・5歳',a[4]+a[5]]]; }
+  else if(m.byGroup){ const f=l=>{const r=m.byGroup.find(x=>x[0]===l);return r?r[1]:null;};
+    g=[['0歳',f('0歳')],['1・2歳',f('1・2歳')],['3歳',f('3歳')],['4・5歳',f('4・5歳')]]; if(g.some(x=>x[1]==null)) g=null; }
+  const tail='黒の点線＝適正上限（国基準×'+V3_COEF+'）';
+  if(!g) return tail;
+  const R={'0歳':3,'1・2歳':6,'3歳':15,'4・5歳':25};
+  const parts=g.filter(x=>x[1]>0).map(([l,n])=>[l,n,Math.ceil(n/R[l])]);
+  const sum=parts.reduce((a,x)=>a+x[2],0);
+  if(sum!==m.base) return (m.staffNote&&/小規模A型/.test(m.staffNote)?'小規模保育A型の＋1名を含む<br>':'')+tail;
+  return parts.map(([l,n,r])=>`${l} ${n}名→${r}名`).join('　')+'<br>'+tail;
+}
 function v3Body(p,key){
   const m=p.v3.months[key], conf=m.kind==='k';
   const rep=conf&&m.rLabor!=null&&m.rIncome;   // 報告書と同じ人件費率の計算をする月か
@@ -861,10 +906,17 @@ function v3Body(p,key){
    <div class="kb"><div class="kh"><span class="sm">人件費率</span></div>
      ${v3Donut(lab,(lab!=null&&lab>V3_LABOR_TARGET)?'var(--c-over)':'var(--c-labor)',lab==null?'—':lab.toFixed(1)+'%',V3_LABOR_TARGET)}
      <div class="kf"${(lab!=null&&lab>V3_LABOR_TARGET)?' style="color:var(--c-over);font-weight:700"':''}>${lab==null?'経理待ち':(lab<=V3_LABOR_TARGET?`目安${V3_LABOR_TARGET}%（黒線）以内`:`目安${V3_LABOR_TARGET}%（黒線）超え`)}</div>${rep?`<div class="kf" style="margin-top:0;color:var(--ink);font-weight:400">${avg?`4〜${an+4}月の累計<br>（人件費÷サービス活動収益）`:'報告書と同じ計算（人件費÷サービス活動収益）'}</div>${avg?`<div class="kf l" style="color:var(--ink);font-weight:400;margin-top:4px">${m.mi+4}月単月 ${(m.rLabor/m.rIncome*100).toFixed(1)}%${m.rNote?'　※'+m.rNote:''}</div>`:(m.rNote?`<div class="kf l" style="color:var(--ink);font-weight:400;margin-top:4px">※${m.rNote}</div>`:'')}`:(m.bonus?`<div class="kf" style="margin-top:0">賞与 ${v3Man(m.bonus)}円を除く</div>`:'')}</div>
-   <div class="kb"><div class="kh"><span class="sm">保育士の配置</span><span class="kv">${m.staff==null?'—':m.staff+'名'}</span></div>
-     ${m.base==null?v3Wait('職員一覧待ち'):v3Columns(m.staff,m.base,'保育',mx)+v3Jtext(m.staff,m.base)}<div class="kf l">${m.staffNote||'園長・調理・事務を除く'}</div></div>
-   <div class="kb"><div class="kh"><span class="sm">常勤換算</span><span class="kv">${m.fte==null?'—':m.fte+'名'}</span></div>
-     ${m.base==null?v3Wait('勤務実績待ち'):v3Columns(m.fte,m.base,'常勤換算',mx)+v3Jtext(m.fte,m.base)}<div class="kf l">${m.fteNote}${m.extraNote?'<br>'+m.extraNote:''}</div></div>
+   <div class="kb"><div class="kh"><span class="sm">園の配置</span></div>
+     <div class="kr"><span>保育士の配置</span><b>${m.staff==null?'—':m.staff+'名'}</b></div>
+     <div class="kr"><span>常勤換算</span><b>${m.fte==null?'—':m.fte+'名'}</b></div>
+     ${m.base==null?v3Wait('職員一覧待ち'):v3StaffSvg(m.staff,m.fte,m.base,mx)}
+     ${m.base==null?'':`<div class="kf l" style="font-weight:700">${v3Jline('保育士',m.staff,m.base)}<br>${v3Jline('常勤換算',m.fte,m.base)}</div>`}
+     <div class="kf l">保育士：${m.staffNote||'園長・調理・事務を除く'}<br>常勤換算：${m.fteNote}${m.extraNote?'<br>'+m.extraNote:''}</div></div>
+   <div class="kb"><div class="kh"><span class="sm">国基準</span></div>
+     <div class="kr"><span>国基準</span><b>${m.base==null?'—':m.base+'名'}</b></div>
+     <div class="kr"><span>適正上限</span><b>${m.base==null?'—':Math.round(m.base*V3_COEF*10)/10+'名'}</b></div>
+     ${m.base==null?v3Wait('職員一覧待ち'):v3BaseSvg(m.base,mx)}
+     ${m.base==null?'':`<div class="kf l">${v3BaseBreak(p,m)}</div>`}</div>
   </div><div class="klg">${m.staffAll}</div>`;
   const rows=r=>r.map(x=>x.length===1?`<tr class="grp"><td colspan="2">${x[0]}</td></tr>`:`<tr><td>${x[0]}</td><td>${x[1]?v3Man(x[1]):'0'}</td></tr>`).join('');
   const mon=m.label.replace(/^令和\d+年|\s.*$/g,'');
