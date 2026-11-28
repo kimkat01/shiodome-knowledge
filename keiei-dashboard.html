@@ -324,7 +324,10 @@ document.addEventListener('keydown',e=>{
 const PARKS=[
   // 0: ふれあいしおどめ保育園（2026-10-23 先頭へ移動）
   {id:'g10', kotei:'15/100', label:'ふれあいしおどめ保育園',       sub:'茨城県守谷市・15/100地域', mult:1.15, capacity:90,
-   staffTotal:32, staffDesc:'正規13・非正規19',age0:3,age1:15,age2:16,age3:18,age4:18,age5:18,hasData:true, peak:{url:'haichi-peak/g10-2026-10.html', day:'11/9'}, ageTable:true, capByAge:[null,null,null,null,null,null],
+   staffTotal:32, staffDesc:'正規13・非正規19',age0:3,age1:15,age2:16,age3:18,age4:18,age5:18,hasData:true, peak:{url:'haichi-peak/g10-2026-10.html', day:'11/9'}, ageTable:true, capByAge:[9,12,15,18,18,18], rIncLabel:'教育活動収入',
+   // 人件費率（2026-11-28）：4〜6月は資金収支月報R08-06の事業活動収支月報（人件費÷教育活動収入計）。4月の欄＝4〜5月の合計（6月の累計−6月の当月）、5月は0。
+   //   7〜9月は事業活動の月報がないため、LeySer推移表の人件費支出÷（収入−受取利息）で代用
+   rMonthly:{L:[10049231,0,6893019,12303326,7438777,6340646],I:[20225274,0,10180015,10191644,10307724,10495270]},
    hasInvoice:true, invoiceIncome:10142940, invoiceMonth:'2026年09月', invoiceUrl:'https://drive.google.com/file/d/1VPn8cI5yfZOKKXC8puT9D0cBCGey3msh/view',
    invoiceRows:{amt0:814300, amt12:4949150, amt35:4379490},
    // ★新カード（v3）。出典：施設別月次報告書R08-06（当月欄）、園児マスタ（6/30時点の在籍＝入園日で判定）、職員マスタ、コドモン6月度勤務実績（5/16〜6/15）
@@ -335,8 +338,9 @@ const PARKS=[
    v3:{ order:['m9','m8','m7','k'], def:'m9', months:{   // def＝最初に表示する月（2026-11-03 本部指示で9月）
      k:{ label:'令和8年6月 確定', kind:'k',
          income:10180015, labor:6893019, admin:1902222, interest:31817,
-         byGroup:[['0歳',1],['1・2歳',30],['3歳',18],['4・5歳',35]], enrolled:84, base:10, staff:21, fte:15.3, fteNote:'保育職員・6月度勤務実績',
-         staffNote:'園長・調理・事務・支援員を除く', extraNote:'ほかに子育て支援員 2名（1.4名）',
+         mi:2, rLabor:6893019, rIncome:10180015,
+         byAge:[1,15,15,18,17,18], enrolled:84, base:10, staff:21, fte:15.7, fteNote:'常勤11名×1.0＋短時間11名の794.5h÷168（6月度（5/16〜6/15）勤務実績。退職者1名の1日分を含む）',
+         staffNote:'園長・調理・事務・支援員を除く', extraNote:'ほかに子育て支援員 2名（1.4名）', byAgeNote:'6月度の登降園に名前があり6月末までに退園した1名は含めない',
          staffAll:'全職員 34名（保育21・支援員2・調理5・事務1・園長1・育休3）',
          expRows:[['人件費'],['本俸',2902854],['期末手当',0],['その他の手当',537276],['所定福利費',473330],['兼務職員（非常勤）',2966657],['退職金',12902],
                   ['管理経費・利息'],['給食費',518029],['修繕費',450010],['賃借料',398750],['光熱水費',177441],['報酬委託手数料',118370],
@@ -344,7 +348,8 @@ const PARKS=[
          incRows:[['保育給付費',9642990],['補助活動収入',345580],['雑収入',191445]] },
      m9:{ label:'令和8年9月', kind:'k', src:'LeySer推移表', tag:'経理入力中',
          income:10495270, labor:6340646, admin:2077586, interest:31460,
-         byAgeNote:'年齢別の在籍は未登録（1・2歳は31名）', enrolled:88, base:11, staff:20, fte:15.4, fteNote:'保育職員・9月度勤務実績（8/16〜9/15）',
+         mi:5, rLabor:6340646, rIncome:10495270, rNote:'7〜9月はLeySer推移表（資金収支）で代用。9月は補助活動収入が0円（経理入力途中）のため、やや高めに出ています',
+         byAge:[3,15,16,18,18,18], enrolled:88, base:11, staff:20, fte:15.5, fteNote:'常勤10名×1.0＋短時間10名の930.8h÷168（9月度（8/16〜9/15）勤務実績）',
          staffNote:'園長・調理・事務・支援員・長期欠勤を除く', extraNote:'ほかに子育て支援員 1名（1.0名）',
          staffAll:'全職員 32名（保育20・支援員1・調理5・事務1・園長1・育休産休3・長期欠勤1）',
          // 注意ポイント（4〜9月累計と年間予算の比較。年間予算10万円未満の科目は除外）。出典：資金収支計算書（4月〜最新）、LeySer推移表
@@ -359,14 +364,16 @@ const PARKS=[
          incRows:[['保育給付費（補助金収入）',10309250],['補助活動収入',0],['受取利息',0],['雑収入',186020]] },
      m8:{ label:'令和8年8月 確定', kind:'k', src:'LeySer推移表',
          income:10409821, labor:7438777, admin:1630523, interest:31579,
-         byAgeNote:'年齢別の在籍は未登録（1・2歳は31名）', enrolled:86, base:11, staff:20, fte:15.2, fteNote:'保育職員・8月度勤務実績（7/16〜8/15）',
+         mi:4, rLabor:7438777, rIncome:10307724, rNote:'7〜9月はLeySer推移表（資金収支）で代用',
+         byAge:[1,15,16,18,18,18], enrolled:86, base:11, staff:20, fte:15.4, fteNote:'常勤10名×1.0＋短時間10名の903.3h÷168（8月度（7/16〜8/15）勤務実績）',
          staffNote:'園長・調理・事務・支援員・長期欠勤を除く', extraNote:'ほかに子育て支援員 2名（1.0名）',
          staffAll:'全職員 33名（保育20・支援員2・調理5・事務1・園長1・育休産休3・長期欠勤1）',
          expRows:[['人件費'],['人件費支出',7438777],['管理経費・利息'],['管理経費支出',1630523],['借入金利息',31579]],
          incRows:[['保育給付費（補助金収入）',9782880],['補助活動収入',352150],['受取利息',102097],['雑収入',172694]] },
      m7:{ label:'令和8年7月 確定', kind:'k', src:'LeySer推移表',
          income:10191644, labor:12303326, admin:1980674, interest:31698,
-         enrolled:84, base:10, staff:20, fte:15.3, fteNote:'保育職員・7月度勤務実績（6/16〜7/15）',
+         mi:3, rLabor:12303326, rIncome:10191644, rNote:'7月は夏の賞与が入るため、高めに出ます。7〜9月はLeySer推移表（資金収支）で代用',
+         byAge:[1,15,15,18,17,18], enrolled:84, base:10, staff:20, fte:15.6, fteNote:'常勤11名×1.0＋短時間9名の771.3h÷168（7月度（6/16〜7/15）勤務実績）',
          staffNote:'園長・調理・事務・支援員・長期欠勤を除く', extraNote:'ほかに子育て支援員 2名（1.5名）',
          staffAll:'全職員 33名（保育20・支援員2・調理5・事務1・園長1・育休産休3・長期欠勤1）', note:'7月は夏の賞与の支給月のため、人件費が大きくなっています',
          expRows:[['人件費'],['人件費支出',12303326],['管理経費・利息'],['管理経費支出',1980674],['借入金利息',31698]],
@@ -957,7 +964,7 @@ function v3Body(p,key){
      ${p.ageTable?v3AgeTable(p,m):`${v3Donut(capPct,'var(--c-profit)',capPct==null?'—':Math.round(capPct)+'%')}<div class="kf">${m.enrolled==null?'園児一覧待ち':m.enrolled+' / '+(p.capacity||'—')+'名'+(p.elastic?'（弾力'+p.elastic+'名）':'')}</div>`}</div>
    <div class="kb"><div class="kh"><span class="sm">人件費率</span></div>
      ${v3Donut(lab,(lab!=null&&lab>V3_LABOR_TARGET)?'var(--c-over)':'var(--c-labor)',lab==null?'—':lab.toFixed(1)+'%',V3_LABOR_TARGET)}
-     <div class="kf"${(lab!=null&&lab>V3_LABOR_TARGET)?' style="color:var(--c-over);font-weight:700"':''}>${lab==null?'経理待ち':(lab<=V3_LABOR_TARGET?`目安${V3_LABOR_TARGET}%（黒線）以内`:`目安${V3_LABOR_TARGET}%（黒線）超え`)}</div>${rep?`<div class="kf" style="margin-top:0;color:var(--ink);font-weight:400">${avg?`4〜${an+4}月の累計<br>（人件費÷サービス活動収益）`:'報告書と同じ計算（人件費÷サービス活動収益）'}</div>${avg?`<div class="kf l" style="color:var(--ink);font-weight:400;margin-top:4px">${m.mi+4}月単月 ${(m.rLabor/m.rIncome*100).toFixed(1)}%${m.rNote?'　※'+m.rNote:''}</div>`:(m.rNote?`<div class="kf l" style="color:var(--ink);font-weight:400;margin-top:4px">※${m.rNote}</div>`:'')}`:(m.bonus?`<div class="kf" style="margin-top:0">賞与 ${v3Man(m.bonus)}円を除く</div>`:'')}</div>
+     <div class="kf"${(lab!=null&&lab>V3_LABOR_TARGET)?' style="color:var(--c-over);font-weight:700"':''}>${lab==null?'経理待ち':(lab<=V3_LABOR_TARGET?`目安${V3_LABOR_TARGET}%（黒線）以内`:`目安${V3_LABOR_TARGET}%（黒線）超え`)}</div>${rep?`<div class="kf" style="margin-top:0;color:var(--ink);font-weight:400">${avg?`4〜${an+4}月の累計<br>（人件費÷${p.rIncLabel||'サービス活動収益'}）`:`報告書と同じ計算（人件費÷${p.rIncLabel||'サービス活動収益'}）`}</div>${avg?`<div class="kf l" style="color:var(--ink);font-weight:400;margin-top:4px">${m.mi+4}月単月 ${(m.rLabor/m.rIncome*100).toFixed(1)}%${m.rNote?'　※'+m.rNote:''}</div>`:(m.rNote?`<div class="kf l" style="color:var(--ink);font-weight:400;margin-top:4px">※${m.rNote}</div>`:'')}`:(m.bonus?`<div class="kf" style="margin-top:0">賞与 ${v3Man(m.bonus)}円を除く</div>`:'')}</div>
    <div class="kpair">
    <div class="kb"><div class="kh"><span class="sm">園の配置</span></div>
      <div><div class="kr"><span>保育士の配置</span><b>${m.staff==null?'—':m.staff+'名'}</b></div>
