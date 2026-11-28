@@ -226,7 +226,7 @@ html.law-y .header{box-shadow:0 2px 8px rgba(67,160,71,.3);}
 </style>
 <style>
 /* ★ データ時点の注意ポップアップ（2026-10）。開くたびに毎回表示。「確認しました」で閉じる
-   月が変わったら、下の本文（id="notice-month"）の「6月時点」を書き換える */
+   月が変わったら、下の本文（id="notice-month"）の「9月時点」を書き換える */
 #notice-ov{position:fixed;inset:0;background:rgba(20,22,40,.42);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px}
 #notice-ov.hide{display:none}
 .notice-card{background:#fff;border-radius:12px;width:100%;max-width:440px;padding:28px 28px 24px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
@@ -252,7 +252,7 @@ html.law-y .header{box-shadow:0 2px 8px rgba(67,160,71,.3);}
       </div>
       <div class="notice-title" id="notice-title">注意</div>
     </div>
-    <p class="l1">このデータは<span class="notice-red" id="notice-month">6月時点</span>のデータになります。</p>
+    <p class="l1">このデータは<span class="notice-red" id="notice-month">9月時点</span>のデータになります。</p>
     <p class="l2">支出データが揃い次第、アップデートとなります。</p>
     <button type="button" class="notice-btn" id="notice-ok" onclick="closeNotice()">確認しました</button>
   </div>
@@ -324,7 +324,7 @@ document.addEventListener('keydown',e=>{
 const PARKS=[
   // 0: ふれあいしおどめ保育園（2026-10-23 先頭へ移動）
   {id:'g10', kotei:'15/100', label:'ふれあいしおどめ保育園',       sub:'茨城県守谷市・15/100地域', mult:1.15, capacity:90,
-   staffTotal:32, staffDesc:'正規13・非正規19',age0:3,age1:15,age2:16,age3:18,age4:18,age5:18,hasData:true, peak:{url:'haichi-peak/g10-2026-10.html', day:'11/9'}, ageTable:true, capByAge:[9,12,15,18,18,18], rIncLabel:'教育活動収入',
+   staffTotal:32, staffDesc:'正規13・非正規19',age0:3,age1:15,age2:16,age3:18,age4:18,age5:18,hasData:true, peak:{url:'haichi-peak/g10-2026-10.html', day:'11/9'}, ageTable:true, capByAge:[9,12,15,18,18,18], elastic:4, rIncLabel:'教育活動収入',   // 弾力4名＝9月の1歳＋3・2歳＋1（2026-11-28 本部：定員超えは弾力）
    // 人件費率（2026-11-28）：4〜6月は資金収支月報R08-06の事業活動収支月報（人件費÷教育活動収入計）。4月の欄＝4〜5月の合計（6月の累計−6月の当月）、5月は0。
    //   7〜9月は事業活動の月報がないため、LeySer推移表の人件費支出÷（収入−受取利息）で代用
    rMonthly:{L:[10049231,0,6893019,12303326,7438777,6340646],I:[20225274,0,10180015,10191644,10307724,10495270]},
