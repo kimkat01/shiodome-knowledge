@@ -168,6 +168,10 @@ html body{background:#dbdcdf}
 .res .big b{font-size:30px;color:var(--accent-dark);font-variant-numeric:tabular-nums}
 .res.short .big b{color:var(--danger)}
 .res .bd{font-size:14.5px;color:var(--sub)}
+/* 配置基準は満たしているが、月次収支レポートでは適正範囲の上限を超えているとき（2026-11-28）：2ページ目の判定と食い違わないように */
+.res.over{border-color:#e8a33d;background:var(--warn-pale)}
+.res.over .big b{color:var(--warn)}
+.res .warnline{font-weight:800;color:var(--warn);font-size:16px;line-height:1.6}
 .skipbox{border:1.5px solid var(--line);border-radius:10px;padding:14px;background:var(--bg)}
 /* money */
 .money{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
@@ -736,6 +740,7 @@ $('done-home').onclick=()=>{ home(); loadHistory(); };
 /* =========== 採用前申請 =========== */
 const PRE_STEPS=['申請者・配置基準','運営状況の確認','求人内容','人件費・経費','確認'];
 let preStep=1, titleTouched=false;
+let UNEI=null, uneiTimer=null;   // 運営状況の確認（月次収支レポートから届く数字）。1ページ目の判定でも使うので先に置く
 $('pre-garden').value=GARDEN; $('k-garden').value=GARDEN;
 /* 記入者名：職員マスタの園長（権限「園長」）の氏名。読めないときは園長ダッシュボードのログイン名 */
 function setWriter(name){ if(!name) return; ['pre-writer','k-writer'].forEach(id=>{ if(!$(id).value.trim()) $(id).value=name; }); }
@@ -765,9 +770,14 @@ function renderHaichi(){
   $('haichi').hidden=skip;
   if(skip) return;
   const h=haichi();
-  $('res').innerHTML=`<div class="res ${h.short?'short':''}">
-    <div class="big"><span>${h.short?'不足しています':'配置基準を満たしています'}</span><b>${h.short?h.diff+' 人不足':'余裕 '+Math.abs(h.diff)+' 人'}</b></div>
-    <div class="bd">必要数 <b>${h.need}人</b> ／ 現在の常勤換算 <b>${h.fte}人</b><br>${h.parts.join('、')||'園児数未入力'}${h.ad.length?'<br>'+h.ad.join('、'):''}</div></div>`;
+  // 月次収支レポートの適正範囲（上限）を超えていれば、ここでも知らせる（2ページ目「運営状況の確認」と同じ数字）
+  const u=(UNEI&&UNEI.ok)?UNEI:null;
+  const ovs=u&&u.up!=null?[[ '保育士の配置',u.staff],['常勤換算',u.fte]].filter(([,v])=>v!=null&&v>u.up):[];
+  const over=!h.short&&ovs.length>0;
+  $('res').innerHTML=`<div class="res ${h.short?'short':over?'over':''}">
+    <div class="big"><span>${h.short?'不足しています':over?'国の配置基準は満たしていますが、適正範囲を超えています':'配置基準を満たしています'}</span><b>${h.short?h.diff+' 人不足':over?'上限を '+Math.round((Math.max(...ovs.map(x=>x[1]))-u.up)*10)/10+' 名超え':'余裕 '+Math.abs(h.diff)+' 人'}</b></div>
+    ${over?`<div class="warnline">⚠ 月次収支レポート（${String(u.month).replace(/[<>&]/g,'')}）では、${ovs.map(([k,v])=>`${k} ${v}名`).join('・')}が、適正範囲の上限（${u.up}名）を超えています。次の「運営状況の確認」で確かめてください。</div>`:''}
+    <div class="bd">必要数 <b>${h.need}人</b> ／ 現在の常勤換算 <b>${h.fte}人</b>${over?`（国の配置基準より ${Math.abs(h.diff)}人多い）`:''}<br>${h.parts.join('、')||'園児数未入力'}${h.ad.length?'<br>'+h.ad.join('、'):''}</div></div>`;
   $('over-wrap').hidden=h.short;
 }
 ['a0','a1','a2','a3','a4','a5','ftype','k3','k45','k1','t90','h11','fte','pre-skip'].forEach(id=>{$(id).addEventListener('input',renderHaichi);$(id).addEventListener('change',renderHaichi);});
@@ -925,7 +935,7 @@ function preGo(n){
   head('採用前申請',PRE_STEPS,n);
   $('pre-back').textContent=n===1?'‹ 申請の種類を選ぶ':'‹ 戻る';
   $('pre-next').textContent=n===4?'内容を確認する ›':n===5?'この内容で送信する':'次の入力へ ›';
-  if(n===2) uneiLoad();
+  if(n<=2) uneiLoad();
   if(n===5){ $('doc-title').textContent=$('pre-title').value; $('doc-tbl').innerHTML=tbl(preRows()); }
   $('pre-err').hidden=true; window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -940,7 +950,6 @@ $('go-pre').onclick=()=>{show('v-pre');preGo(1);};
    月次収支レポート（keiei-dashboard.html）を ?kpi=1 で読み込むと、その園の「② 運営の指標」だけが出て、数字が postMessage で届く。
    数字で「人件費率が目安超え」「保育士の配置か常勤換算が適正範囲超え」なのに、園長がそう判定しなかったときは理由を必須にする。
    レポートに数字がない園は、質問なしでそのまま進める */
-let UNEI=null, uneiTimer=null;
 const GARDEN_PARAM=(()=>{ try{ return new URLSearchParams(location.search).get('garden')||G.key||FCODE; }catch(e){ return FCODE; } })();
 window.addEventListener('message',ev=>{
   if(ev.origin!==location.origin||!ev.data||ev.data.type!=='keiei-kpi') return;
@@ -987,6 +996,7 @@ function uneiPeak(url){
 }
 $('unei-peak').addEventListener('click',()=>{ if(UNEI&&UNEI.peak) uneiPeak(UNEI.peak.url); });
 function uneiShow(){
+  try{ renderHaichi(); }catch(e){}
   const u=UNEI||{}, a=uneiAuto(u);
   const pk=u.ok&&u.peak&&u.peak.url; $('unei-peak').hidden=!pk;
   if(pk) $('unei-peak').textContent=`配置人数グラフを見る（${u.peak.day}）`;
