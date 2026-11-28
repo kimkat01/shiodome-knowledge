@@ -188,8 +188,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 .v3 .kr{display:flex;justify-content:space-between;align-items:baseline;font-size:15px;margin-top:2px}
 .v3 .kr b{font-size:20px;font-variant-numeric:tabular-nums}
 .v3 .kover{margin:4px 0 2px;padding:5px 8px;border-radius:6px;background:rgba(226,75,74,.10);color:var(--c-ng);font-size:22px;font-weight:800;line-height:1.25}
-.v3 .kpeak{display:block;width:100%;margin:4px 0 2px;padding:6px 8px;border:1.5px solid var(--c-labor);border-radius:6px;background:#fff;color:var(--c-labor);font-size:14px;font-weight:700;cursor:pointer}
-.v3 .kpeak:hover{background:var(--c-labor);color:#fff}
+.v3 .kpeak{display:block;width:100%;margin:4px 0 2px;padding:9px 12px;border:2px solid var(--c-labor);border-radius:8px;background:var(--c-labor);color:#fff;font-size:16px;font-weight:800;cursor:pointer}   /* 2026-11-28 採用前申請と同じ青ベタ白文字 */
+.v3 .kpeak:hover{filter:brightness(.9)}
 #peak-ov{position:fixed;inset:0;z-index:200;background:rgba(20,22,40,.5);display:none;align-items:center;justify-content:center}
 #peak-ov .peak-box{position:relative;width:min(1240px,96vw);height:92vh;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.35)}
 #peak-ov iframe{width:100%;height:100%;border:0}
@@ -985,7 +985,7 @@ function v3Body(p,key){
      <div>${m.base==null?v3Wait('職員一覧待ち'):v3BaseSvg(m.base,mx,v3BaseFte(p,m))}</div>
      <div>${m.base==null?'':`<div class="kf l">${v3BaseBreak(p,m)}</div>`}</div></div>
    </div>
-   ${p.peak?`<button type="button" class="kpeak" style="grid-column:1/-1" onclick="v3Peak('${p.peak.url}')">シフトを見る（${p.peak.day}）</button>`:''}
+   ${p.peak?`<button type="button" class="kpeak" style="grid-column:1/-1" onclick="v3Peak('${p.peak.url}')">配置人数グラフを見る（${p.peak.day}）</button>`:''}
   </div><div class="klg">${m.staffAll}</div>`;
   const rows=r=>r.map(x=>x.length===1?`<tr class="grp"><td colspan="2">${x[0]}</td></tr>`:`<tr><td>${x[0]}</td><td>${x[1]?v3Man(x[1]):'0'}</td></tr>`).join('');
   const mon=m.label.replace(/^令和\d+年|\s.*$/g,'');
