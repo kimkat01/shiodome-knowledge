@@ -980,7 +980,7 @@ function v3Body(p,key){
      <div class="kf l">保育士：${m.staffNote||'園長・調理・事務を除く'}<br>常勤換算：${m.fteNote}${m.extraNote?'<br>'+m.extraNote:''}</div></div></div>
    <div class="kb"><div class="kh"><span class="sm">国基準</span></div>
      <div><div class="kr"><span>国基準</span><b>${m.base==null?'—':m.base+'名'}</b></div>
-     ${(()=>{const f=v3BaseFte(p,m);return f==null?'':`<div class="kr"><span>国基準の常勤換算</span><b>${f.toFixed(1)}名</b></div>`;})()}</div>
+     ${(()=>{const f=v3BaseFte(p,m);return f==null?'':`<div class="kr"><span>国基準の常勤換算</span><b>${f.toFixed(1)}名</b></div>`;})()}<div class="kr"><span>適正常勤換算</span><b>${v3Up(p,m).toFixed(1)}名</b></div></div>
      <div></div>
      <div>${m.base==null?v3Wait('職員一覧待ち'):v3BaseSvg(m.base,mx,v3BaseFte(p,m))}</div>
      <div>${m.base==null?'':`<div class="kf l">${v3BaseBreak(p,m)}</div>`}</div></div>
