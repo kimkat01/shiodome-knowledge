@@ -1324,6 +1324,8 @@ function kpiEmbed(){
     const body=document.createElement('div'); body.className='park-card-body'; body.style.padding='0';
     if(k4) body.appendChild(k4); if(lg) body.appendChild(lg); wrap.appendChild(body); box.appendChild(wrap);
     msg=Object.assign({type:'keiei-kpi',ok:true,garden:p.label},window.V3_LAST||{});
+    // 「シフトを見る」（2026-11-28）：ボタンは採用申請の画面側に出す（ここでは隠す）ので、行き先と日付を渡す
+    if(p.peak&&p.peak.url){ try{ msg.peak={url:new URL(p.peak.url,location.href).href,day:p.peak.day||''}; }catch(e){} }
   } else {
     box.innerHTML='<div style="padding:16px;text-align:center;color:var(--text-muted)">この園の月次収支レポートは準備中です</div>';
   }

@@ -204,6 +204,13 @@ html body{background:#dbdcdf}
 /* 運営状況の確認（2026-11-28）：月次収支レポートの「② 運営の指標」をそのまま埋め込み、園長が自分で判定する */
 .unei-frame{width:100%;border:0;display:block;min-height:120px;background:transparent}
 .unei-src{font-size:14px;color:var(--sub)}
+/* 「シフトを見る」（2026-11-28）：月次収支レポートと同じボタン・同じポップアップ（配置人数グラフ） */
+.unei-peak{display:block;width:100%;padding:10px 12px;border:2px solid var(--accent);border-radius:9px;background:var(--card);color:var(--accent-dark);font:inherit;font-size:17px;font-weight:800;cursor:pointer}
+.unei-peak:hover{background:var(--accent);color:#fff}
+#peak-ov{position:fixed;inset:0;z-index:200;background:rgba(20,22,40,.5);display:none;align-items:center;justify-content:center}
+#peak-ov .peak-box{position:relative;width:min(1240px,96vw);height:92vh;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+#peak-ov iframe{width:100%;height:100%;border:0}
+#peak-ov .peak-x{position:absolute;top:8px;right:10px;z-index:1;padding:4px 12px;border:1px solid #80869a;border-radius:6px;background:#fff;font-size:15px;font-weight:700;cursor:pointer}
 .unei-q{border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:10px}
 .unei-q .lbl{font-size:18px}
 .chip.rd span::before{border-radius:50%}
@@ -336,6 +343,7 @@ td{white-space:pre-wrap;word-break:break-word}
       <p style="margin:0;color:var(--sub)">採用の前に、いまの園の収支と職員の人数を確認してください。下は本部の月次収支レポート「② 運営の指標」と同じものです。</p>
       <div id="unei-month" class="unei-src"></div>
       <iframe id="unei-frame" class="unei-frame" title="月次収支レポート 運営の指標" loading="eager"></iframe>
+      <button type="button" class="unei-peak" id="unei-peak" hidden>シフトを見る</button>
       <div id="unei-none" class="note" hidden></div>
       <div id="unei-qs" class="stack" hidden>
         <div class="unei-q" id="uq-labor-wrap">
@@ -964,8 +972,24 @@ function uneiGaps(){
   }
   return g;
 }
+/* 「シフトを見る」：一番職員が多い日の配置人数グラフをポップアップで開く（月次収支レポートの v3Peak と同じ動き） */
+function uneiPeak(url){
+  let ov=$('peak-ov');
+  if(!ov){ ov=document.createElement('div'); ov.id='peak-ov';
+    ov.innerHTML='<div class="peak-box" role="dialog" aria-modal="true" aria-label="配置人数グラフ"><button type="button" class="peak-x" aria-label="閉じる">× 閉じる</button><iframe title="配置人数グラフ"></iframe></div>';
+    document.body.appendChild(ov);
+    const close=()=>{ov.style.display='none';ov.querySelector('iframe').src='about:blank';};
+    ov.addEventListener('click',e=>{if(e.target===ov)close();});
+    ov.querySelector('.peak-x').addEventListener('click',close);
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&ov.style.display==='flex')close();});
+  }
+  ov.querySelector('iframe').src=url; ov.style.display='flex';
+}
+$('unei-peak').addEventListener('click',()=>{ if(UNEI&&UNEI.peak) uneiPeak(UNEI.peak.url); });
 function uneiShow(){
   const u=UNEI||{}, a=uneiAuto(u);
+  const pk=u.ok&&u.peak&&u.peak.url; $('unei-peak').hidden=!pk;
+  if(pk) $('unei-peak').textContent=`シフトを見る（${u.peak.day}）`;
   $('unei-month').textContent=u.ok?`表示している月：${u.month}${u.tag?'（'+u.tag+'）':''}`:'';
   if(!u.ok){
     $('unei-qs').hidden=true; $('unei-none').hidden=false;
