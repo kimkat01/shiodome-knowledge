@@ -772,7 +772,7 @@ function renderHaichi(){
   const h=haichi();
   // 月次収支レポートの適正範囲（上限）を超えていれば、ここでも知らせる（2ページ目「運営状況の確認」と同じ数字）
   const u=(UNEI&&UNEI.ok)?UNEI:null;
-  const ovs=u&&u.up!=null?[[ '保育士の配置',u.staff],['常勤換算',u.fte]].filter(([,v])=>v!=null&&v>u.up):[];
+  const ovs=u&&u.up!=null?[['常勤換算',u.fte]].filter(([,v])=>v!=null&&v>u.up):[];   // 2026-11-28 本部指示：適正範囲の判定は常勤換算だけ（月次収支レポートと同じ）
   const over=!h.short&&ovs.length>0;
   $('res').innerHTML=`<div class="res ${h.short?'short':over?'over':''}">
     <div class="big"><span>${h.short?'不足しています':over?'国の配置基準は満たしていますが、適正範囲を超えています':'配置基準を満たしています'}</span><b>${h.short?h.diff+' 人不足':over?'上限を '+Math.round((Math.max(...ovs.map(x=>x[1]))-u.up)*10)/10+' 名超え':'余裕 '+Math.abs(h.diff)+' 人'}</b></div>
@@ -967,7 +967,7 @@ function uneiAuto(u){
   let staff=null;
   if(u.base!=null&&(u.staff!=null||u.fte!=null)){
     const vs=[u.staff,u.fte].filter(v=>v!=null);
-    staff=vs.some(v=>v>u.up)?'多い':vs.some(v=>v<u.base)?'足りない':'適正';
+    staff=(u.fte!=null&&u.fte>u.up)?'多い':vs.some(v=>v<u.base)?'足りない':'適正';   // 「多い」は常勤換算だけで判定（2026-11-28）
   }
   return {labor,staff};
 }
@@ -976,7 +976,7 @@ function uneiGaps(){
   const u=UNEI, a=uneiAuto(u), g=[];
   if(a.labor==='高い'&&radioVal('uq-labor')&&radioVal('uq-labor')!=='高い') g.push(`人件費率は${u.labor}%で、目安の${u.laborTarget}%を超えています。`);
   if(a.staff==='多い'&&radioVal('uq-staff')&&radioVal('uq-staff')!=='多い'){
-    const t=[]; if(u.staff!=null&&u.staff>u.up) t.push(`保育士の配置は${u.staff}名`); if(u.fte!=null&&u.fte>u.up) t.push(`常勤換算は${u.fte}名`);
+    const t=[]; if(u.fte!=null&&u.fte>u.up) t.push(`常勤換算は${u.fte}名`);
     g.push(`${t.join('、')}で、適正範囲（${u.up}名まで）を超えています。`);
   }
   return g;
