@@ -786,7 +786,7 @@ function actualBlock(p){
 }
 
 // ===== 新カード（v3）=====
-const V3_COEF=1.8, V3_LABOR_TARGET=70;   // 適正上限＝国基準×1.8／人件費率の目安70%
+const V3_COEF=1.6, V3_LABOR_TARGET=70;   // 適正上限＝国基準の常勤換算×1.6（2026-11-28 本部指示で1.8→1.6）／人件費率の目安70%
 const V3C=2*Math.PI*40;
 function v3Donut(pct,color,center,mark){
   const dash=(pct==null?0:V3C*Math.min(pct,100)/100).toFixed(1);
@@ -849,7 +849,7 @@ const v3Jline=(lab,v,base,up)=>{ if(v==null) return `${lab}：勤務実績待ち
 function v3StaffSvg(staff,fte,base,max,upIn){
   max=max||30; const up=upIn!=null?upIn:Math.round(base*V3_COEF*10)/10, Y0=105, K=90/max, yB=Y0-base*K, yU=Y0-up*K;
   const bar=(x,v,lab)=>{ if(v==null) return `<text x="${x+18}" y="100" text-anchor="middle" font-size="12" fill="var(--ink)">—</text><text x="${x+18}" y="119" text-anchor="middle" font-size="8" fill="var(--ink)">${lab}</text>`;
-    const [col]=v3Judge(v,base,up), yV=Y0-Math.min(v,max)*K;
+    const col=lab==='保育士'?'#A9B1C2':v3Judge(v,base,up)[0], yV=Y0-Math.min(v,max)*K;   // 2026-11-28：判定は常勤換算だけ。保育士の棒はグレー
     return `<rect x="${x}" y="${yV}" width="36" height="${Y0-yV}" fill="${col}"/><text x="${x+18}" y="${yV-4}" text-anchor="middle" font-size="12" fill="var(--ink)">${v}</text>
       <text x="${x+18}" y="119" text-anchor="middle" font-size="8" fill="var(--ink)">${lab}</text>`; };
   return `<svg viewBox="0 0 150 128" width="100%" role="img" aria-label="園の保育士と常勤換算">
@@ -860,16 +860,16 @@ function v3StaffSvg(staff,fte,base,max,upIn){
    <line x1="20" y1="${yU}" x2="140" y2="${yU}" stroke="var(--c-mark)" stroke-width="1.5" stroke-dasharray="4 3"/>
    ${bar(36,staff,'保育士')}${bar(92,fte,'常勤換算')}</svg>`;
 }
-// 適正上限（国基準×1.8）を超えた人数を赤で大きく出す（2026-11-27 本部指示：園長に自覚してもらうため）。保育士の人数で判定し、保育士が超えていなければ常勤換算で判定
+// 適正上限（国基準の常勤換算×1.6）を超えた人数を赤で大きく出す（2026-11-27 本部指示：園長に自覚してもらうため。2026-11-28 判定は常勤換算だけ・係数1.6に）
 function v3Over(p,m){
-  // 上限は右の国基準カードと同じ「常勤換算の上限」。常勤換算で判定し、超えていなければ保育士の人数で判定
+  // 上限は右の国基準カードと同じ「常勤換算の上限」。常勤換算だけで判定
   if(m.base==null) return '';
   const up=v3Up(p,m), o=v=>v==null?0:Math.round((v-up)*10)/10;
-  const of=o(m.fte), os=o(m.staff);
-  const [lab,v]=of>0?['常勤換算',of]:os>0?['保育士の人数',os]:[null,0];
+  const of=o(m.fte);   // 2026-11-28 本部指示：判定は常勤換算だけ（保育士の人数では判定しない）
+  const [lab,v]=of>0?['常勤換算',of]:[null,0];
   return v>0?`<div class="kover"><small style="font-size:14px;font-weight:700;margin-right:4px">${lab}</small>${v}名超過<span>${lab}が上限（${up}名）を超えています</span></div>`:'';
 }
-// 適正上限：国基準の常勤換算（年齢ごとに小数）があればその×1.8、なければ国基準（人数）×1.8。左右のカードで同じ値を使う
+// 適正上限：国基準の常勤換算（年齢ごとに小数）があればその×V3_COEF（1.6）、なければ国基準（人数）×V3_COEF。左右のカードで同じ値を使う
 function v3Low(p,m){ const f=v3BaseFte(p,m); return f!=null?f:m.base; }   // 下限（国基準）。常勤換算があればそちら
 function v3Up(p,m){ const f=v3BaseFte(p,m); return Math.round((f!=null?f:m.base)*V3_COEF*10)/10; }
 // 国基準の常勤換算（2026-11-27 本部指示）：年齢ごとに「人数÷配置基準」を小数第1位まで（第2位以下は切り捨て）出して合計する。
@@ -899,7 +899,7 @@ function v3Peak(url){
 }
 function v3BaseSvg(base,max,bf){
   if(bf!=null) base=bf;   // 灰色＝国基準の常勤換算
-  // bf＝国基準の常勤換算（年齢ごとに小数で計算した必要人数）。あれば緑の幅と点線を bf×1.8 にする
+  // bf＝国基準の常勤換算（年齢ごとに小数で計算した必要人数）。あれば緑の幅と点線を bf×V3_COEF にする
   max=max||30; const up=Math.round((bf!=null?bf:base)*V3_COEF*10)/10, Y0=105, K=90/max, yB=Y0-base*K, yU=Y0-up*K;
   return `<svg viewBox="0 0 150 128" width="100%" role="img" aria-label="国基準と適正上限">
    <line x1="20" y1="15" x2="140" y2="15" stroke="var(--s2)"/><line x1="20" y1="105" x2="140" y2="105" stroke="var(--line)"/>
@@ -976,7 +976,7 @@ function v3Body(p,key){
      <div class="kr"><span>常勤換算</span><b>${m.fte==null?'—':m.fte+'名'}</b></div></div>
      <div>${v3Over(p,m)}</div>
      <div>${m.base==null?v3Wait('職員一覧待ち'):v3StaffSvg(m.staff,m.fte,v3Low(p,m),mx,v3Up(p,m))}</div>
-     <div>${m.base==null?'':`<div class="kf l" style="font-weight:700">${v3Jline('保育士',m.staff,v3Low(p,m),v3Up(p,m))}<br>${v3Jline('常勤換算',m.fte,v3Low(p,m),v3Up(p,m))}</div>`}
+     <div>${m.base==null?'':`<div class="kf l" style="font-weight:700">${v3Jline('常勤換算',m.fte,v3Low(p,m),v3Up(p,m))}</div>`}
      <div class="kf l">保育士：${m.staffNote||'園長・調理・事務を除く'}<br>常勤換算：${m.fteNote}${m.extraNote?'<br>'+m.extraNote:''}</div></div></div>
    <div class="kb"><div class="kh"><span class="sm">国基準</span></div>
      <div><div class="kr"><span>国基準</span><b>${m.base==null?'—':m.base+'名'}</b></div>
