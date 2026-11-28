@@ -1332,8 +1332,15 @@ function kpiEmbed(){
   document.body.innerHTML='';
   document.body.appendChild(box);
   const st=document.createElement('style');
-  st.textContent='body{background:transparent!important;min-height:0!important;margin:0}#portalBackBtn,.kpeak{display:none!important}';
+  st.textContent='body{background:transparent!important;min-height:0!important;margin:0}#portalBackBtn,.kpeak{display:none!important}'
+    // &row=1（本部の採用前申請 確認表から）：4つのカードを横1列に並べる（園の配置・国基準の2枚組はそのまま2列分を使う）
+    +(new URLSearchParams(location.search).get('row')==='1'?'.v3 .k4{grid-template-columns:repeat(4,minmax(0,1fr))!important}.v3 .kpair{grid-column:span 2!important}':'');
   document.head.appendChild(st);
+  // &html=1（本部の採用前申請 確認表から）：カードのHTMLと見た目の指定もいっしょに渡す（確認表のページに直接描いて、印刷でも崩れないように）
+  if(p&&new URLSearchParams(location.search).get('html')==='1'){
+    msg.html=box.outerHTML;
+    msg.css=[...document.querySelectorAll('style')].map(x=>x.textContent).join('\n');
+  }
   const send=()=>{ msg.height=Math.ceil(box.getBoundingClientRect().height)+4; try{ parent.postMessage(msg,location.origin); }catch(e){} };
   send(); setTimeout(send,200); setTimeout(send,800); window.addEventListener('resize',send);
 }
