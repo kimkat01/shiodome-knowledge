@@ -1000,7 +1000,7 @@ function uneiData(){
   const u=UNEI; if(!u||!u.ok) return {ok:false,note:u&&u.failed?'読み込めず':'データ準備中'};
   const a=uneiAuto(u), gaps=uneiGaps();
   return {ok:true,month:u.month,tag:u.tag||'',capPct:u.capPct,enrolled:u.enrolled,capacity:u.capacity,elastic:u.elastic||0,
-    labor:u.labor,laborTarget:u.laborTarget,staff:u.staff,fte:u.fte,base:u.base,up:u.up,
+    labor:u.labor,laborTarget:u.laborTarget,staff:u.staff,fte:u.fte,base:u.base,baseHead:u.baseHead==null?null:u.baseHead,baseFte:u.baseFte==null?null:u.baseFte,up:u.up,
     autoLabor:a.labor,autoStaff:a.staff,ansLabor:radioVal('uq-labor'),ansStaff:radioVal('uq-staff'),
     mismatch:gaps,reason:gaps.length?$('unei-reason').value.trim():'',agreed:$('unei-agree').checked};
 }
@@ -1011,7 +1011,7 @@ function uneiRows(d){
   const lines=[`${d.month}（月次収支レポート）`,
     `定員充足度 ${n(d.capPct)}%（${n(d.enrolled)}／${n(d.capacity)}名）`,
     `人件費率 ${n(d.labor)}%（目安${d.laborTarget}%）`,
-    `保育士の配置 ${n(d.staff)}名／常勤換算 ${n(d.fte)}名（国基準${n(d.base)}名・適正範囲${n(d.up)}名まで）`];
+    `保育士の配置 ${n(d.staff)}名／常勤換算 ${n(d.fte)}名（国基準${d.baseFte!=null?n(d.baseHead)+'名・国基準の常勤換算'+d.baseFte:n(d.base)}名・適正範囲${n(d.up)}名まで）`];
   const rows=[['自園の運営状況',lines.join('\n')]];
   rows.push(['園長の判定',`人件費率：${d.ansLabor||'—'}／保育士の人数：${d.ansStaff||'—'}`+(d.mismatch&&d.mismatch.length?'（数字と違う）':'')]);
   if(d.reason) rows.push(['数字と違う判定の理由',d.reason]);

@@ -962,7 +962,8 @@ function v3Body(p,key){
   // 採用申請へ渡す数字（2026-11-28）：?kpi=1 で開いたとき、この4つの指標の値を親画面へ送る
   window.V3_LAST={month:m.label,tag:m.tag||'',capPct:capPct==null?null:Math.round(capPct),enrolled:m.enrolled==null?null:m.enrolled,capacity:p.capacity||null,elastic:p.elastic||0,
     labor:lab==null?null:Math.round(lab*10)/10,laborTarget:V3_LABOR_TARGET,staff:m.staff==null?null:m.staff,fte:m.fte==null?null:m.fte,
-    base:m.base==null?null:m.base,up:m.base==null?null:Math.round(m.base*V3_COEF*10)/10};
+    // 国基準と適正上限は、カードと同じ関数で出す（国基準の常勤換算があればそれ、なければ国基準の人数。上限はその×1.8）
+    base:m.base==null?null:v3Low(p,m),baseHead:m.base==null?null:m.base,baseFte:v3BaseFte(p,m),up:m.base==null?null:v3Up(p,m)};
   const kpi=`<div class="k4">
    <div class="kb"><div class="kh"><span class="sm">定員充足度</span>${(p.ageTable&&capPct!=null)?`<span class="kv">${Math.round(capPct)}%</span>`:''}</div>
      ${p.ageTable?v3AgeTable(p,m):`${v3Donut(capPct,'var(--c-profit)',capPct==null?'—':Math.round(capPct)+'%')}<div class="kf">${m.enrolled==null?'園児一覧待ち':m.enrolled+' / '+(p.capacity||'—')+'名'+(p.elastic?'（弾力'+p.elastic+'名）':'')}</div>`}</div>
