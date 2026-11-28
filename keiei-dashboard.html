@@ -924,7 +924,7 @@ function v3BaseBreak(p,m){
   const sum=parts.reduce((a,x)=>a+x[2],0);
   if(sum!==m.base) return (m.staffNote&&/小規模A型/.test(m.staffNote)?'小規模保育A型の＋1名を含む<br>':'')+tail;
   const bf=v3BaseFte(p,m);
-  return parts.map(([l,n,r])=>`${l} ${n}名→${r}名`).join('　')+(bf!=null?`<br>国基準の常勤換算 ${bf.toFixed(1)}名 ×${V3_COEF}＝${Math.round(bf*V3_COEF*10)/10}名`:'')+'<br>'+tail.replace('適正上限（国基準×'+V3_COEF+'）','適正上限（常勤換算）');
+  return parts.map(([l,n,r])=>`${l} ${n}名→${r}名`).join('　')+'<br>'+tail.replace('適正上限（国基準×'+V3_COEF+'）','適正上限（常勤換算）');
 }
 function v3Body(p,key){
   const m=p.v3.months[key], conf=m.kind==='k';
