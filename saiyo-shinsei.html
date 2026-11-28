@@ -343,7 +343,7 @@ td{white-space:pre-wrap;word-break:break-word}
       <p style="margin:0;color:var(--sub)">採用の前に、いまの園の収支と職員の人数を確認してください。下は本部の月次収支レポート「② 運営の指標」と同じものです。</p>
       <div id="unei-month" class="unei-src"></div>
       <iframe id="unei-frame" class="unei-frame" title="月次収支レポート 運営の指標" loading="eager"></iframe>
-      <button type="button" class="unei-peak" id="unei-peak" hidden>シフトを見る</button>
+      <button type="button" class="unei-peak" id="unei-peak" hidden>配置人数グラフを見る</button>
       <div id="unei-none" class="note" hidden></div>
       <div id="unei-qs" class="stack" hidden>
         <div class="unei-q" id="uq-labor-wrap">
@@ -989,7 +989,7 @@ $('unei-peak').addEventListener('click',()=>{ if(UNEI&&UNEI.peak) uneiPeak(UNEI.
 function uneiShow(){
   const u=UNEI||{}, a=uneiAuto(u);
   const pk=u.ok&&u.peak&&u.peak.url; $('unei-peak').hidden=!pk;
-  if(pk) $('unei-peak').textContent=`シフトを見る（${u.peak.day}）`;
+  if(pk) $('unei-peak').textContent=`配置人数グラフを見る（${u.peak.day}）`;
   $('unei-month').textContent=u.ok?`表示している月：${u.month}${u.tag?'（'+u.tag+'）':''}`:'';
   if(!u.ok){
     $('unei-qs').hidden=true; $('unei-none').hidden=false;
