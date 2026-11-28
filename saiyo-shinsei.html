@@ -201,6 +201,16 @@ html body{background:#dbdcdf}
 .doc{border:1.5px solid var(--line);border-radius:10px;overflow:hidden}
 .doc h3{margin:0;background:var(--accent-pale);color:var(--accent-dark);padding:12px 16px;font-size:18px}
 .tblwrap{overflow-x:auto}
+/* 運営状況の確認（2026-11-28）：月次収支レポートの「② 運営の指標」をそのまま埋め込み、園長が自分で判定する */
+.unei-frame{width:100%;border:0;display:block;min-height:120px;background:transparent}
+.unei-src{font-size:14px;color:var(--sub)}
+.unei-q{border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:10px}
+.unei-q .lbl{font-size:18px}
+.chip.rd span::before{border-radius:50%}
+.unei-gap{background:var(--warn-pale);border:1.5px solid #e8c873;border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.unei-gap b{color:var(--warn)}
+.unei-agree{display:flex;gap:12px;align-items:flex-start;border:2px solid var(--accent);background:var(--accent-pale);border-radius:10px;padding:14px 16px;font-weight:800;cursor:pointer}
+.unei-agree input{width:22px;height:22px;margin-top:3px;accent-color:var(--accent);flex-shrink:0}
 table{width:100%;border-collapse:collapse;font-size:15.5px}
 th,td{border-top:1px solid var(--line);padding:9px 14px;text-align:left;vertical-align:top}
 th{width:32%;color:var(--sub);font-weight:700;background:var(--bg);white-space:nowrap}
@@ -245,7 +255,7 @@ td{white-space:pre-wrap;word-break:break-word}
     <button type="button" id="go-pre">
       <span class="t">【採用前申請】</span>
       <span class="w">これから求人を出したいとき</span>
-      <ol><li>申請者情報・配置基準の確認</li><li>求人内容の作成</li><li>人件費・紹介会社の経費確認</li></ol>
+      <ol><li>申請者情報・配置基準の確認</li><li>自園の運営状況の確認</li><li>求人内容の作成</li><li>人件費・紹介会社の経費確認</li></ol>
     </button>
     <button type="button" id="go-kessai">
       <span class="t">【応募者決裁】</span>
@@ -319,8 +329,44 @@ td{white-space:pre-wrap;word-break:break-word}
     </div>
   </div>
 
-  <!-- P2 -->
+  <!-- P2 運営状況の確認（2026-11-28） -->
   <div class="stack" data-p="2" hidden>
+    <div class="card">
+      <h2>自園の運営状況の確認<span class="tag">月次収支レポートの数字がそのまま出ます</span></h2>
+      <p style="margin:0;color:var(--sub)">採用の前に、いまの園の収支と職員の人数を確認してください。下は本部の月次収支レポート「② 運営の指標」と同じものです。</p>
+      <div id="unei-month" class="unei-src"></div>
+      <iframe id="unei-frame" class="unei-frame" title="月次収支レポート 運営の指標" loading="eager"></iframe>
+      <div id="unei-none" class="note" hidden></div>
+      <div id="unei-qs" class="stack" hidden>
+        <div class="unei-q" id="uq-labor-wrap">
+          <span class="lbl">Q1. 自園の人件費率をどう見ますか？<span class="req">必須</span></span>
+          <div class="chips">
+            <label class="chip rd"><input type="radio" name="uq-labor" value="高い"><span>高い</span></label>
+            <label class="chip rd"><input type="radio" name="uq-labor" value="適正"><span>適正</span></label>
+            <label class="chip rd"><input type="radio" name="uq-labor" value="低い"><span>低い（余裕がある）</span></label>
+          </div>
+        </div>
+        <div class="unei-q" id="uq-staff-wrap">
+          <span class="lbl">Q2. いまの保育士の人数をどう見ますか？<span class="req">必須</span></span>
+          <div class="chips">
+            <label class="chip rd"><input type="radio" name="uq-staff" value="多い"><span>多い</span></label>
+            <label class="chip rd"><input type="radio" name="uq-staff" value="適正"><span>適正</span></label>
+            <label class="chip rd"><input type="radio" name="uq-staff" value="足りない"><span>足りない</span></label>
+          </div>
+          <span class="unei-src">「保育士の配置」と「常勤換算」の2つを見て答えてください。</span>
+        </div>
+        <div class="unei-gap" id="unei-gap" hidden>
+          <div id="unei-gap-msg"></div>
+          <label for="unei-reason" style="font-weight:800">それでも採用が必要な理由<span class="req">必須</span></label>
+          <textarea id="unei-reason" placeholder="例）3月末に正規保育士2名が退職予定で、4月以降は人数が足りなくなる見込みのため"></textarea>
+        </div>
+        <label class="unei-agree"><input type="checkbox" id="unei-agree"><span>自園の収支と職員の人数を確認しました。そのうえで、採用が必要と判断して申請します。</span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- P3 -->
+  <div class="stack" data-p="3" hidden>
     <div class="card">
       <h2>求人内容の作成<span class="tag">採用サイト・求人媒体にそのまま使います</span></h2>
       <div class="row">
@@ -399,7 +445,7 @@ td{white-space:pre-wrap;word-break:break-word}
   </div>
 
   <!-- P3 -->
-  <div class="stack" data-p="3" hidden>
+  <div class="stack" data-p="4" hidden>
     <div class="card">
       <h2>採用予定の人件費</h2>
       <p class="desc">給与は前のページで入力した金額を使います。1人あたりで計算し、最後に人数を掛けます。</p>
@@ -435,7 +481,7 @@ td{white-space:pre-wrap;word-break:break-word}
   </div>
 
   <!-- 確認 -->
-  <div class="stack" data-p="4" hidden>
+  <div class="stack" data-p="5" hidden>
     <div class="doc"><h3 id="doc-title"></h3><div class="tblwrap"><table id="doc-tbl"></table></div></div>
     <div class="rule"><b>本部のルール</b><br>・送信後、原則3営業日以内に結果（可決・相談）をお知らせします。<br>・可決された場合は、採用活動に入ってください。</div>
   </div>
@@ -680,7 +726,7 @@ function home(){head('採用申請',[],0);show('v-entry');}
 $('done-home').onclick=()=>{ home(); loadHistory(); };
 
 /* =========== 採用前申請 =========== */
-const PRE_STEPS=['申請者・配置基準','求人内容','人件費・経費','確認'];
+const PRE_STEPS=['申請者・配置基準','運営状況の確認','求人内容','人件費・経費','確認'];
 let preStep=1, titleTouched=false;
 $('pre-garden').value=GARDEN; $('k-garden').value=GARDEN;
 /* 記入者名：職員マスタの園長（権限「園長」）の氏名。読めないときは園長ダッシュボードのログイン名 */
@@ -827,7 +873,8 @@ function preValidate(step){
     if(!$('pre-writer').value.trim()) e.push('記入者名を入力してください');
     if(!$('pre-skip').checked && !haichi().short && !$('over-reason').value.trim()) e.push('配置基準を満たしているため、募集する理由を入力してください');
   }
-  if(step===2){
+  if(step===2) e.push(...uneiErrors());
+  if(step===3){
     if(!$('job').value) e.push('職種を選んでください');
     if(!$('start').value) e.push('入職希望日を入力してください');
     if(!$('persona').value.trim()) e.push('求める人物像を入力してください');
@@ -836,7 +883,7 @@ function preValidate(step){
       if(pt && !(+$('wage').value>0)) e.push('時給を入力してください');
       if(pt && !(+$('h-day').value>0 && +$('h-days').value>0)) e.push('勤務時間（1日の時間・週の日数）を入力してください'); }
   }
-  if(step===3 && !checked('ag').length) e.push('利用予定の紹介会社・媒体を1つ以上選んでください');
+  if(step===4 && !checked('ag').length) e.push('利用予定の紹介会社・媒体を1つ以上選んでください');
   $('pre-err').hidden=!e.length; $('pre-err').innerHTML=e.join('<br>');
   return !e.length;
 }
@@ -847,6 +894,7 @@ function preRows(){
    ['配置基準',$('pre-skip').checked?'保育士以外のためスキップ':`必要 ${h.need}人 ／ 現在 ${h.fte}人（${h.short?h.diff+'人不足':'充足'}）`],
   ];
   if(!$('pre-skip').checked && !h.short) rows.push(['充足しているのに募集する理由',$('over-reason').value]);
+  uneiRows(uneiData()).forEach(r=>rows.push(r));
   rows.push(['入職希望日',fmtYM(p.start)],['職種',info.name+`（${p.hc}名）`],['業務内容',$('duty').value],
    info.part?['時給',`${yen(p.wage)}（処遇改善(その他)手当 月${yen(p.pallow)}）`]
      :['給与（月給）',`${yen(p.base+p.shogu+p.career+p.chiiki+p.other)}\n内訳：基本給 ${yen(p.base)}／処遇改善 ${yen(p.shogu)}／キャリアアップ ${yen(p.career)}／地域 ${yen(p.chiiki)}／その他 ${yen(p.other)}`]);
@@ -868,16 +916,107 @@ function preGo(n){
   document.querySelectorAll('#v-pre [data-p]').forEach(s=>s.hidden=+s.dataset.p!==n);
   head('採用前申請',PRE_STEPS,n);
   $('pre-back').textContent=n===1?'‹ 申請の種類を選ぶ':'‹ 戻る';
-  $('pre-next').textContent=n===3?'内容を確認する ›':n===4?'この内容で送信する':'次の入力へ ›';
-  if(n===4){ $('doc-title').textContent=$('pre-title').value; $('doc-tbl').innerHTML=tbl(preRows()); }
+  $('pre-next').textContent=n===4?'内容を確認する ›':n===5?'この内容で送信する':'次の入力へ ›';
+  if(n===2) uneiLoad();
+  if(n===5){ $('doc-title').textContent=$('pre-title').value; $('doc-tbl').innerHTML=tbl(preRows()); }
   $('pre-err').hidden=true; window.scrollTo({top:0,behavior:'smooth'});
 }
 $('pre-back').onclick=()=>preStep===1?home():preGo(preStep-1);
 $('pre-next').onclick=()=>{
-  if(preStep<4){ if(preValidate(preStep)) preGo(preStep+1); return; }
+  if(preStep<5){ if(preValidate(preStep)) preGo(preStep+1); return; }
   submitPre();
 };
 $('go-pre').onclick=()=>{show('v-pre');preGo(1);};
+
+/* ===== 運営状況の確認（2026-11-28）=====
+   月次収支レポート（keiei-dashboard.html）を ?kpi=1 で読み込むと、その園の「② 運営の指標」だけが出て、数字が postMessage で届く。
+   数字で「人件費率が目安超え」「保育士の配置か常勤換算が適正範囲超え」なのに、園長がそう判定しなかったときは理由を必須にする。
+   レポートに数字がない園は、質問なしでそのまま進める */
+let UNEI=null, uneiTimer=null;
+const GARDEN_PARAM=(()=>{ try{ return new URLSearchParams(location.search).get('garden')||G.key||FCODE; }catch(e){ return FCODE; } })();
+window.addEventListener('message',ev=>{
+  if(ev.origin!==location.origin||!ev.data||ev.data.type!=='keiei-kpi') return;
+  const d=ev.data; if(d.height) $('unei-frame').style.height=d.height+'px';
+  if(!UNEI||UNEI.ok!==d.ok||UNEI.month!==d.month){ UNEI=d; clearTimeout(uneiTimer); uneiShow(); }
+});
+function uneiLoad(){
+  const f=$('unei-frame'); if(f.dataset.loaded) return; f.dataset.loaded='1';
+  f.src='keiei-dashboard.html?kpi=1&garden='+encodeURIComponent(GARDEN_PARAM);
+  uneiTimer=setTimeout(()=>{ if(!UNEI){ UNEI={ok:false,failed:true}; uneiShow(); } },10000);
+}
+function uneiAuto(u){
+  if(!u||!u.ok) return {labor:null,staff:null};
+  const labor=u.labor==null?null:(u.labor>u.laborTarget?'高い':'適正');
+  let staff=null;
+  if(u.base!=null&&(u.staff!=null||u.fte!=null)){
+    const vs=[u.staff,u.fte].filter(v=>v!=null);
+    staff=vs.some(v=>v>u.up)?'多い':vs.some(v=>v<u.base)?'足りない':'適正';
+  }
+  return {labor,staff};
+}
+const radioVal=n=>{ const r=document.querySelector(`input[name="${n}"]:checked`); return r?r.value:''; };
+function uneiGaps(){
+  const u=UNEI, a=uneiAuto(u), g=[];
+  if(a.labor==='高い'&&radioVal('uq-labor')&&radioVal('uq-labor')!=='高い') g.push(`人件費率は${u.labor}%で、目安の${u.laborTarget}%を超えています。`);
+  if(a.staff==='多い'&&radioVal('uq-staff')&&radioVal('uq-staff')!=='多い'){
+    const t=[]; if(u.staff!=null&&u.staff>u.up) t.push(`保育士の配置は${u.staff}名`); if(u.fte!=null&&u.fte>u.up) t.push(`常勤換算は${u.fte}名`);
+    g.push(`${t.join('、')}で、適正範囲（${u.up}名まで）を超えています。`);
+  }
+  return g;
+}
+function uneiShow(){
+  const u=UNEI||{}, a=uneiAuto(u);
+  $('unei-month').textContent=u.ok?`表示している月：${u.month}${u.tag?'（'+u.tag+'）':''}`:'';
+  if(!u.ok){
+    $('unei-qs').hidden=true; $('unei-none').hidden=false;
+    $('unei-none').innerHTML=u.failed?'月次収支レポートを読み込めませんでした。このまま次へ進めます。'
+      :'この園の月次収支レポートは準備中です。このまま次へ進めます。';
+    if(u.failed) $('unei-frame').hidden=true;
+    return;
+  }
+  $('unei-none').hidden=true; $('unei-qs').hidden=false;
+  $('uq-labor-wrap').hidden=a.labor==null; $('uq-staff-wrap').hidden=a.staff==null;
+  uneiRefresh();
+}
+function uneiRefresh(){
+  const g=uneiGaps();
+  $('unei-gap').hidden=!g.length;
+  $('unei-gap-msg').innerHTML=g.map(t=>`<b>⚠ ${esc(t)}</b>`).join('<br>')+(g.length?'<br>あなたの判定と数字が違います。採用が必要な理由を書いてください。':'');
+}
+document.querySelectorAll('input[name="uq-labor"],input[name="uq-staff"]').forEach(r=>r.addEventListener('change',uneiRefresh));
+function uneiErrors(){
+  const u=UNEI, e=[];
+  if(!u) { e.push('月次収支レポートを読み込んでいます。少し待ってからもう一度押してください'); return e; }
+  if(!u.ok) return e;
+  const a=uneiAuto(u);
+  if(a.labor!=null&&!radioVal('uq-labor')) e.push('Q1（人件費率）を選んでください');
+  if(a.staff!=null&&!radioVal('uq-staff')) e.push('Q2（保育士の人数）を選んでください');
+  if(uneiGaps().length&&!$('unei-reason').value.trim()) e.push('「それでも採用が必要な理由」を書いてください');
+  if(!$('unei-agree').checked) e.push('最後の確認（自園の収支と職員の人数を確認しました）にチェックを入れてください');
+  return e;
+}
+/* 保存する形（計算データの unei）。本部の確認表もこの形を読む */
+function uneiData(){
+  const u=UNEI; if(!u||!u.ok) return {ok:false,note:u&&u.failed?'読み込めず':'データ準備中'};
+  const a=uneiAuto(u), gaps=uneiGaps();
+  return {ok:true,month:u.month,tag:u.tag||'',capPct:u.capPct,enrolled:u.enrolled,capacity:u.capacity,elastic:u.elastic||0,
+    labor:u.labor,laborTarget:u.laborTarget,staff:u.staff,fte:u.fte,base:u.base,up:u.up,
+    autoLabor:a.labor,autoStaff:a.staff,ansLabor:radioVal('uq-labor'),ansStaff:radioVal('uq-staff'),
+    mismatch:gaps,reason:gaps.length?$('unei-reason').value.trim():'',agreed:$('unei-agree').checked};
+}
+function uneiRows(d){
+  if(!d) return [];
+  if(!d.ok) return [['自園の運営状況','月次収支レポート：'+(d.note||'データ準備中')]];
+  const n=v=>v==null?'—':v;
+  const lines=[`${d.month}（月次収支レポート）`,
+    `定員充足度 ${n(d.capPct)}%（${n(d.enrolled)}／${n(d.capacity)}名）`,
+    `人件費率 ${n(d.labor)}%（目安${d.laborTarget}%）`,
+    `保育士の配置 ${n(d.staff)}名／常勤換算 ${n(d.fte)}名（国基準${n(d.base)}名・適正範囲${n(d.up)}名まで）`];
+  const rows=[['自園の運営状況',lines.join('\n')]];
+  rows.push(['園長の判定',`人件費率：${d.ansLabor||'—'}／保育士の人数：${d.ansStaff||'—'}`+(d.mismatch&&d.mismatch.length?'（数字と違う）':'')]);
+  if(d.reason) rows.push(['数字と違う判定の理由',d.reason]);
+  return rows;
+}
 
 function rowsToText(rows){ return rows.map(([k,v])=>k+'：'+v).join('\n'); }
 function submitPre(){
@@ -903,7 +1042,7 @@ function submitPre(){
     agencies:preCalc.fees.map(f=>`${f.name}：${yen(f.fee)}`).join('\n'),
     useAgency:preCalc.fees.some(f=>f.type!=='free')?'紹介会社等を使う':'使わない（HP／ハローワーク）',
     maxFee:Math.round(preCalc.maxFee),
-    calc:{v:1,p:p,job:info,fees:preCalc.fees.map(f=>({id:f.id,fee:Math.round(f.fee)}))}
+    calc:{v:1,p:p,job:info,fees:preCalc.fees.map(f=>({id:f.id,fee:Math.round(f.fee)})),unei:uneiData()}
   };
   btn.disabled=true; btn.textContent='送信しています…'; $('pre-err').hidden=true;
   gasPost('submitStage1',data).then(res=>{
@@ -936,6 +1075,7 @@ function appFromRow(r){
     ['想定年収（1人）',r['想定年収（1人）']?yen(r['想定年収（1人）']):''],['人件費（年間）',r['想定年間人件費']?yen(r['想定年間人件費']):''],
     ['利用予定の紹介会社等',r['利用予定の紹介会社等']||r['紹介会社_派遣を使うか']],['本部コメント',r['本部コメント']]]
     .filter(([k,v])=>v!==undefined&&v!==null&&String(v).trim()!=='');
+  if(calc&&calc.unei){ const u=uneiRows(calc.unei); view.splice(4,0,...u); }
   return {id:r['申請ID'],title,status:r['ステータス'],job,p,fees,rows:view,hasCalc:!!calc};
 }
 function loadApproved(){

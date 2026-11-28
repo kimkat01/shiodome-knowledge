@@ -959,6 +959,10 @@ function v3Body(p,key){
   const sumTo=(a,n)=>a.slice(0,n+1).reduce((x,y)=>x+y,0);
   const an=avg?m.mi:0;   // 累計の最終月＝表示している月（2026-11-27 本部指示：4月からの累計で毎月出す）
   const lab=conf?(avg?sumTo(p.rMonthly.L,an)/sumTo(p.rMonthly.I,an)*100:rep?m.rLabor/m.rIncome*100:(m.labor-(m.bonus||0))/m.income*100):null, mx=v3Scale(m);
+  // 採用申請へ渡す数字（2026-11-28）：?kpi=1 で開いたとき、この4つの指標の値を親画面へ送る
+  window.V3_LAST={month:m.label,tag:m.tag||'',capPct:capPct==null?null:Math.round(capPct),enrolled:m.enrolled==null?null:m.enrolled,capacity:p.capacity||null,elastic:p.elastic||0,
+    labor:lab==null?null:Math.round(lab*10)/10,laborTarget:V3_LABOR_TARGET,staff:m.staff==null?null:m.staff,fte:m.fte==null?null:m.fte,
+    base:m.base==null?null:m.base,up:m.base==null?null:Math.round(m.base*V3_COEF*10)/10};
   const kpi=`<div class="k4">
    <div class="kb"><div class="kh"><span class="sm">定員充足度</span>${(p.ageTable&&capPct!=null)?`<span class="kv">${Math.round(capPct)}%</span>`:''}</div>
      ${p.ageTable?v3AgeTable(p,m):`${v3Donut(capPct,'var(--c-profit)',capPct==null?'—':Math.round(capPct)+'%')}<div class="kf">${m.enrolled==null?'園児一覧待ち':m.enrolled+' / '+(p.capacity||'—')+'名'+(p.elastic?'（弾力'+p.elastic+'名）':'')}</div>`}</div>
@@ -1299,12 +1303,45 @@ function isHonbuUnlocked(){
   try{ return sessionStorage.getItem('keiei_honbu_ok')==='1'; }catch(e){ return false; }
 }
 
+// ===== 採用申請への埋め込み（2026-11-28）=====
+// 採用前申請の「運営状況の確認」から ?kpi=1&garden=園 で読み込まれたときは、その園の「② 運営の指標」（4つのカード）だけを、
+// レポートと同じ見た目・同じ数字（最初に表示する月）で出し、数字と高さを採用申請の画面へ postMessage で渡す。
+// 新しい形式のカード（v3）がない園・hidden の園は「準備中」を返す
+const KPI_EMBED=(function(){ try{ return new URLSearchParams(location.search).get('kpi')==='1'; }catch(e){ return false; } })();
+function kpiEmbed(){
+  const norm=t=>String(t||'').replace(/[\s　]/g,'');
+  const g=(typeof gardenFromUrl==='function')?gardenFromUrl():null;
+  const all=PARKS.concat(typeof YUGA_PARKS!=='undefined'?YUGA_PARKS:[]);
+  const p=g?all.find(x=>x.v3&&!x.hidden&&norm(x.label)===norm(g.name)):null;
+  let msg={type:'keiei-kpi',ok:false};
+  const box=document.createElement('div'); box.id='kpi-embed';
+  if(p){
+    const key=p.v3.def||p.v3.order[0], tmp=document.createElement('div');
+    tmp.innerHTML=v3Body(p,key);
+    const k4=tmp.querySelector('.k4'), lg=tmp.querySelector('.klg');
+    const wrap=document.createElement('div'); wrap.className='park-card v3'; wrap.style.cssText='min-width:0;max-width:none;border:0;background:transparent';
+    const body=document.createElement('div'); body.className='park-card-body'; body.style.padding='0';
+    if(k4) body.appendChild(k4); if(lg) body.appendChild(lg); wrap.appendChild(body); box.appendChild(wrap);
+    msg=Object.assign({type:'keiei-kpi',ok:true,garden:p.label},window.V3_LAST||{});
+  } else {
+    box.innerHTML='<div style="padding:16px;text-align:center;color:var(--text-muted)">この園の月次収支レポートは準備中です</div>';
+  }
+  document.body.innerHTML='';
+  document.body.appendChild(box);
+  const st=document.createElement('style');
+  st.textContent='body{background:transparent!important;min-height:0!important;margin:0}#portalBackBtn,.kpeak{display:none!important}';
+  document.head.appendChild(st);
+  const send=()=>{ msg.height=Math.ceil(box.getBoundingClientRect().height)+4; try{ parent.postMessage(msg,location.origin); }catch(e){} };
+  send(); setTimeout(send,200); setTimeout(send,800); window.addEventListener('resize',send);
+}
+
 // ===== 初期化 =====
-window.addEventListener('resize',resizeViewport);
+function startPage(){ if(KPI_EMBED){ kpiEmbed(); return; } buildCards();update();goTo(0,false); }
+window.addEventListener('resize',()=>{ if(!KPI_EMBED) resizeViewport(); });
 if(document.readyState==='loading'){
-  document.addEventListener('DOMContentLoaded',()=>{buildCards();update();goTo(0,false);});
+  document.addEventListener('DOMContentLoaded',startPage);
 }else{
-  buildCards();update();goTo(0,false);
+  startPage();
 }
 </script>
 <!-- しおどめポータルサイトから開いたときだけ、左下に「ログアウト」（ポータルへ戻る）ボタンを出す -->
